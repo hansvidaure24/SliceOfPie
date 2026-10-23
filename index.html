@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -10,6 +10,16 @@
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 
   <title>SliceOfPie</title>
+  <meta name="description" content="Split bills without the awkward math. Scan a receipt, assign items, add tip, and share who owes what — all offline, all on-device.">
+  <meta property="og:title" content="SliceOfPie">
+  <meta property="og:description" content="Split bills without the awkward math — offline, on-device, no sign-up.">
+  <meta property="og:image" content="https://slice-of-pie-xi.vercel.app/icon-512.png">
+  <meta property="og:url" content="https://slice-of-pie-xi.vercel.app">
+  <meta property="og:type" content="website">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="SliceOfPie">
+  <meta name="twitter:description" content="Split bills without the awkward math — offline, on-device, no sign-up.">
+  <meta name="twitter:image" content="https://slice-of-pie-xi.vercel.app/icon-512.png">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -67,11 +77,15 @@
       <input class="pay-input" id="payCashApp" placeholder="$cashtag" oninput="savePayment()">
       <button class="toggle on pay-toggle" id="togCashApp" onclick="togglePay('CashApp')" role="switch" aria-checked="true" aria-label="Include Cash App"></button>
     </div>
-    <div class="pay-row">
-      <input class="pay-input" id="payOtherLabel" placeholder="Other (PayPal, Revolut...)" style="flex:0 0 45%" oninput="savePayment()">
-      <input class="pay-input" id="payOtherValue" placeholder="username or email" oninput="savePayment()">
+    <div class="pay-row" style="flex-wrap:wrap">
+      <input class="pay-input" id="payOtherLabel" placeholder="Other (PayPal, Revolut...)" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
+      <input class="pay-input" id="payOtherValue" placeholder="username or email" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
       <button class="toggle on pay-toggle" id="togOther" onclick="togglePay('Other')" role="switch" aria-checked="true" aria-label="Include other method"></button>
     </div>
+  </div>
+  <div class="card">
+    <div class="section-label">Currency</div>
+    <div class="currency-row" id="currencyRow"></div>
   </div>
   <div class="card">
     <div class="section-label">Tip Presets</div>
@@ -98,7 +112,7 @@
 
 <!-- SCREEN: Bill Detail -->
 <div id="screenDetail" class="screen">
-  <h1 id="detailTitle">Bill</h1>
+  <h1 id="detailTitle" class="editable-title">Bill</h1>
   <p class="subtitle" id="detailDate"></p>
   <div class="card" id="detailSummaryCard"></div>
   <div class="card">
@@ -146,7 +160,7 @@
   <div class="card">
     <div class="section-label">Receipt Total</div>
     <div style="display:flex;align-items:center;gap:6px">
-      <span style="font-size:1.4rem;color:var(--crust);font-weight:700">$</span>
+      <span id="quickTotalSymbol" style="font-size:1.4rem;color:var(--crust);font-weight:700">$</span>
       <input id="quickTotal" class="item-price" type="number" inputmode="decimal" step="0.01"
              placeholder="0.00" style="width:100%;font-size:1.3rem;padding:10px 8px"
              aria-label="Receipt total">
@@ -159,7 +173,7 @@
   <div class="card" id="quickTaxCard" style="display:none">
     <div class="section-label">Tax Amount</div>
     <div style="display:flex;align-items:center;gap:6px">
-      <span style="font-size:1.1rem;color:var(--crust)">$</span>
+      <span id="quickTaxSymbol" style="font-size:1.1rem;color:var(--crust)">$</span>
       <input id="quickTax" class="item-price" type="number" inputmode="decimal" step="0.01"
              placeholder="0.00" style="width:100%;font-size:1rem;padding:8px"
              aria-label="Tax amount">
@@ -179,7 +193,7 @@
   <div class="capture-btns">
     <button class="btn btn-primary camera-btn" onclick="takePhoto()"><span class="camera-icon" style="margin-right:6px"></span>Take Photo</button>
     <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon" style="margin-right:6px"></span>Upload from Gallery</button>
-    <input type="file" id="photoInput" accept="image/*">
+    <input type="file" id="photoInput" accept="image/*" aria-label="Upload receipt photo">
     <button class="btn btn-ghost" onclick="skipToManual()"><span class="pencil-icon" style="margin-right:6px"></span>Enter Manually</button>
   </div>
   <img id="previewImg" class="preview-img" alt="Receipt preview" style="display:none">
@@ -202,7 +216,7 @@
     <button class="add-btn" onclick="addItem()"><span class="add-icon" style="margin-right:4px"></span>Add Item</button>
     <div class="tax-row">
       <span class="tax-label">Tax</span>
-      <span style="color:var(--muted);font-size:.85rem">$</span>
+      <span id="taxSymbol" style="color:var(--muted);font-size:.85rem">$</span>
       <input class="tax-input" id="taxInput" type="number" inputmode="decimal" step="0.01" value="0" placeholder="0.00" aria-label="Tax amount">
     </div>
     <div class="running-sub" id="runningSub">Subtotal: $0.00</div>
