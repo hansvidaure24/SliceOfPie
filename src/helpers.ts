@@ -45,6 +45,10 @@ export function setToggle(id: string, on: boolean): void {
   el.setAttribute('aria-checked', String(on));
 }
 
+export function tap(): void {
+  navigator.vibrate?.(10);
+}
+
 // Force reflow between remove/add so the browser sees two distinct states
 export function pulse(el: HTMLElement): void {
   el.classList.remove('pulse');
@@ -69,6 +73,34 @@ export async function shareText(text: string): Promise<void> {
   } catch {
     showToast('Could not copy');
   }
+}
+
+export type ThemePref = 'system' | 'light' | 'dark';
+
+export function getThemePref(): ThemePref {
+  return (localStorage.getItem('sp_theme') as ThemePref) || 'system';
+}
+
+export function setThemePref(pref: ThemePref): void {
+  localStorage.setItem('sp_theme', pref);
+  applyTheme();
+}
+
+export function applyTheme(): void {
+  const pref = getThemePref();
+  let resolved: 'light' | 'dark';
+  if (pref === 'system') {
+    resolved = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  } else {
+    resolved = pref;
+  }
+  if (resolved === 'dark') {
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+  const metaTheme = document.querySelector('meta[name="theme-color"]');
+  if (metaTheme) metaTheme.setAttribute('content', resolved === 'light' ? '#FFFFFF' : '#3A2418');
 }
 
 export function defaultLabel(): string {
