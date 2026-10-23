@@ -53,12 +53,23 @@
 
 <!-- SCREEN: Settings -->
 <div id="screenSettings" class="screen">
-  <h1>Payment <span class="accent">Details</span></h1>
-  <p class="subtitle">Optional — included when you share the bill</p>
+  <h1><span class="accent">Settings</span></h1>
+  <p class="subtitle">Personalize your experience</p>
   <div class="card">
     <div class="section-label">Your Name</div>
     <input class="pay-input" id="payName" placeholder="Your name" style="width:100%;margin-bottom:8px"
            oninput="savePayment()">
+  </div>
+  <div class="card">
+    <div class="section-label">Appearance</div>
+    <div class="theme-row">
+      <span class="round-label">Theme</span>
+      <div class="theme-toggle" id="themeToggle">
+        <button class="theme-opt" data-theme="system">Auto</button>
+        <button class="theme-opt" data-theme="light">Light</button>
+        <button class="theme-opt" data-theme="dark">Dark</button>
+      </div>
+    </div>
   </div>
   <div class="card">
     <div class="section-label">Payment Methods</div>
@@ -279,6 +290,7 @@
 
   <div class="nav-row" style="margin-top:12px">
     <button class="btn btn-ghost" onclick="goBackFromSummary()">Back</button>
+    <button class="btn btn-secondary" onclick="exportImage()" style="flex:.6"><span class="gallery-icon" style="margin-right:6px"></span>Image</button>
     <button class="btn btn-primary" onclick="doShare()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
   </div>
   <div class="save-label-wrap" id="saveLabelWrap" style="margin-top:8px">

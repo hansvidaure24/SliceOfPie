@@ -1,4 +1,4 @@
-import { $, setToggle } from './helpers';
+import { $, setToggle, tap } from './helpers';
 import { state } from './state';
 import { renderNames } from './people';
 import { updateSummary } from './summary';
@@ -10,6 +10,7 @@ export function setSplitMode(mode: 'even' | 'item'): void {
 }
 
 export function toggleTaxInc(): void {
+  tap();
   state.taxIncluded = !state.taxIncluded;
   setToggle('taxIncToggle', state.taxIncluded);
   $('quickTaxCard').style.display = state.taxIncluded ? 'none' : 'block';
@@ -20,12 +21,14 @@ export function toggleTaxInc(): void {
 }
 
 export function toggleRound(): void {
+  tap();
   state.roundUp = !state.roundUp;
   setToggle('roundToggle', state.roundUp);
   updateSummary();
 }
 
 export function togglePartOfBill(): void {
+  tap();
   state.imPartOfBill = !state.imPartOfBill;
 
   if (state.imPartOfBill) {

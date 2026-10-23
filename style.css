@@ -16,11 +16,32 @@ html{background:#1A0E08}
   --brown:#1A0E08;
   --text:#FFF5E6;
   --muted:#BBA784;
+  --border-subtle:var(--border-subtle);
   --radius:16px;
   --radius-sm:10px;
   --shadow:0 2px 12px #0004;
   --shadow-lg:0 4px 24px #0006;
 }
+[data-theme="light"]{
+  --bg:#FFF8F0;
+  --bg2:#F5EDE4;
+  --surface:#FFFFFF;
+  --surface2:#F0E6DA;
+  --surface-border:#DDD0C0;
+  --crust:#A07840;
+  --cherry:#C53B2C;
+  --cherry-glow:#C53B2C25;
+  --cherry-dark:#9A2E22;
+  --cream:#2C1810;
+  --cream-dim:#5E4535;
+  --brown:#FFF8F0;
+  --text:#2C1810;
+  --muted:#8B7560;
+  --border-subtle:#00000010;
+  --shadow:0 2px 12px #0001;
+  --shadow-lg:0 4px 24px #0002;
+}
+html[data-theme="light"]{background:#F5EDE4}
 
 /* ── Base ── */
 body{
@@ -56,9 +77,9 @@ h1:focus{outline:none}
 .btn-primary:active{border-bottom-width:1px;background:var(--cherry-dark)}
 .btn-secondary{
   background:var(--surface2);color:var(--cream-dim);
-  border-bottom:2px solid #3a2315;
+  border-bottom:2px solid var(--surface-border);
 }
-.btn-secondary:active{border-bottom-width:1px;background:#3a2315}
+.btn-secondary:active{border-bottom-width:1px;background:var(--surface-border)}
 .btn-ghost{
   background:transparent;border:1.5px solid var(--surface-border);color:var(--muted);
 }
@@ -94,6 +115,7 @@ body.transitioning .btn{pointer-events:none}
 
 /* ── Logo ── */
 .logo-wrap{position:relative;width:120px;height:120px;margin:0 auto 12px}
+.logo-wrap::after{content:'';position:absolute;bottom:-10px;left:50%;transform:translateX(-50%);width:80px;height:14px;background:radial-gradient(ellipse,#0003 0%,transparent 70%);border-radius:50%}
 .logo-pie,.logo-slice{width:120px;height:120px;filter:drop-shadow(0 4px 20px #0006)}
 .logo-slice{position:absolute;top:0;left:0;animation:sliceBob 3s ease-in-out infinite}
 @keyframes sliceBob{0%,100%{transform:translate(4px,-4px)}50%{transform:translate(6px,-10px)}}
@@ -216,7 +238,7 @@ body.transitioning .btn{pointer-events:none}
 /* ── Items List ── */
 .item-row{
   display:flex;align-items:center;gap:8px;padding:12px 0;
-  border-bottom:1px solid #ffffff08;
+  border-bottom:1px solid var(--border-subtle);
 }
 .item-row:last-child{border-bottom:none}
 .item-name{
@@ -239,7 +261,7 @@ body.transitioning .btn{pointer-events:none}
 .add-btn:active{border-color:var(--crust);color:var(--crust)}
 
 /* ── Assign Badges ── */
-.assign-wrap{padding:10px 0;border-bottom:1px solid #ffffff08}
+.assign-wrap{padding:10px 0;border-bottom:1px solid var(--border-subtle)}
 .assign-wrap:last-child{border-bottom:none}
 .assign-item-label{font-size:.85rem;color:var(--cream-dim);margin-bottom:6px;font-weight:500}
 .assign-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
@@ -270,7 +292,7 @@ body.transitioning .btn{pointer-events:none}
 /* ── Running Subtotal ── */
 .running-sub{
   text-align:right;padding:10px 0;font-size:.9rem;color:var(--crust);font-weight:600;
-  border-top:1px solid #ffffff0a;margin-top:6px;
+  border-top:1px solid var(--border-subtle);margin-top:6px;
 }
 
 /* ── Tip Buttons ── */
@@ -310,9 +332,9 @@ body.transitioning .btn{pointer-events:none}
 @keyframes circleGrow{from{r:0}to{}}
 
 /* ── Breakdown ── */
-.breakdown-line{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;border-bottom:1px solid #ffffff08}
+.breakdown-line{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;border-bottom:1px solid var(--border-subtle)}
 .breakdown-line:last-child{border-bottom:none}
-.breakdown-name{font-weight:600}
+.breakdown-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
 
 /* ── Toggle Switch ── */
 .round-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
@@ -325,7 +347,7 @@ body.transitioning .btn{pointer-events:none}
 .toggle.on{background:var(--cherry)}
 .toggle::after{
   content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;
-  border-radius:50%;background:var(--cream);transition:transform .2s;
+  border-radius:50%;background:#fff;transition:transform .2s;
   box-shadow:0 1px 4px #0003;
 }
 .toggle.on::after{transform:translateX(22px)}
@@ -362,7 +384,7 @@ body.transitioning .btn{pointer-events:none}
 }
 .settings-gear:active{background:var(--surface2);opacity:.8}
 .settings-gear svg{width:22px;height:22px}
-.pay-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #ffffff08}
+.pay-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--border-subtle)}
 .pay-row:last-child{border-bottom:none}
 .pay-icon{flex-shrink:0;font-size:.85rem;color:var(--crust);width:64px;font-weight:600}
 .pay-input{
@@ -387,6 +409,15 @@ body.transitioning .btn{pointer-events:none}
 }
 .preset-add:active{border-color:var(--crust);color:var(--crust)}
 
+/* ── Theme Toggle ── */
+.theme-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
+.theme-toggle{display:flex;border-radius:8px;overflow:hidden;border:2px solid var(--surface2);background:var(--surface2)}
+.theme-opt{
+  padding:7px 14px;background:none;border:none;color:var(--muted);
+  font-size:.8rem;font-weight:600;cursor:pointer;border-radius:6px;transition:all .12s;
+}
+.theme-opt.active{background:var(--cherry);color:#fff}
+
 /* ── Who Paid Badges ── */
 .payer-row,.currency-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .payer-badge{
@@ -405,7 +436,7 @@ body.transitioning .btn{pointer-events:none}
 }
 .history-card:active{transform:scale(.98);opacity:.85}
 .history-top{display:flex;justify-content:space-between;align-items:center}
-.history-label{font-weight:600;font-size:.95rem}
+.history-label{font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%}
 .history-date{font-size:.75rem;color:var(--muted)}
 .history-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
 .history-total{font-weight:700;color:var(--cherry);font-size:1.05rem}
@@ -416,9 +447,9 @@ body.transitioning .btn{pointer-events:none}
 .empty-state{text-align:center;color:var(--muted);padding:48px 20px;font-size:.9rem;line-height:1.6}
 
 /* ── Bill Detail ── */
-.detail-person{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #ffffff08}
+.detail-person{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border-subtle)}
 .detail-person:last-child{border-bottom:none}
-.detail-name{font-weight:600;font-size:.9rem}
+.detail-name{font-weight:600;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
 .detail-amount{font-size:.85rem;color:var(--cream-dim);margin-top:2px}
 .paid-btn{
   padding:6px 14px;border-radius:50px;font-size:.75rem;font-weight:600;
@@ -457,7 +488,7 @@ body.transitioning .btn{pointer-events:none}
 
 /* ── Pie Legend ── */
 .pie-legend{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 14px;margin-top:8px}
-.pie-legend-item{display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--cream-dim)}
+.pie-legend-item{display:flex;align-items:center;gap:4px;font-size:.75rem;color:var(--cream-dim);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pie-legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
 
 /* ── Toast ── */
@@ -487,3 +518,28 @@ body.transitioning .btn{pointer-events:none}
   opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1);pointer-events:none;
 }
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── Desktop responsive ── */
+@media (min-width:768px){
+  .container{max-width:720px}
+
+  /* Settings: name + payment full-width, rest 2-col */
+  #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  #screenSettings>h1,#screenSettings>.subtitle,#screenSettings>.nav-row{grid-column:1/-1}
+  #screenSettings>.card:nth-of-type(3),#screenSettings>.card:last-of-type{grid-column:1/-1}
+
+  /* Summary: tip card + summary card side by side */
+  #screenSummary.active{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
+  #screenSummary>.progress-dots,#screenSummary>h1,#screenSummary>.nav-row,
+  #screenSummary>.save-label-wrap,#screenSummary>#saveBillBtn,
+  #screenSummary>.btn-ghost:last-child{grid-column:1/-1}
+
+  /* Detail: summary + people side by side */
+  #screenDetail.active{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
+  #screenDetail>h1,#screenDetail>.subtitle,#screenDetail>.nav-row,
+  #screenDetail>#detailDelBtn{grid-column:1/-1}
+
+  /* History: cards in grid */
+  #historyList{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  #historyList .history-card{margin-bottom:0}
+}

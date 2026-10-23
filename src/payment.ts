@@ -23,6 +23,8 @@ export function savePayment(): void {
   Object.entries(state.payToggles).forEach(([k, v]) => data['tog' + k] = v);
   state.payment = data as unknown as typeof state.payment;
   localStorage.setItem('sp_payment', JSON.stringify(state.payment));
+  const me = state.people.find(p => p.isMe);
+  if (me && state.payment.name) me.name = state.payment.name;
 }
 
 export function togglePay(key: keyof typeof state.payToggles): void {
