@@ -31,8 +31,10 @@ export function getCurrency(): string {
   return currencySymbol;
 }
 
+const ZERO_DECIMAL = new Set(['¥']);
+
 export function fmt(n: number): string {
-  return currencySymbol + n.toFixed(2);
+  return currencySymbol + n.toFixed(ZERO_DECIMAL.has(currencySymbol) ? 0 : 2);
 }
 
 export function esc(s: string): string {
