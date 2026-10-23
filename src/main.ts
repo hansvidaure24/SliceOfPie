@@ -45,7 +45,7 @@ function renderCurrencySelect(): void {
   const current = getCurrency();
   const select = $('currencySelect') as HTMLSelectElement;
   select.innerHTML = CURRENCIES.map(c =>
-    `<option value="${c.symbol}" ${c.symbol === current ? 'selected' : ''}>${c.symbol} ${c.code}</option>`
+    `<option value="${c.symbol}" ${c.symbol === current ? 'selected' : ''}>${c.symbol} — ${c.name} (${c.code})</option>`
   ).join('');
   select.addEventListener('change', () => {
     setCurrency(select.value);
