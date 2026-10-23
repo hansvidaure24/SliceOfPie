@@ -41,23 +41,24 @@ $('themeToggle').addEventListener('click', (e) => {
   renderThemeToggle();
 });
 
-function renderCurrencyRow(): void {
+function renderCurrencySelect(): void {
   const current = getCurrency();
-  $('currencyRow').innerHTML = CURRENCIES.map(c =>
-    `<button class="payer-badge ${c.symbol === current ? 'on' : ''}" data-currency="${c.symbol}">${c.symbol} ${c.code}</button>`
+  const select = $('currencySelect') as HTMLSelectElement;
+  select.innerHTML = CURRENCIES.map(c =>
+    `<option value="${c.symbol}" ${c.symbol === current ? 'selected' : ''}>${c.symbol} ${c.code}</option>`
   ).join('');
-  // Update currency symbols in input labels
+  select.addEventListener('change', () => {
+    setCurrency(select.value);
+    updateCurrencySymbols();
+  });
+  updateCurrencySymbols();
+}
+
+function updateCurrencySymbols(): void {
   const sym = getCurrency();
   ['quickTotalSymbol', 'quickTaxSymbol', 'taxSymbol'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = sym;
-  });
-
-  $('currencyRow').querySelectorAll<HTMLButtonElement>('[data-currency]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      setCurrency(btn.dataset.currency!);
-      renderCurrencyRow();
-    });
   });
 }
 
@@ -67,7 +68,7 @@ renderThemeToggle();
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
   if (getThemePref() === 'system') applyTheme();
 });
-renderCurrencyRow();
+renderCurrencySelect();
 restorePaymentFields();
 Object.entries(state.payToggles).forEach(([key, on]) => setToggle('tog' + key, on));
 renderPresets();
