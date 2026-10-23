@@ -2,6 +2,8 @@
 
 Split bills without the awkward math. Snap a receipt, assign items, add tip, and share who owes what — all offline, all on-device.
 
+**[Live Demo](https://slice-of-pie-xi.vercel.app/)**
+
 <p align="center">
   <img src="docs/demo.gif" alt="SliceOfPie demo" width="600">
 </p>
