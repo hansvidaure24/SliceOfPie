@@ -1,5 +1,17 @@
-import { $, COLORS, esc } from './helpers';
+import { $, COLORS, esc, showToast } from './helpers';
 import { state } from './state';
+
+function loadLastGroup(): void {
+  const last = state.history[0];
+  if (!last) return;
+  state.people = last.people.map((p, i) => ({
+    name: p.name,
+    isMe: i === 0,
+  }));
+  $('peopleCount').textContent = String(state.people.length);
+  renderNames();
+  showToast('Loaded ' + last.people.length + ' people from "' + last.label + '"');
+}
 
 function otherCount(): number {
   return state.people.filter(p => !p.isMe).length;
@@ -45,7 +57,16 @@ export function renderNames(): void {
     </div>
   ` : '';
 
-  $('namesList').innerHTML = rows + joinRow;
+  const lastGroupBtn = state.history.length > 0
+    ? '<button class="btn btn-ghost last-group-btn" style="margin-top:8px;padding:8px;font-size:.75rem;width:auto;display:inline-block;border-color:var(--surface2)">Last group</button>'
+    : '';
+
+  $('namesList').innerHTML = rows + joinRow + lastGroupBtn;
+
+  const lastBtn = $('namesList').querySelector('.last-group-btn');
+  if (lastBtn) {
+    lastBtn.addEventListener('click', loadLastGroup);
+  }
 
   $('namesList').querySelectorAll<HTMLInputElement>('[data-person]').forEach(input => {
     const idx = Number(input.dataset.person);

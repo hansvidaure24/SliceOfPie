@@ -1,5 +1,6 @@
 /* ── Reset & Variables ── */
 *{margin:0;padding:0;box-sizing:border-box}
+html{background:#1A0E08}
 :root{
   --bg:#24140E;
   --bg2:#1A0E08;
@@ -37,6 +38,7 @@ body{
 .container{max-width:480px;margin:0 auto}
 h1{font-size:1.75rem;text-align:center;margin:8px 0;letter-spacing:-.02em;line-height:1.2}
 h1:focus{outline:none}
+.editable-title{cursor:pointer}
 .accent{color:var(--cherry)}
 .subtitle{text-align:center;color:var(--muted);font-size:.875rem;margin-bottom:20px;line-height:1.4}
 
@@ -386,7 +388,7 @@ body.transitioning .btn{pointer-events:none}
 .preset-add:active{border-color:var(--crust);color:var(--crust)}
 
 /* ── Who Paid Badges ── */
-.payer-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.payer-row,.currency-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .payer-badge{
   padding:8px 16px;border-radius:50px;font-size:.8rem;font-weight:600;
   cursor:pointer;border:2px solid var(--surface2);background:none;color:var(--muted);

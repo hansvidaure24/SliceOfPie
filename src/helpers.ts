@@ -7,8 +7,32 @@ export function $(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
 
+const CURRENCIES = [
+  { code: 'USD', symbol: '$' },
+  { code: 'EUR', symbol: '€' },
+  { code: 'GBP', symbol: '£' },
+  { code: 'JPY', symbol: '¥' },
+  { code: 'CAD', symbol: 'CA$' },
+  { code: 'AUD', symbol: 'A$' },
+  { code: 'MXN', symbol: 'MX$' },
+  { code: 'PHP', symbol: '₱' },
+] as const;
+
+export { CURRENCIES };
+
+let currencySymbol = localStorage.getItem('sp_currency') || '$';
+
+export function setCurrency(symbol: string): void {
+  currencySymbol = symbol;
+  localStorage.setItem('sp_currency', symbol);
+}
+
+export function getCurrency(): string {
+  return currencySymbol;
+}
+
 export function fmt(n: number): string {
-  return '$' + n.toFixed(2);
+  return currencySymbol + n.toFixed(2);
 }
 
 export function esc(s: string): string {

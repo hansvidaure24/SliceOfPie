@@ -1,4 +1,4 @@
-import { $, setToggle } from './helpers';
+import { $, setToggle, CURRENCIES, getCurrency, setCurrency } from './helpers';
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
 import { renderPresets, addPreset, renderTipRow, setTipBase } from './tip';
@@ -24,7 +24,28 @@ Object.assign(window, {
   renderHistory,
 });
 
+function renderCurrencyRow(): void {
+  const current = getCurrency();
+  $('currencyRow').innerHTML = CURRENCIES.map(c =>
+    `<button class="payer-badge ${c.symbol === current ? 'on' : ''}" data-currency="${c.symbol}">${c.symbol} ${c.code}</button>`
+  ).join('');
+  // Update currency symbols in input labels
+  const sym = getCurrency();
+  ['quickTotalSymbol', 'quickTaxSymbol', 'taxSymbol'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = sym;
+  });
+
+  $('currencyRow').querySelectorAll<HTMLButtonElement>('[data-currency]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      setCurrency(btn.dataset.currency!);
+      renderCurrencyRow();
+    });
+  });
+}
+
 // Restore saved state
+renderCurrencyRow();
 restorePaymentFields();
 Object.entries(state.payToggles).forEach(([key, on]) => setToggle('tog' + key, on));
 renderPresets();
