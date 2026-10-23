@@ -426,7 +426,7 @@ body.transitioning .btn{pointer-events:none}
 
 /* ── Currency Select ── */
 .currency-select{
-  width:100%;padding:10px 12px;background:var(--surface2);color:var(--text);
+  width:100%;padding:10px 32px 10px 12px;background:var(--surface2);color:var(--text);
   border:1.5px solid var(--surface-border);border-radius:var(--radius-sm);
   font-size:.9rem;font-weight:600;cursor:pointer;appearance:auto;
 }
