@@ -1,0 +1,17 @@
+{
+  "name": "sliceofpie",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^5.4.0",
+    "vite-plugin-pwa": "^0.19.8",
+    "workbox-precaching": "^7.4.1"
+  }
+}
