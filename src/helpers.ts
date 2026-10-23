@@ -8,14 +8,46 @@ export function $(id: string): HTMLElement {
 }
 
 const CURRENCIES = [
-  { code: 'USD', symbol: '$' },
-  { code: 'EUR', symbol: '€' },
-  { code: 'GBP', symbol: '£' },
-  { code: 'JPY', symbol: '¥' },
-  { code: 'CAD', symbol: 'CA$' },
-  { code: 'AUD', symbol: 'A$' },
-  { code: 'MXN', symbol: 'MX$' },
-  { code: 'PHP', symbol: '₱' },
+  { code: 'USD', symbol: '$', name: 'US Dollar' },
+  { code: 'EUR', symbol: '€', name: 'Euro' },
+  { code: 'GBP', symbol: '£', name: 'British Pound' },
+  { code: 'JPY', symbol: '¥', name: 'Japanese Yen' },
+  { code: 'CAD', symbol: 'CA$', name: 'Canadian Dollar' },
+  { code: 'AUD', symbol: 'A$', name: 'Australian Dollar' },
+  { code: 'MXN', symbol: 'MX$', name: 'Mexican Peso' },
+  { code: 'PHP', symbol: '₱', name: 'Philippine Peso' },
+  { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
+  { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
+  { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
+  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
+  { code: 'SEK', symbol: 'kr', name: 'Swedish Krona' },
+  { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone' },
+  { code: 'DKK', symbol: 'kr', name: 'Danish Krone' },
+  { code: 'NZD', symbol: 'NZ$', name: 'New Zealand Dollar' },
+  { code: 'SGD', symbol: 'S$', name: 'Singapore Dollar' },
+  { code: 'HKD', symbol: 'HK$', name: 'Hong Kong Dollar' },
+  { code: 'TWD', symbol: 'NT$', name: 'Taiwan Dollar' },
+  { code: 'THB', symbol: '฿', name: 'Thai Baht' },
+  { code: 'IDR', symbol: 'Rp', name: 'Indonesian Rupiah' },
+  { code: 'MYR', symbol: 'RM', name: 'Malaysian Ringgit' },
+  { code: 'VND', symbol: '₫', name: 'Vietnamese Dong' },
+  { code: 'ZAR', symbol: 'R', name: 'South African Rand' },
+  { code: 'TRY', symbol: '₺', name: 'Turkish Lira' },
+  { code: 'PLN', symbol: 'zł', name: 'Polish Zloty' },
+  { code: 'CZK', symbol: 'Kč', name: 'Czech Koruna' },
+  { code: 'HUF', symbol: 'Ft', name: 'Hungarian Forint' },
+  { code: 'RON', symbol: 'lei', name: 'Romanian Leu' },
+  { code: 'CLP', symbol: 'CL$', name: 'Chilean Peso' },
+  { code: 'COP', symbol: 'CO$', name: 'Colombian Peso' },
+  { code: 'PEN', symbol: 'S/', name: 'Peruvian Sol' },
+  { code: 'ARS', symbol: 'AR$', name: 'Argentine Peso' },
+  { code: 'ILS', symbol: '₪', name: 'Israeli Shekel' },
+  { code: 'AED', symbol: 'د.إ', name: 'UAE Dirham' },
+  { code: 'SAR', symbol: '﷼', name: 'Saudi Riyal' },
+  { code: 'EGP', symbol: 'E£', name: 'Egyptian Pound' },
+  { code: 'NGN', symbol: '₦', name: 'Nigerian Naira' },
+  { code: 'KES', symbol: 'KSh', name: 'Kenyan Shilling' },
 ] as const;
 
 export { CURRENCIES };
@@ -31,7 +63,7 @@ export function getCurrency(): string {
   return currencySymbol;
 }
 
-const ZERO_DECIMAL = new Set(['¥']);
+const ZERO_DECIMAL = new Set(['¥', '₩', '₫', 'CL$', 'Ft', 'Rp']);
 
 export function fmt(n: number): string {
   return currencySymbol + n.toFixed(ZERO_DECIMAL.has(currencySymbol) ? 0 : 2);
