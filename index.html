@@ -3,403 +3,41 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#3B2314">
+  <meta name="theme-color" content="#3A2418">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+
   <title>SliceOfPie</title>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    :root{
-      --bg:#2C1810;
-      --bg2:#241209;
-      --surface:#3B2314;
-      --surface2:#4A2E1C;
-      --surface-border:#5A3D2B;
-      --crust:#C4956A;
-      --cherry:#C0392B;
-      --cherry-glow:#C0392B40;
-      --cherry-dark:#962D22;
-      --cream:#FFF5E6;
-      --cream-dim:#D4C5A9;
-      --brown:#1A0E08;
-      --text:#FFF5E6;
-      --muted:#B8A282;
-      --radius:16px;
-      --radius-sm:10px;
-      --shadow:0 2px 12px #0004;
-      --shadow-lg:0 4px 24px #0006;
-    }
-    body{
-      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
-      background:linear-gradient(170deg,var(--bg) 0%,var(--bg2) 100%);
-      color:var(--text);
-      min-height:100dvh;
-      padding:20px;
-      padding-bottom:calc(24px + env(safe-area-inset-bottom,0px));
-      -webkit-font-smoothing:antialiased;
-    }
-    .container{max-width:480px;margin:0 auto}
-    h1{font-size:1.75rem;text-align:center;margin:8px 0;letter-spacing:-.02em;line-height:1.2}
-    .accent{color:var(--cherry)}
-    .subtitle{text-align:center;color:var(--muted);font-size:.875rem;margin-bottom:20px;line-height:1.4}
-
-    /* Buttons */
-    .btn{
-      display:block;width:100%;padding:16px;border:none;border-radius:50px;
-      font-size:1rem;font-weight:600;cursor:pointer;transition:all .15s;
-      min-height:48px;
-    }
-    .btn:active{transform:scale(.97);opacity:.85}
-    .btn-primary{
-      background:linear-gradient(135deg,var(--cherry) 0%,var(--cherry-dark) 100%);
-      color:#fff;box-shadow:0 4px 16px var(--cherry-glow);
-    }
-    .btn-secondary{background:var(--surface2);color:var(--cream);box-shadow:var(--shadow)}
-    .btn-ghost{background:transparent;border:1.5px solid var(--crust);color:var(--crust)}
-
-    .screen{display:none;animation:fadeSlideUp .25s cubic-bezier(.4,0,.2,1)}
-    .screen.active{display:block}
-    .screen.leaving{display:block;animation:fadeOut .15s ease-in forwards}
-    body.transitioning .btn{pointer-events:none}
-    @keyframes fadeSlideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
-    @keyframes fadeOut{from{opacity:1}to{opacity:0}}
-
-    /* Cards */
-    .card{
-      background:var(--surface);border-radius:var(--radius);padding:18px;margin-bottom:12px;
-      border:1px solid var(--surface-border);box-shadow:var(--shadow);
-    }
-    .section-label{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px;font-weight:600}
-
-    /* Logo */
-    .logo-wrap{text-align:center;margin:40px 0 12px}
-    .logo-wrap svg{width:96px;height:96px;filter:drop-shadow(0 4px 20px #0006)}
-    .float-slice{animation:sliceBob 3s ease-in-out infinite}
-    @keyframes sliceBob{0%,100%{transform:translate(6px,-6px)}50%{transform:translate(6px,-10px)}}
-    .app-title{font-size:2.25rem;font-weight:800;text-align:center;margin:8px 0;letter-spacing:-.03em}
-    .app-title .pie{color:var(--cherry)}
-
-    /* People setup */
-    .people-counter{display:flex;align-items:center;gap:20px;justify-content:center;margin:16px 0}
-    .counter-btn{
-      width:48px;height:48px;border-radius:50%;border:2px solid var(--crust);
-      background:none;color:var(--crust);font-size:1.5rem;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;transition:all .12s;
-    }
-    .counter-btn:active{background:var(--crust);color:var(--brown);transform:scale(.92)}
-    .counter-val{font-size:2.2rem;font-weight:800;min-width:40px;text-align:center}
-    .person-name-row{display:flex;align-items:center;gap:10px;padding:8px 0}
-    .person-color-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0;box-shadow:0 0 0 2px #ffffff10}
-    .person-name-input{
-      flex:1;background:none;border:none;border-bottom:1.5px solid var(--surface2);
-      color:var(--text);font-size:.95rem;padding:6px 2px;transition:border-color .15s;
-    }
-    .person-name-input:focus{border-color:var(--crust);outline:none;box-shadow:0 2px 0 var(--crust)}
-
-    /* Mode toggle */
-    .mode-toggle{display:flex;border-radius:50px;overflow:hidden;margin:14px 0;border:2px solid var(--surface2);background:var(--surface2)}
-    .mode-btn{
-      flex:1;padding:12px;background:none;border:none;
-      color:var(--muted);font-size:.85rem;font-weight:600;cursor:pointer;
-      border-radius:50px;transition:all .15s;
-    }
-    .mode-btn:active{opacity:.7}
-    .mode-btn.active{background:var(--cherry);color:#fff;box-shadow:0 2px 8px var(--cherry-glow)}
-
-    /* Capture */
-    .capture-btns{display:flex;flex-direction:column;gap:12px;margin-top:20px}
-    #photoInput{display:none}
-    .preview-img{width:100%;max-height:200px;object-fit:contain;border-radius:var(--radius);margin:14px 0}
-    .progress-wrap{margin:20px 0;text-align:center}
-    .progress-bar{width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:10px}
-    .progress-fill{height:100%;background:linear-gradient(90deg,var(--cherry),var(--crust));width:0%;transition:width .3s}
-    .progress-text{color:var(--muted);font-size:.85rem}
-
-    /* Items list */
-    .item-row{
-      display:flex;align-items:center;gap:8px;padding:12px 0;
-      border-bottom:1px solid #ffffff08;
-    }
-    .item-row:last-child{border-bottom:none}
-    .item-name{
-      flex:1;background:none;border:1px solid transparent;color:var(--text);
-      font-size:.9rem;padding:8px;border-radius:var(--radius-sm);transition:all .15s;
-    }
-    .item-name:focus{border-color:var(--crust);outline:none;background:var(--surface2)}
-    .item-price{
-      width:85px;background:var(--surface2);border:1px solid transparent;color:var(--cream);
-      font-size:.9rem;padding:8px;border-radius:var(--radius-sm);text-align:right;
-      font-variant-numeric:tabular-nums;
-    }
-    .item-price:focus{border-color:var(--crust);outline:none;box-shadow:0 0 0 3px var(--cherry-glow)}
-    .item-del{background:none;border:none;color:var(--cherry);font-size:1.2rem;cursor:pointer;padding:8px 10px;min-width:40px;min-height:40px;border-radius:50%;transition:background .12s}
-    .item-del:active{background:var(--cherry-glow)}
-    .add-btn{
-      display:block;width:100%;padding:12px;border:2px dashed var(--surface-border);
-      background:none;color:var(--muted);border-radius:var(--radius-sm);cursor:pointer;font-size:.9rem;margin-top:10px;transition:all .12s;
-    }
-    .add-btn:active{border-color:var(--crust);color:var(--crust)}
-
-    /* Assign badges */
-    .assign-wrap{padding:10px 0;border-bottom:1px solid #ffffff08}
-    .assign-wrap:last-child{border-bottom:none}
-    .assign-item-label{font-size:.85rem;color:var(--cream-dim);margin-bottom:6px;font-weight:500}
-    .assign-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-    .person-badge{
-      padding:6px 12px;border-radius:50px;font-size:.75rem;font-weight:600;
-      cursor:pointer;border:2px solid var(--surface2);background:none;color:var(--muted);
-      transition:all .12s;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .person-badge:active{transform:scale(.93)}
-    .person-badge.on{color:#fff}
-    .assign-action{
-      padding:4px 10px;border-radius:50px;font-size:.65rem;font-weight:700;
-      cursor:pointer;border:1.5px solid var(--surface-border);background:none;color:var(--muted);
-      text-transform:uppercase;letter-spacing:.5px;transition:all .12s;
-    }
-    .assign-action:active{border-color:var(--crust);color:var(--crust)}
-
-    /* Tax field */
-    .tax-row{display:flex;align-items:center;gap:8px;margin-top:10px}
-    .tax-label{font-size:.85rem;color:var(--muted);flex-shrink:0}
-    .tax-input{
-      width:95px;background:var(--surface2);border:1px solid transparent;color:var(--cream);
-      font-size:.9rem;padding:8px;border-radius:var(--radius-sm);text-align:right;
-      font-variant-numeric:tabular-nums;
-    }
-    .tax-input:focus{border-color:var(--crust);outline:none;box-shadow:0 0 0 3px var(--cherry-glow)}
-
-    /* Running subtotal */
-    .running-sub{
-      text-align:right;padding:10px 0;font-size:.9rem;color:var(--crust);font-weight:600;
-      border-top:1px solid #ffffff0a;margin-top:6px;
-    }
-
-    /* Tip buttons */
-    .tip-row{display:flex;gap:8px;margin:12px 0}
-    .tip-btn{
-      flex:1;padding:12px;border:2px solid var(--surface2);background:none;
-      color:var(--cream-dim);border-radius:50px;font-size:.9rem;font-weight:600;cursor:pointer;
-      transition:all .12s;min-height:44px;
-    }
-    .tip-btn:active{transform:scale(.95)}
-    .tip-btn.active{background:var(--cherry);border-color:var(--cherry);color:#fff;box-shadow:0 2px 8px var(--cherry-glow)}
-    .custom-tip{
-      width:72px;background:var(--surface2);border:1px solid transparent;color:var(--cream);
-      border-radius:50px;text-align:center;font-size:.9rem;padding:10px;font-variant-numeric:tabular-nums;
-    }
-    .custom-tip:focus{border-color:var(--crust);outline:none;box-shadow:0 0 0 3px var(--cherry-glow)}
-
-    /* Summary */
-    .sum-line{display:flex;justify-content:space-between;padding:6px 0;font-size:.9rem;color:var(--cream-dim)}
-    .sum-line.total{
-      font-size:1.25rem;font-weight:700;color:var(--cream);
-      border-top:2px solid var(--crust);padding-top:12px;margin-top:8px;
-    }
-    .per-person-label{text-align:center;color:var(--muted);font-size:.8rem;margin-top:14px;text-transform:uppercase;letter-spacing:1px}
-    .per-person-val{
-      text-align:center;font-size:2.5rem;font-weight:800;color:var(--cherry);
-      margin:6px 0 10px;transition:transform .15s;
-      text-shadow:0 2px 16px var(--cherry-glow);
-    }
-    .per-person-val.pulse,.sum-line.total .pulse{animation:numPulse .2s ease-out}
-    @keyframes numPulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
-
-    /* Pie chart */
-    .pie-chart-wrap{display:flex;justify-content:center;margin:20px 0}
-    .pie-chart-wrap svg{filter:drop-shadow(0 4px 16px #0006)}
-
-    /* Breakdown */
-    .breakdown-line{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;border-bottom:1px solid #ffffff08}
-    .breakdown-line:last-child{border-bottom:none}
-    .breakdown-name{font-weight:600}
-
-    /* Round toggle */
-    .round-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
-    .round-label{font-size:.875rem;color:var(--cream-dim)}
-    .toggle{
-      width:48px;height:26px;border-radius:13px;background:var(--surface2);
-      cursor:pointer;position:relative;transition:background .2s;border:none;
-      box-shadow:inset 0 1px 3px #0003;
-    }
-    .toggle.on{background:var(--cherry);box-shadow:0 0 8px var(--cherry-glow)}
-    .toggle::after{
-      content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;
-      border-radius:50%;background:var(--cream);transition:transform .2s;
-      box-shadow:0 1px 4px #0003;
-    }
-    .toggle.on::after{transform:translateX(22px)}
-
-    /* Nav */
-    .nav-row{display:flex;gap:10px;margin-top:20px}
-    .nav-row .btn{flex:1}
-
-    /* Warning banner */
-    .warn-banner{
-      background:#D4A01720;border:1.5px solid #D4A017;border-radius:var(--radius-sm);
-      padding:10px 14px;font-size:.8rem;color:#D4A017;margin-bottom:12px;
-      display:none;
-    }
-    .warn-banner.show{display:block}
-
-    /* Tip base toggle */
-    .tip-base-row{display:flex;gap:8px;margin-top:10px}
-    .tip-base-btn{
-      flex:1;padding:8px;border:1.5px solid var(--surface2);background:none;
-      color:var(--muted);border-radius:50px;font-size:.8rem;cursor:pointer;transition:all .12s;
-    }
-    .tip-base-btn:active{opacity:.7}
-    .tip-base-btn.active{border-color:var(--crust);color:var(--cream);background:var(--surface2)}
-
-    /* Tax included toggle on quick screen */
-    .tax-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
-
-    /* Settings */
-    .settings-gear{
-      position:absolute;top:20px;right:20px;background:none;border:none;cursor:pointer;
-      color:var(--muted);padding:10px;border-radius:50%;transition:all .12s;
-    }
-    .settings-gear:active{background:var(--surface2);opacity:.8}
-    .settings-gear svg{width:22px;height:22px}
-    .pay-row{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #ffffff08}
-    .pay-row:last-child{border-bottom:none}
-    .pay-icon{flex-shrink:0;font-size:.85rem;color:var(--crust);width:64px;font-weight:600}
-    .pay-input{
-      flex:1;background:none;border:none;border-bottom:1.5px solid var(--surface2);
-      color:var(--text);font-size:.9rem;padding:6px 2px;transition:border-color .15s;
-    }
-    .pay-input:focus{border-color:var(--crust);outline:none}
-    .pay-toggle{flex-shrink:0}
-
-    /* Tip presets in settings */
-    .preset-row{display:flex;align-items:center;gap:8px;padding:8px 0}
-    .preset-input{
-      width:64px;background:var(--surface2);border:1px solid transparent;color:var(--cream);
-      font-size:.9rem;padding:8px;border-radius:var(--radius-sm);text-align:center;
-    }
-    .preset-input:focus{border-color:var(--crust);outline:none}
-    .preset-del{background:none;border:none;color:var(--cherry);font-size:1rem;cursor:pointer;padding:6px 10px;min-width:36px;border-radius:50%;transition:background .12s}
-    .preset-del:active{background:var(--cherry-glow)}
-    .preset-add{
-      padding:8px 14px;border:1.5px dashed var(--surface-border);background:none;
-      color:var(--muted);border-radius:var(--radius-sm);cursor:pointer;font-size:.8rem;margin-top:6px;transition:all .12s;
-    }
-    .preset-add:active{border-color:var(--crust);color:var(--crust)}
-
-    /* Who paid badges */
-    .payer-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-    .payer-badge{
-      padding:8px 16px;border-radius:50px;font-size:.8rem;font-weight:600;
-      cursor:pointer;border:2px solid var(--surface2);background:none;color:var(--muted);
-      transition:all .12s;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-    }
-    .payer-badge:active{transform:scale(.93)}
-    .payer-badge.on{background:var(--cherry);border-color:var(--cherry);color:#fff;box-shadow:0 2px 8px var(--cherry-glow)}
-    .paid-tag{font-size:.75rem;color:var(--crust);font-style:italic}
-
-    /* History */
-    .history-card{
-      background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;
-      cursor:pointer;transition:all .12s;border:1px solid var(--surface-border);box-shadow:var(--shadow);
-    }
-    .history-card:active{transform:scale(.98);opacity:.85}
-    .history-top{display:flex;justify-content:space-between;align-items:center}
-    .history-label{font-weight:600;font-size:.95rem}
-    .history-date{font-size:.75rem;color:var(--muted)}
-    .history-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
-    .history-total{font-weight:700;color:var(--cherry);font-size:1.05rem}
-    .history-status{font-size:.75rem;padding:4px 10px;border-radius:50px;font-weight:600}
-    .status-none{background:#C0392B20;color:#E74C3C}
-    .status-partial{background:#D4A01720;color:#F0C040}
-    .status-done{background:#27AE6020;color:#2ECC71}
-    .empty-state{text-align:center;color:var(--muted);padding:48px 20px;font-size:.9rem;line-height:1.6}
-
-    /* Bill detail */
-    .detail-person{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #ffffff08}
-    .detail-person:last-child{border-bottom:none}
-    .detail-name{font-weight:600;font-size:.9rem}
-    .detail-amount{font-size:.85rem;color:var(--cream-dim);margin-top:2px}
-    .paid-btn{
-      padding:6px 14px;border-radius:50px;font-size:.75rem;font-weight:600;
-      cursor:pointer;border:1.5px solid var(--surface2);background:none;color:var(--muted);
-      transition:all .12s;min-height:32px;
-    }
-    .paid-btn:active{transform:scale(.95)}
-    .paid-btn.paid{background:#27AE60;border-color:#27AE60;color:#fff;box-shadow:0 2px 8px #27AE6040}
-    .del-confirm{background:var(--cherry);border-color:var(--cherry);color:#fff}
-
-    /* Save bill label input */
-    .save-label-wrap{display:none;margin-bottom:12px}
-    .save-label-wrap.show{display:flex;gap:8px;align-items:center}
-    .save-label-input{
-      flex:1;background:var(--surface2);border:1px solid transparent;color:var(--cream);
-      font-size:.9rem;padding:10px 12px;border-radius:var(--radius-sm);
-    }
-    .save-label-input:focus{border-color:var(--crust);outline:none}
-
-    /* Share toast */
-    .toast{
-      position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(8px);
-      background:var(--surface);color:var(--cream);padding:12px 24px;border-radius:50px;
-      font-size:.85rem;font-weight:600;box-shadow:var(--shadow-lg);
-      border:1px solid var(--surface-border);
-      opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1);pointer-events:none;
-    }
-    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js" defer></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div class="container">
+<main class="container">
 
 <!-- SCREEN 0: Welcome -->
-<div id="screenWelcome" class="screen active" style="position:relative">
+<div id="screenWelcome" class="screen screen-welcome active">
   <button class="settings-gear" onclick="goTo('screenSettings')" aria-label="Settings">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.43 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.43a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
     </svg>
   </button>
   <div class="logo-wrap">
-    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="crustGrad" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#D4A574"/>
-          <stop offset="100%" stop-color="#A0714A"/>
-        </linearGradient>
-        <linearGradient id="fillGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stop-color="#C0392B"/>
-          <stop offset="100%" stop-color="#922B21"/>
-        </linearGradient>
-      </defs>
-      <!-- Pie base -->
-      <circle cx="50" cy="52" r="38" fill="url(#crustGrad)"/>
-      <!-- Pie fill -->
-      <circle cx="50" cy="52" r="33" fill="url(#fillGrad)"/>
-      <!-- Lattice lines -->
-      <g stroke="#D4A574" stroke-width="3" stroke-linecap="round" opacity=".7">
-        <line x1="22" y1="40" x2="78" y2="40"/>
-        <line x1="20" y1="52" x2="80" y2="52"/>
-        <line x1="22" y1="64" x2="78" y2="64"/>
-        <line x1="38" y1="22" x2="38" y2="82"/>
-        <line x1="50" y1="20" x2="50" y2="84"/>
-        <line x1="62" y1="22" x2="62" y2="82"/>
-      </g>
-      <!-- Slice cut -->
-      <path d="M50 52 L74 30 A38 38 0 0 1 80 52 Z" fill="#2C1810" opacity=".6"/>
-      <!-- Floating slice -->
-      <g class="float-slice">
-        <path d="M50 52 L74 30 A38 38 0 0 1 80 52 Z" fill="url(#crustGrad)"/>
-        <path d="M52 51 L72 33 A33 33 0 0 1 77 51 Z" fill="url(#fillGrad)"/>
-        <line x1="56" y1="38" x2="72" y2="46" stroke="#D4A574" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
-      </g>
-    </svg>
+    <img src="/logo-pie.png" alt="" class="logo-pie">
+    <img src="/logo-slice.png" alt="" class="logo-slice">
   </div>
   <div class="app-title">SliceOf<span class="pie">Pie</span></div>
   <p class="subtitle">Everybody gets their slice</p>
-  <div style="margin-top:40px;display:flex;flex-direction:column;gap:12px">
+  <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px;width:100%">
     <button class="btn btn-primary" onclick="goTo('screenPeople')">Get Started</button>
-    <button class="btn btn-secondary" onclick="goTo('screenHistory')">History</button>
+    <div class="history-btn-wrap">
+      <button class="btn btn-secondary" onclick="goTo('screenHistory')"><span class="bill-icon" style="margin-right:6px"></span>History</button>
+      <span class="badge" id="histBadge" style="display:none">0</span>
+    </div>
   </div>
 </div>
 
@@ -438,7 +76,10 @@
   <div class="card">
     <div class="section-label">Tip Presets</div>
     <div id="presetsList"></div>
-    <button class="preset-add" id="presetAddBtn" onclick="addPreset()">+ Add Preset</button>
+    <button class="preset-add" id="presetAddBtn" onclick="addPreset()"><span class="add-icon" style="margin-right:4px"></span>Add Preset</button>
+  </div>
+  <div class="card" style="background:var(--bg);border:1px dashed var(--muted);text-align:center;padding:12px 16px">
+    <p style="margin:0;font-size:.8rem;color:var(--muted)">Your data is saved locally on this device only. Nothing is sent to a server.</p>
   </div>
   <div class="nav-row">
     <button class="btn btn-ghost" onclick="goTo('screenWelcome')">Back</button>
@@ -466,44 +107,40 @@
   </div>
   <div class="nav-row">
     <button class="btn btn-ghost" onclick="goTo('screenHistory');renderHistory()">Back</button>
-    <button class="btn btn-primary" onclick="reshareDetail()">Share</button>
+    <button class="btn btn-primary" onclick="reshareDetail()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
   </div>
-  <button class="btn btn-ghost" id="detailDelBtn" style="margin-top:10px;border-color:var(--cherry);color:var(--cherry)" onclick="deleteBill()">Delete Bill</button>
+  <button class="btn btn-ghost" id="detailDelBtn" style="margin-top:10px;border-color:var(--cherry);color:var(--cherry)" onclick="deleteBill()"><span class="trash-icon" style="margin-right:6px"></span>Delete Bill</button>
 </div>
 
 <!-- SCREEN 1: People Setup -->
 <div id="screenPeople" class="screen">
+  <div class="progress-dots"><span class="progress-dot active"></span><span class="progress-dot"></span><span class="progress-dot"></span></div>
   <h1>Who's <span class="accent">splitting?</span></h1>
   <p class="subtitle">How many people at the table?</p>
   <div class="card">
     <div class="people-counter">
       <button class="counter-btn" onclick="changePeople(-1)" aria-label="Remove person">−</button>
-      <span class="counter-val" id="peopleCount">2</span>
+      <span class="counter-val" id="peopleCount" aria-live="polite" aria-label="Number of people">2</span>
       <button class="counter-btn" onclick="changePeople(1)" aria-label="Add person">+</button>
     </div>
     <div id="namesList"></div>
   </div>
   <div class="card">
-    <div class="round-row">
-      <span class="round-label">I'm part of this bill</span>
-      <button class="toggle on" id="partOfBillToggle" onclick="togglePartOfBill()" role="switch" aria-checked="true" aria-label="I'm part of this bill"></button>
-    </div>
-  </div>
-  <div class="card">
     <div class="section-label">Split Method</div>
     <div class="mode-toggle">
       <button class="mode-btn active" id="modeEven" onclick="setSplitMode('even')">Even Split</button>
-      <button class="mode-btn" id="modeItem" onclick="setSplitMode('item')">By Item</button>
+      <button class="mode-btn" id="modeItem" onclick="setSplitMode('item')"><span class="list-icon" style="margin-right:4px"></span>By Item</button>
     </div>
   </div>
   <div class="nav-row">
     <button class="btn btn-ghost" onclick="goTo('screenWelcome')">Back</button>
-    <button class="btn btn-primary" onclick="goTo(splitMode==='even'?'screenQuick':'screenCapture')">Next</button>
+    <button class="btn btn-primary" onclick="goToNextFromPeople()">Next</button>
   </div>
 </div>
 
 <!-- SCREEN 2a: Quick Entry (Even Split) -->
 <div id="screenQuick" class="screen">
+  <div class="progress-dots"><span class="progress-dot done"></span><span class="progress-dot active"></span><span class="progress-dot"></span></div>
   <h1>The <span class="accent">total</span></h1>
   <p class="subtitle">Enter the bottom-line number from the receipt</p>
   <div class="card">
@@ -512,7 +149,7 @@
       <span style="font-size:1.4rem;color:var(--crust);font-weight:700">$</span>
       <input id="quickTotal" class="item-price" type="number" inputmode="decimal" step="0.01"
              placeholder="0.00" style="width:100%;font-size:1.3rem;padding:10px 8px"
-             oninput="quickTotalAmt=parseFloat(this.value)||0">
+             aria-label="Receipt total">
     </div>
     <div class="tax-toggle-row">
       <span class="round-label">Tax already included?</span>
@@ -525,7 +162,7 @@
       <span style="font-size:1.1rem;color:var(--crust)">$</span>
       <input id="quickTax" class="item-price" type="number" inputmode="decimal" step="0.01"
              placeholder="0.00" style="width:100%;font-size:1rem;padding:8px"
-             oninput="quickTaxAmt=parseFloat(this.value)||0">
+             aria-label="Tax amount">
     </div>
   </div>
   <div class="nav-row">
@@ -536,15 +173,16 @@
 
 <!-- SCREEN 2b: Capture (By Item) -->
 <div id="screenCapture" class="screen">
+  <div class="progress-dots"><span class="progress-dot done"></span><span class="progress-dot active"></span><span class="progress-dot"></span></div>
   <h1>Scan the <span class="accent">receipt</span></h1>
   <p class="subtitle">Take a photo or enter items manually</p>
   <div class="capture-btns">
-    <button class="btn btn-primary" onclick="takePhoto()">Take Photo</button>
-    <button class="btn btn-secondary" onclick="uploadPhoto()">Upload from Gallery</button>
+    <button class="btn btn-primary camera-btn" onclick="takePhoto()"><span class="camera-icon" style="margin-right:6px"></span>Take Photo</button>
+    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon" style="margin-right:6px"></span>Upload from Gallery</button>
     <input type="file" id="photoInput" accept="image/*">
-    <button class="btn btn-ghost" onclick="skipToManual()">Enter Manually</button>
+    <button class="btn btn-ghost" onclick="skipToManual()"><span class="pencil-icon" style="margin-right:6px"></span>Enter Manually</button>
   </div>
-  <img id="previewImg" class="preview-img" style="display:none">
+  <img id="previewImg" class="preview-img" alt="Receipt preview" style="display:none">
   <div id="progressWrap" class="progress-wrap" style="display:none">
     <p class="progress-text" id="progressText">Scanning receipt...</p>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
@@ -556,21 +194,22 @@
 
 <!-- SCREEN 3: Edit Items -->
 <div id="screenItems" class="screen">
+  <div class="progress-dots" id="dotItems"><span class="progress-dot done"></span><span class="progress-dot active"></span><span class="progress-dot"></span></div>
   <h1>Your <span class="accent">items</span></h1>
   <p class="subtitle">Fix anything the scan missed</p>
   <div class="card">
     <div id="itemsList"></div>
-    <button class="add-btn" onclick="addItem()">+ Add Item</button>
+    <button class="add-btn" onclick="addItem()"><span class="add-icon" style="margin-right:4px"></span>Add Item</button>
     <div class="tax-row">
       <span class="tax-label">Tax</span>
       <span style="color:var(--muted);font-size:.85rem">$</span>
-      <input class="tax-input" id="taxInput" type="number" inputmode="decimal" step="0.01" value="0" placeholder="0.00" oninput="taxAmt=parseFloat(this.value)||0;updateRunning()">
+      <input class="tax-input" id="taxInput" type="number" inputmode="decimal" step="0.01" value="0" placeholder="0.00" aria-label="Tax amount">
     </div>
     <div class="running-sub" id="runningSub">Subtotal: $0.00</div>
   </div>
 
   <div id="assignSection" style="display:none">
-    <div class="warn-banner" id="unassignedWarn">Some items aren't assigned to anyone — they won't be included in the split.</div>
+    <div class="warn-banner" id="unassignedWarn"><span class="warning-icon" style="margin-right:6px;background:#D4A017"></span>Some items aren't assigned to anyone — they won't be included in the split.</div>
     <div class="card">
       <div class="section-label">Assign items to people</div>
       <div id="assignList"></div>
@@ -585,6 +224,7 @@
 
 <!-- SCREEN 4: Tip & Summary -->
 <div id="screenSummary" class="screen">
+  <div class="progress-dots"><span class="progress-dot done"></span><span class="progress-dot done"></span><span class="progress-dot active"></span></div>
   <h1>The <span class="accent">bill</span></h1>
 
   <div class="card">
@@ -594,16 +234,12 @@
       <button class="tip-base-btn active" id="tipPreTax" onclick="setTipBase('pre')">On pre-tax</button>
       <button class="tip-base-btn" id="tipPostTax" onclick="setTipBase('post')">On post-tax</button>
     </div>
-  </div>
-
-  <div class="card">
+    <div class="card-divider"></div>
     <div class="round-row">
-      <span class="round-label">Round up to nearest dollar</span>
+      <span class="round-label"><span class="arrow-up-icon" style="margin-right:4px"></span>Round up to nearest dollar</span>
       <button class="toggle" id="roundToggle" onclick="toggleRound()" role="switch" aria-checked="false" aria-label="Round up"></button>
     </div>
-  </div>
-
-  <div class="card">
+    <div class="card-divider"></div>
     <div class="section-label">Who paid?</div>
     <div class="payer-row" id="payerRow"></div>
   </div>
@@ -627,936 +263,21 @@
     </div>
   </div>
 
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo(splitMode==='even'?'screenQuick':'screenItems')">Back</button>
-    <button class="btn btn-primary" onclick="doShare()">Share</button>
+  <div class="nav-row" style="margin-top:12px">
+    <button class="btn btn-ghost" onclick="goBackFromSummary()">Back</button>
+    <button class="btn btn-primary" onclick="doShare()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
   </div>
-  <div class="save-label-wrap" id="saveLabelWrap">
-    <input class="save-label-input" id="saveLabelInput" placeholder="Label this bill...">
+  <div class="save-label-wrap" id="saveLabelWrap" style="margin-top:8px">
+    <input class="save-label-input" id="saveLabelInput" placeholder="Label this bill..." aria-label="Bill label">
     <button class="btn btn-primary btn-small" onclick="confirmSave()" style="display:inline-block;width:auto;padding:8px 16px">Save</button>
   </div>
-  <button class="btn btn-secondary" style="margin-top:10px" id="saveBillBtn" onclick="startSaveBill()">Save Bill</button>
-  <button class="btn btn-ghost" style="margin-top:10px;border-color:var(--muted);color:var(--muted)" onclick="newBill()">New Bill</button>
+  <button class="btn btn-secondary" style="margin-top:8px" id="saveBillBtn" onclick="startSaveBill()"><span class="bill-icon" style="margin-right:6px"></span>Save Bill</button>
+  <button class="btn btn-ghost" style="margin-top:8px;border-color:var(--muted);color:var(--muted)" onclick="newBill()">New Bill</button>
 </div>
 
-<div class="toast" id="toast">Copied to clipboard!</div>
-</div><!-- /container -->
+<div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
+</main><!-- /container -->
 
-<script>
-// ── State ──
-let people = [{name:(JSON.parse(localStorage.getItem('sp_payment')||'{}').name||'Me'),isMe:true},{name:'Person 1'}];
-let splitMode = 'even';
-let items = [];
-let taxAmt = 0;
-let quickTotalAmt = 0;
-let quickTaxAmt = 0;
-let tipPct = parseInt(localStorage.getItem('sp_tip')) || 18;
-let tipBase = 'pre';
-let taxIncluded = true;
-let roundUp = false;
-let payer = 'me'; // 'me' or person index
-let imPartOfBill = true;
-
-const COLORS = ['#C0392B','#2E86C1','#D4A017','#27AE60','#8E44AD','#16A085','#D35400','#2C3E50'];
-const $ = id => document.getElementById(id);
-const fmt = n => '$' + n.toFixed(2);
-const esc = s => s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
-
-// ── Payment settings ──
-let payment = JSON.parse(localStorage.getItem('sp_payment') || '{}');
-// Restore fields
-if (payment.name) $('payName').value = payment.name;
-if (payment.venmo) $('payVenmo').value = payment.venmo;
-if (payment.zelle) $('payZelle').value = payment.zelle;
-if (payment.cashApp) $('payCashApp').value = payment.cashApp;
-if (payment.otherLabel) $('payOtherLabel').value = payment.otherLabel;
-if (payment.otherValue) $('payOtherValue').value = payment.otherValue;
-// Restore toggles (default on)
-const payToggles = {Venmo: payment.togVenmo !== false, Zelle: payment.togZelle !== false, CashApp: payment.togCashApp !== false, Other: payment.togOther !== false};
-Object.entries(payToggles).forEach(([k, v]) => {
-  const el = $('tog' + k);
-  el.classList.toggle('on', v);
-  el.setAttribute('aria-checked', v);
-});
-
-function savePayment() {
-  payment = {
-    name: $('payName').value.trim(),
-    venmo: $('payVenmo').value.trim(),
-    zelle: $('payZelle').value.trim(),
-    cashApp: $('payCashApp').value.trim(),
-    otherLabel: $('payOtherLabel').value.trim(),
-    otherValue: $('payOtherValue').value.trim(),
-    togVenmo: payToggles.Venmo,
-    togZelle: payToggles.Zelle,
-    togCashApp: payToggles.CashApp,
-    togOther: payToggles.Other,
-  };
-  localStorage.setItem('sp_payment', JSON.stringify(payment));
-}
-
-function togglePay(key) {
-  payToggles[key] = !payToggles[key];
-  const el = $('tog' + key);
-  el.classList.toggle('on', payToggles[key]);
-  el.setAttribute('aria-checked', payToggles[key]);
-  savePayment();
-}
-
-function getPaymentLines() {
-  const lines = [];
-  if (payToggles.Venmo && payment.venmo) lines.push('Venmo: ' + payment.venmo);
-  if (payToggles.Zelle && payment.zelle) lines.push('Zelle: ' + payment.zelle);
-  if (payToggles.CashApp && payment.cashApp) lines.push('Cash App: ' + payment.cashApp);
-  if (payToggles.Other && payment.otherLabel && payment.otherValue) lines.push(payment.otherLabel + ': ' + payment.otherValue);
-  if (lines.length === 0) return [];
-  const sendTo = payment.name ? 'Send to ' + payment.name + ':' : 'Send to:';
-  return ['', sendTo, ...lines];
-}
-
-// ── Tip Presets ──
-let tipPresets = JSON.parse(localStorage.getItem('sp_tipPresets') || 'null') || [15, 18, 20];
-
-function renderPresets() {
-  const list = $('presetsList');
-  list.innerHTML = tipPresets.map((p, i) => `
-    <div class="preset-row">
-      <input class="preset-input" type="number" inputmode="decimal" value="${p}" min="0" max="100"
-             onchange="updatePreset(${i},this.value)">
-      <span style="color:var(--muted);font-size:.85rem">%</span>
-      ${tipPresets.length > 2 ? `<button class="preset-del" onclick="removePreset(${i})">×</button>` : ''}
-    </div>
-  `).join('');
-  $('presetAddBtn').style.display = tipPresets.length >= 4 ? 'none' : 'block';
-}
-
-function updatePreset(i, val) {
-  const v = Math.max(0, Math.min(100, Math.round(parseFloat(val) || 0)));
-  tipPresets[i] = v;
-  tipPresets.sort((a, b) => a - b);
-  // Remove duplicates
-  tipPresets = [...new Set(tipPresets)];
-  savePresets();
-  renderPresets();
-}
-
-function addPreset() {
-  if (tipPresets.length >= 4) return;
-  tipPresets.push(25);
-  tipPresets.sort((a, b) => a - b);
-  tipPresets = [...new Set(tipPresets)];
-  savePresets();
-  renderPresets();
-}
-
-function removePreset(i) {
-  if (tipPresets.length <= 2) return;
-  tipPresets.splice(i, 1);
-  savePresets();
-  renderPresets();
-}
-
-function savePresets() {
-  localStorage.setItem('sp_tipPresets', JSON.stringify(tipPresets));
-}
-
-function renderTipRow() {
-  $('tipRow').innerHTML = tipPresets.map(p =>
-    `<button class="tip-btn ${p === tipPct ? 'active' : ''}" data-tip="${p}" onclick="setTip(${p})">${p}%</button>`
-  ).join('') + `<input class="custom-tip" id="customTip" type="number" inputmode="decimal" placeholder="%" oninput="setCustomTip()">`;
-}
-
-renderPresets();
-renderTipRow();
-
-// ── People ──
-function otherCount() { return people.filter(p => !p.isMe).length; }
-function changePeople(d) {
-  const others = otherCount();
-  const target = Math.max(1, Math.min(8, others + d));
-  while (otherCount() < target) {
-    const num = otherCount() + 1;
-    people.push({name: 'Person ' + num});
-  }
-  while (otherCount() > target) {
-    for (let i = people.length - 1; i >= 0; i--) {
-      if (!people[i].isMe) { people.splice(i, 1); break; }
-    }
-  }
-  if (typeof payer === 'number' && payer >= people.length) payer = imPartOfBill ? 'me' : 0;
-  $('peopleCount').textContent = people.length;
-  renderNames();
-}
-
-function renderNames() {
-  $('namesList').innerHTML = people.map((p, i) => `
-    <div class="person-name-row">
-      <div class="person-color-dot" style="background:${p.isMe ? 'var(--crust)' : COLORS[i % 8]}"></div>
-      <input class="person-name-input" value="${esc(p.name)}" placeholder="${p.isMe ? 'Your name' : 'Name'}"
-             oninput="people[${i}].name=this.value||'${p.isMe ? 'Me' : 'Person '+(i+1)}'"
-             style="${p.isMe ? 'border-bottom-color:var(--crust)' : ''}">
-      ${p.isMe ? '<span style="font-size:.7rem;color:var(--crust);flex-shrink:0">(you)</span>' : ''}
-    </div>
-  `).join('');
-}
-renderNames();
-
-// ── Split Mode ──
-function setSplitMode(mode) {
-  splitMode = mode;
-  $('modeEven').classList.toggle('active', mode === 'even');
-  $('modeItem').classList.toggle('active', mode === 'item');
-}
-
-// ── Tax included toggle (even split) ──
-function toggleTaxInc() {
-  taxIncluded = !taxIncluded;
-  const el = $('taxIncToggle');
-  el.classList.toggle('on', taxIncluded);
-  el.setAttribute('aria-checked', taxIncluded);
-  $('quickTaxCard').style.display = taxIncluded ? 'none' : 'block';
-  if (taxIncluded) { quickTaxAmt = 0; $('quickTax').value = ''; }
-}
-
-// ── $0 guard for quick entry ──
-function quickNext() {
-  if (quickTotalAmt <= 0) { showToast('Enter a total first'); return; }
-  goToSummary();
-}
-
-// ── Unassigned warning + guard for items ──
-function itemsNext() {
-  const sub = items.reduce((s, it) => s + (it.price || 0), 0);
-  if (sub <= 0) { showToast('Add at least one item'); return; }
-  if (splitMode === 'item') {
-    const unassigned = items.filter(it => (it.price || 0) > 0 && (!it.assignees || it.assignees.length === 0));
-    const warn = $('unassignedWarn');
-    if (unassigned.length > 0) {
-      if (!warn.classList.contains('show')) {
-        warn.classList.add('show');
-        warn.scrollIntoView({behavior:'smooth',block:'center'});
-        showToast(unassigned.length + ' item(s) unassigned');
-        return;
-      }
-      // Second tap proceeds anyway — user saw the warning
-    }
-    warn.classList.remove('show');
-  }
-  goToSummary();
-}
-
-// ── Tip base (pre/post tax) ──
-function setTipBase(base) {
-  tipBase = base;
-  $('tipPreTax').classList.toggle('active', base === 'pre');
-  $('tipPostTax').classList.toggle('active', base === 'post');
-  updateSummary();
-}
-
-// ── New Bill ──
-function newBill() {
-  people = [{name: payment.name || 'Me', isMe: true},{name:'Person 1'}];
-  splitMode = 'even';
-  items = [];
-  taxAmt = 0;
-  quickTotalAmt = 0;
-  quickTaxAmt = 0;
-  taxIncluded = true;
-  roundUp = false;
-  tipBase = 'pre';
-  payer = 'me';
-  imPartOfBill = true;
-  $('partOfBillToggle').classList.add('on');
-  $('partOfBillToggle').setAttribute('aria-checked', 'true');
-  $('peopleCount').textContent = 2;
-  $('roundToggle').classList.remove('on');
-  $('roundToggle').setAttribute('aria-checked', 'false');
-  $('taxIncToggle').classList.add('on');
-  $('taxIncToggle').setAttribute('aria-checked', 'true');
-  $('quickTaxCard').style.display = 'none';
-  $('quickTotal').value = '';
-  $('quickTax').value = '';
-  $('taxInput').value = '';
-  $('modeEven').classList.add('active');
-  $('modeItem').classList.remove('active');
-  $('tipPreTax').classList.add('active');
-  $('tipPostTax').classList.remove('active');
-  $('unassignedWarn').classList.remove('show');
-  $('previewImg').style.display = 'none';
-  $('progressWrap').style.display = 'none';
-  $('progressFill').style.width = '0%';
-  $('photoInput').value = '';
-  billSavedThisSession = false;
-  $('saveBillBtn').textContent = 'Save Bill';
-  $('saveBillBtn').style.opacity = '1';
-  $('saveLabelWrap').classList.remove('show');
-  renderTipRow();
-  renderNames();
-  goTo('screenWelcome');
-}
-
-// ── Camera ──
-function takePhoto() {
-  const input = $('photoInput');
-  input.setAttribute('capture', 'environment');
-  input.click();
-}
-function uploadPhoto() {
-  const input = $('photoInput');
-  input.removeAttribute('capture');
-  input.click();
-}
-
-$('photoInput').addEventListener('change', async e => {
-  const file = e.target.files[0];
-  if (!file) return;
-  $('previewImg').src = URL.createObjectURL(file);
-  $('previewImg').style.display = 'block';
-  $('progressWrap').style.display = 'block';
-  await runOCR(file);
-});
-
-async function runOCR(file) {
-  try {
-    const { data } = await Tesseract.recognize(file, 'eng', {
-      logger: m => {
-        if (m.status === 'recognizing text') {
-          const pct = Math.round(m.progress * 100);
-          $('progressFill').style.width = pct + '%';
-          $('progressText').textContent = 'Scanning... ' + pct + '%';
-        }
-      }
-    });
-    const parsed = parseReceipt(data.text);
-    items = parsed.items.length ? parsed.items : [{name: '', price: 0}];
-    taxAmt = parsed.tax;
-    $('taxInput').value = taxAmt || '';
-    enterItemsScreen();
-  } catch {
-    $('progressText').textContent = 'Scan failed — entering manual mode';
-    setTimeout(skipToManual, 1000);
-  }
-}
-
-function parseReceipt(text) {
-  const lines = text.split('\n');
-  const priceRe = /\$?\s*(\d+\.\d{2})\s*$/;
-  const result = {items: [], tax: 0};
-  for (const line of lines) {
-    const m = line.match(priceRe);
-    if (!m) continue;
-    const price = parseFloat(m[1]);
-    let name = line.slice(0, m.index).replace(/[^a-zA-Z0-9 &'/-]/g, '').trim();
-    if (!name) name = 'Item';
-    if (/\b(total|subtotal|balance|change|visa|master|amex|cash|gratuity|due)\b/i.test(name)) continue;
-    if (/\btax\b/i.test(name)) { result.tax = price; continue; }
-    if (price > 0 && price < 500) result.items.push({name, price});
-  }
-  return result;
-}
-
-function skipToManual() {
-  items = [{name: '', price: 0}];
-  taxAmt = 0;
-  $('taxInput').value = '';
-  enterItemsScreen();
-}
-
-function enterItemsScreen() {
-  renderItems();
-  updateRunning();
-  if (splitMode === 'item') renderAssign();
-  $('assignSection').style.display = splitMode === 'item' ? 'block' : 'none';
-  goTo('screenItems');
-}
-
-// ── Items ──
-function renderItems() {
-  $('itemsList').innerHTML = items.map((it, i) => `
-    <div class="item-row">
-      <input class="item-name" value="${esc(it.name)}" placeholder="Item name"
-             oninput="items[${i}].name=this.value">
-      <input class="item-price" type="number" inputmode="decimal" step="0.01"
-             value="${it.price || ''}" placeholder="0.00"
-             oninput="items[${i}].price=parseFloat(this.value)||0;updateRunning()">
-      <button class="item-del" onclick="removeItem(${i})" aria-label="Remove item">×</button>
-    </div>
-  `).join('');
-}
-
-function addItem() {
-  items.push({name: '', price: 0});
-  renderItems();
-  if (splitMode === 'item') renderAssign();
-  // Focus the new name input
-  const inputs = $('itemsList').querySelectorAll('.item-name');
-  if (inputs.length) inputs[inputs.length - 1].focus();
-}
-
-function removeItem(i) {
-  items.splice(i, 1);
-  renderItems();
-  updateRunning();
-  if (splitMode === 'item') renderAssign();
-}
-
-function updateRunning() {
-  const sub = items.reduce((s, it) => s + (it.price || 0), 0);
-  $('runningSub').textContent = 'Subtotal: ' + fmt(sub) + (taxAmt ? ' + ' + fmt(taxAmt) + ' tax' : '');
-}
-
-// ── Assignment (By Item mode) ──
-function renderAssign() {
-  $('assignList').innerHTML = items.map((it, i) => {
-    if (!it.assignees) it.assignees = [];
-    const badges = people.map((p, pi) => {
-      const on = it.assignees.includes(pi);
-      return `<button class="person-badge ${on ? 'on' : ''}"
-        style="${on ? 'background:'+COLORS[pi%8]+';border-color:'+COLORS[pi%8] : ''}"
-        onclick="toggleAssign(${i},${pi})">${esc(p.name)}</button>`;
-    }).join('');
-    return `<div class="assign-wrap">
-      <div class="assign-item-label">${esc(it.name || 'Item ' + (i+1))} — ${fmt(it.price||0)}</div>
-      <div class="assign-row">
-        ${badges}
-        <button class="assign-action" onclick="assignAll(${i})">All</button>
-        <button class="assign-action" onclick="assignClear(${i})">Clear</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function toggleAssign(item, person) {
-  const a = items[item].assignees || (items[item].assignees = []);
-  const idx = a.indexOf(person);
-  idx >= 0 ? a.splice(idx, 1) : a.push(person);
-  renderAssign();
-}
-
-function assignAll(item) {
-  items[item].assignees = people.map((_, i) => i);
-  renderAssign();
-}
-
-function assignClear(item) {
-  items[item].assignees = [];
-  renderAssign();
-}
-
-// ── Tip ──
-function setTip(pct) {
-  tipPct = pct;
-  const custom = $('customTip');
-  if (custom) custom.value = '';
-  document.querySelectorAll('.tip-btn').forEach(b =>
-    b.classList.toggle('active', parseInt(b.dataset.tip) === pct)
-  );
-  localStorage.setItem('sp_tip', pct);
-  updateSummary();
-}
-
-function setCustomTip() {
-  const custom = $('customTip');
-  if (!custom) return;
-  const v = parseFloat(custom.value);
-  if (!isNaN(v) && v >= 0) {
-    tipPct = v;
-    document.querySelectorAll('.tip-btn').forEach(b => b.classList.remove('active'));
-    localStorage.setItem('sp_tip', v);
-    updateSummary();
-  }
-}
-
-// ── Round up ──
-function toggleRound() {
-  roundUp = !roundUp;
-  const el = $('roundToggle');
-  el.classList.toggle('on', roundUp);
-  el.setAttribute('aria-checked', roundUp);
-  updateSummary();
-}
-
-// ── Part of bill toggle ──
-function togglePartOfBill() {
-  imPartOfBill = !imPartOfBill;
-  const el = $('partOfBillToggle');
-  el.classList.toggle('on', imPartOfBill);
-  el.setAttribute('aria-checked', imPartOfBill);
-  if (imPartOfBill) {
-    // Insert "me" at front if not already there
-    if (!people[0]?.isMe) {
-      const myName = payment.name || 'Me';
-      people.unshift({name: myName, isMe: true});
-    }
-    payer = 'me';
-  } else {
-    // Remove "me" entry if it's still flagged
-    if (people[0]?.isMe) people.splice(0, 1);
-    // Ensure at least 1 other person
-    if (people.length === 0) people.push({name: 'Person 1'});
-    payer = 0;
-  }
-  $('peopleCount').textContent = people.length;
-  renderNames();
-}
-
-// ── Who Paid ──
-function renderPayerRow() {
-  let html = '';
-  people.forEach((p, i) => {
-    if (p.isMe) {
-      // "Me" shown as special badge with 'me' payer value
-      const on = payer === 'me' ? 'on' : '';
-      html += `<button class="payer-badge ${on}" onclick="setPayer('me')">${esc(p.name)} (you)</button>`;
-    } else {
-      const on = payer === i ? 'on' : '';
-      html += `<button class="payer-badge ${on}" onclick="setPayer(${i})">${esc(p.name)}</button>`;
-    }
-  });
-  $('payerRow').innerHTML = html;
-}
-
-function setPayer(who) {
-  payer = who;
-  renderPayerRow();
-  updateSummary();
-}
-
-function getPayerName() {
-  if (payer === 'me') {
-    const me = people.find(p => p.isMe);
-    return me ? me.name : (payment.name || 'Me');
-  }
-  return people[payer]?.name || 'Someone';
-}
-
-// ── Summary ──
-function goToSummary() {
-  renderTipRow();
-  renderPayerRow();
-  updateSummary();
-  goTo('screenSummary');
-}
-
-function calcOwes() {
-  let sub, tax;
-  if (splitMode === 'even') {
-    sub = quickTotalAmt;
-    tax = quickTaxAmt;
-  } else {
-    sub = items.reduce((s, it) => s + (it.price || 0), 0);
-    tax = taxAmt;
-  }
-  const tipOn = tipBase === 'post' ? sub + tax : sub;
-  const tip = tipOn * (tipPct / 100);
-  const total = sub + tax + tip;
-
-  if (splitMode === 'even') {
-    let pp = total / people.length;
-    if (roundUp) pp = Math.ceil(pp);
-    return people.map((p, i) => ({name: p.name, amount: pp, color: COLORS[i % 8]}));
-  }
-
-  // By item: proportional tax + tip
-  const owes = Array(people.length).fill(0);
-  for (const it of items) {
-    const a = it.assignees || [];
-    if (a.length === 0) continue;
-    const share = (it.price || 0) / a.length;
-    a.forEach(p => owes[p] += share);
-  }
-  const itemTotal = owes.reduce((s, v) => s + v, 0);
-
-  return people.map((p, i) => {
-    const pTax = itemTotal > 0 ? (owes[i] / itemTotal) * tax : tax / people.length;
-    const pTip = itemTotal > 0 ? (owes[i] / itemTotal) * tip : tip / people.length;
-    let amount = owes[i] + pTax + pTip;
-    if (roundUp) amount = Math.ceil(amount);
-    return {name: p.name, amount, color: COLORS[i % 8]};
-  });
-}
-
-function updateSummary() {
-  const sub = splitMode === 'even' ? quickTotalAmt : items.reduce((s, it) => s + (it.price || 0), 0);
-  const tax = splitMode === 'even' ? quickTaxAmt : taxAmt;
-  const tipOn = tipBase === 'post' ? sub + tax : sub;
-  const tip = tipOn * (tipPct / 100);
-  const total = sub + tax + tip;
-
-  const evenTaxInc = splitMode === 'even' && taxIncluded;
-  $('sumSubLabel').textContent = evenTaxInc ? 'Bill Total' : 'Subtotal';
-  $('sumTaxLine').style.display = evenTaxInc ? 'none' : 'flex';
-  $('tipBaseRow').style.display = evenTaxInc ? 'none' : 'flex';
-  const tipLabel = tipBase === 'post' && !evenTaxInc ? 'on post-tax' : evenTaxInc ? '' : 'on pre-tax';
-  $('sumTipLabel').textContent = 'Tip (' + tipPct + '%' + (tipLabel ? ' ' + tipLabel : '') + ')';
-
-  $('sumSub').textContent = fmt(sub);
-  $('sumTax').textContent = fmt(tax);
-  $('sumTipAmt').textContent = fmt(tip);
-  const totalEl = $('sumTotal');
-  const oldTotal = totalEl.textContent;
-  totalEl.textContent = fmt(total);
-  if (oldTotal !== fmt(total)) pulse(totalEl);
-
-  const breakdown = calcOwes();
-
-  if (splitMode === 'even') {
-    $('evenResult').style.display = 'block';
-    $('itemResult').style.display = 'none';
-    const ppEl = $('perPerson');
-    const oldPP = ppEl.textContent;
-    ppEl.textContent = fmt(breakdown[0]?.amount || 0);
-    if (oldPP !== ppEl.textContent) pulse(ppEl);
-    // Show per-person list with payer marked
-    const evenList = $('evenBreakdown');
-    if (evenList) {
-      evenList.innerHTML = breakdown.map((b, i) => {
-        const isPayer = (payer === 'me' && people[i]?.isMe) || payer === i;
-        return `<div class="breakdown-line">
-          <span class="breakdown-name" style="color:${b.color}">${esc(b.name)}${isPayer ? ' <span class="paid-tag">(paid)</span>' : ''}</span>
-          <span>${isPayer ? '<span class="paid-tag">—</span>' : fmt(b.amount)}</span>
-        </div>`;
-      }).join('');
-    }
-  } else {
-    $('evenResult').style.display = 'none';
-    $('itemResult').style.display = 'block';
-    renderPieChart(breakdown);
-    $('breakdownList').innerHTML = breakdown.map((b, i) => {
-      const isPayer = (payer === 'me' && people[i]?.isMe) || payer === i;
-      return `<div class="breakdown-line">
-        <span class="breakdown-name" style="color:${b.color}">${esc(b.name)}${isPayer ? ' <span class="paid-tag">(paid)</span>' : ''}</span>
-        <span>${isPayer ? '<span class="paid-tag">—</span>' : fmt(b.amount)}</span>
-      </div>`;
-    }).join('');
-  }
-}
-
-// ── Pie Chart (SVG) ──
-function renderPieChart(breakdown) {
-  const total = breakdown.reduce((s, b) => s + b.amount, 0);
-  if (total === 0) { $('pieChartWrap').innerHTML = ''; return; }
-
-  const size = 160, cx = 80, cy = 80, r = 70;
-  let angle = -Math.PI / 2;
-  let paths = '', labels = '';
-
-  breakdown.forEach((b, i) => {
-    const frac = b.amount / total;
-    if (frac <= 0) return;
-    const sweep = frac * Math.PI * 2;
-    const x1 = cx + r * Math.cos(angle);
-    const y1 = cy + r * Math.sin(angle);
-    const x2 = cx + r * Math.cos(angle + sweep);
-    const y2 = cy + r * Math.sin(angle + sweep);
-    const large = sweep > Math.PI ? 1 : 0;
-
-    if (frac >= 0.999) {
-      paths += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${b.color}">
-        <animate attributeName="r" from="0" to="${r}" dur=".4s" fill="freeze"/>
-      </circle>`;
-    } else {
-      paths += `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large},1 ${x2},${y2} Z"
-        fill="${b.color}" opacity="0">
-        <animate attributeName="opacity" from="0" to="1" dur=".3s" begin="${i * 0.08}s" fill="freeze"/>
-      </path>`;
-    }
-    if (frac > 0.08) {
-      const mid = angle + sweep / 2;
-      const lr = r * 0.55;
-      const lx = cx + lr * Math.cos(mid);
-      const ly = cy + lr * Math.sin(mid);
-      labels += `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central"
-        fill="#fff" font-size="11" font-weight="700" style="pointer-events:none">${Math.round(frac*100)}%</text>`;
-    }
-    angle += sweep;
-  });
-
-  $('pieChartWrap').innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${paths}${labels}</svg>`;
-}
-
-// ── Navigation ──
-function goTo(id) {
-  const current = document.querySelector('.screen.active');
-  if (current && current.id !== id) {
-    document.body.classList.add('transitioning');
-    current.classList.remove('active');
-    current.classList.add('leaving');
-    current.addEventListener('animationend', () => {
-      current.classList.remove('leaving');
-      document.body.classList.remove('transitioning');
-    }, {once: true});
-  } else if (current) {
-    current.classList.remove('active');
-  }
-  $(id).classList.add('active');
-  window.scrollTo(0, 0);
-  if (id === 'screenItems') {
-    $('assignSection').style.display = splitMode === 'item' ? 'block' : 'none';
-    if (splitMode === 'item') renderAssign();
-  }
-  if (id === 'screenHistory') renderHistory();
-}
-
-// ── Share ──
-async function doShare() {
-  const sub = splitMode === 'even' ? quickTotalAmt : items.reduce((s, it) => s + (it.price || 0), 0);
-  const tax = splitMode === 'even' ? quickTaxAmt : taxAmt;
-  const tipOn = tipBase === 'post' ? sub + tax : sub;
-  const tip = tipOn * (tipPct / 100);
-  const total = sub + tax + tip;
-  const breakdown = calcOwes();
-  const today = new Date();
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
-
-  let lines = ['SliceOfPie — ' + dateStr];
-
-  if (splitMode === 'item') {
-    lines.push('');
-    items.forEach(it => {
-      if (!it.price) return;
-      const assigned = (it.assignees || []).map(pi => people[pi]?.name).filter(Boolean);
-      const who = assigned.length ? ' → ' + assigned.join(', ') : '';
-      lines.push(it.name + ': ' + fmt(it.price) + who);
-    });
-  }
-
-  lines.push('');
-  const parts = ['Subtotal: ' + fmt(sub)];
-  if (tax) parts.push('Tax: ' + fmt(tax));
-  parts.push('Tip (' + tipPct + '%): ' + fmt(tip));
-  lines.push(parts.join(' | '));
-  lines.push('Total: ' + fmt(total));
-  lines.push('');
-
-  const payerName = getPayerName();
-  const payerBreakdown = breakdown.find((b, i) => (payer === 'me' && people[i]?.isMe) || payer === i);
-  lines.push(payerName + ' (paid)' + (payerBreakdown ? ': ' + fmt(payerBreakdown.amount) : ''));
-  breakdown.forEach((b, i) => {
-    const isPayer = (payer === 'me' && people[i]?.isMe) || payer === i;
-    if (isPayer) return;
-    lines.push(b.name + ' owes: ' + fmt(b.amount));
-  });
-
-  if (payer === 'me' && imPartOfBill) {
-    lines.push(...getPaymentLines());
-  } else {
-    lines.push('', 'Send to ' + payerName);
-  }
-
-  const text = lines.join('\n');
-  if (navigator.share) {
-    try { await navigator.share({title: 'SliceOfPie', text}); return; } catch {}
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('Copied to clipboard!');
-  } catch {
-    showToast('Could not copy');
-  }
-}
-
-function pulse(el) {
-  el.classList.remove('pulse');
-  void el.offsetWidth;
-  el.classList.add('pulse');
-}
-
-function showToast(msg) {
-  const t = $('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 2000);
-}
-
-// ── Bill History ──
-let history = JSON.parse(localStorage.getItem('sp_history') || '[]');
-let viewingBillId = null;
-let billSavedThisSession = false;
-let deleteArmed = false;
-let deleteTimer = null;
-
-function defaultLabel() {
-  const h = new Date().getHours();
-  const meal = h < 11 ? 'breakfast' : h < 16 ? 'lunch' : 'dinner';
-  const d = new Date();
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  return months[d.getMonth()] + ' ' + d.getDate() + ' ' + meal;
-}
-
-function startSaveBill() {
-  const breakdown = calcOwes();
-  const sub = splitMode === 'even' ? quickTotalAmt : items.reduce((s, it) => s + (it.price || 0), 0);
-  const tax = splitMode === 'even' ? quickTaxAmt : taxAmt;
-  const tipOn = tipBase === 'post' ? sub + tax : sub;
-  const total = sub + tax + tipOn * (tipPct / 100);
-  if (total <= 0) { showToast('Nothing to save'); return; }
-  if (billSavedThisSession) { showToast('Already saved'); return; }
-  $('saveLabelInput').value = defaultLabel();
-  $('saveLabelWrap').classList.add('show');
-  $('saveLabelInput').focus();
-}
-
-function confirmSave() {
-  const label = $('saveLabelInput').value.trim() || defaultLabel();
-  const breakdown = calcOwes();
-  const sub = splitMode === 'even' ? quickTotalAmt : items.reduce((s, it) => s + (it.price || 0), 0);
-  const tax = splitMode === 'even' ? quickTaxAmt : taxAmt;
-  const tipOn = tipBase === 'post' ? sub + tax : sub;
-  const tip = tipOn * (tipPct / 100);
-  const total = sub + tax + tip;
-
-  const bill = {
-    id: Date.now(),
-    date: new Date().toISOString(),
-    label,
-    total,
-    tipPct,
-    splitMode,
-    payerName: getPayerName(),
-    people: breakdown.map((b, i) => ({
-      name: b.name,
-      amount: b.amount,
-      color: b.color,
-      paid: (payer === 'me') ? false : payer === i,
-    })),
-  };
-
-  history.unshift(bill);
-  // ponytail: cap at 50 — localStorage isn't a database
-  if (history.length > 50) history.pop();
-  localStorage.setItem('sp_history', JSON.stringify(history));
-  billSavedThisSession = true;
-  $('saveLabelWrap').classList.remove('show');
-  $('saveBillBtn').textContent = 'Saved!';
-  $('saveBillBtn').style.opacity = '.5';
-  showToast('Bill saved!');
-}
-
-function renderHistory() {
-  if (history.length === 0) {
-    $('historyList').innerHTML = '<div class="empty-state">No saved bills yet.<br>Split a bill and tap Save!</div>';
-    return;
-  }
-  $('historyList').innerHTML = history.map(bill => {
-    const d = new Date(bill.date);
-    const dateStr = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
-    const paidCount = bill.people.filter(p => p.paid).length;
-    const total = bill.people.length;
-    let statusClass, statusText;
-    if (paidCount === 0) { statusClass = 'status-none'; statusText = 'Unpaid'; }
-    else if (paidCount >= total) { statusClass = 'status-done'; statusText = 'All paid'; }
-    else { statusClass = 'status-partial'; statusText = paidCount + '/' + total + ' paid'; }
-    return `<div class="history-card" onclick="viewBill(${bill.id})">
-      <div class="history-top">
-        <span class="history-label">${esc(bill.label)}</span>
-        <span class="history-date">${dateStr}</span>
-      </div>
-      <div class="history-bottom">
-        <span class="history-total">${fmt(bill.total)}</span>
-        <span class="history-status ${statusClass}">${statusText}</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function viewBill(id) {
-  const bill = history.find(b => b.id === id);
-  if (!bill) return;
-  viewingBillId = id;
-  deleteArmed = false;
-  $('detailDelBtn').textContent = 'Delete Bill';
-  $('detailDelBtn').classList.remove('del-confirm');
-  $('detailTitle').innerHTML = esc(bill.label);
-  const d = new Date(bill.date);
-  $('detailDate').textContent = d.toLocaleDateString('en-US', {weekday:'long', month:'long', day:'numeric'});
-  $('detailSummaryCard').innerHTML = `
-    <div class="sum-line"><span>Total</span><span>${fmt(bill.total)}</span></div>
-    <div class="sum-line"><span>Tip</span><span>${bill.tipPct}%</span></div>
-    <div class="sum-line"><span>Split</span><span>${bill.splitMode === 'even' ? 'Even' : 'By item'}</span></div>
-    <div class="sum-line"><span>Paid by</span><span>${esc(bill.payerName)}</span></div>
-  `;
-  renderDetailPeople(bill);
-  goTo('screenDetail');
-}
-
-function renderDetailPeople(bill) {
-  $('detailPeople').innerHTML = bill.people.map((p, i) => `
-    <div class="detail-person">
-      <div>
-        <div class="detail-name" style="color:${p.color}">${esc(p.name)}</div>
-        <div class="detail-amount">${p.paid ? 'Paid' : 'Owes ' + fmt(p.amount)}</div>
-      </div>
-      <button class="paid-btn ${p.paid ? 'paid' : ''}" onclick="togglePaid(${bill.id},${i})">
-        ${p.paid ? 'Paid' : 'Not yet'}
-      </button>
-    </div>
-  `).join('');
-}
-
-function togglePaid(billId, personIdx) {
-  const bill = history.find(b => b.id === billId);
-  if (!bill) return;
-  bill.people[personIdx].paid = !bill.people[personIdx].paid;
-  localStorage.setItem('sp_history', JSON.stringify(history));
-  renderDetailPeople(bill);
-}
-
-async function reshareDetail() {
-  const bill = history.find(b => b.id === viewingBillId);
-  if (!bill) return;
-  const d = new Date(bill.date);
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const dateStr = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear();
-  let lines = ['SliceOfPie — ' + dateStr, bill.label, '', 'Total: ' + fmt(bill.total), ''];
-  const payerLine = bill.payerName + ' (paid)';
-  lines.push(payerLine);
-  bill.people.forEach(p => {
-    if (p.name === bill.payerName) return;
-    lines.push(p.name + (p.paid ? ' (paid)' : ' owes: ' + fmt(p.amount)));
-  });
-  // Append payment details if "me" was the payer
-  if (bill.payerName === (payment.name || 'Me')) {
-    lines.push(...getPaymentLines());
-  } else {
-    lines.push('', 'Send to ' + bill.payerName);
-  }
-  const text = lines.join('\n');
-  if (navigator.share) {
-    try { await navigator.share({title: 'SliceOfPie', text}); return; } catch {}
-  }
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast('Copied to clipboard!');
-  } catch {
-    showToast('Could not copy');
-  }
-}
-
-function deleteBill() {
-  if (!deleteArmed) {
-    deleteArmed = true;
-    $('detailDelBtn').textContent = 'Tap again to delete';
-    $('detailDelBtn').classList.add('del-confirm');
-    clearTimeout(deleteTimer);
-    deleteTimer = setTimeout(() => {
-      deleteArmed = false;
-      $('detailDelBtn').textContent = 'Delete Bill';
-      $('detailDelBtn').classList.remove('del-confirm');
-    }, 3000);
-    return;
-  }
-  clearTimeout(deleteTimer);
-  history = history.filter(b => b.id !== viewingBillId);
-  localStorage.setItem('sp_history', JSON.stringify(history));
-  showToast('Deleted');
-  renderHistory();
-  goTo('screenHistory');
-}
-
-// ── PWA ──
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
-</script>
+<script type="module" src="/src/main.ts"></script>
 </body>
 </html>
