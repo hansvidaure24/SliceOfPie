@@ -555,7 +555,7 @@ body.transitioning .btn{pointer-events:none}
   .container{max-width:720px}
 
   /* Settings: name + payment full-width, rest 2-col */
-  #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:12px 16px;align-items:start}
+  #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;align-items:start}
   #screenSettings>.card{margin-bottom:0}
   #screenSettings>h1,#screenSettings>.subtitle,#screenSettings>.nav-row{grid-column:1/-1}
   #screenSettings>.card:nth-of-type(3),#screenSettings>.card:last-of-type{grid-column:1/-1}
