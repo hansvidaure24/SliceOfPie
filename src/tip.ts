@@ -94,7 +94,7 @@ export function setTip(pct: number): void {
 export function setCustomTip(): void {
   const custom = $('customTip') as HTMLInputElement | null;
   if (!custom) return;
-  const val = parseFloat(custom.value);
+  const val = Math.min(100, parseFloat(custom.value));
   if (!isNaN(val) && val >= 0) {
     state.tipPct = val;
     document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => btn.classList.remove('active'));

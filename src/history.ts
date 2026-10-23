@@ -1,4 +1,4 @@
-import { $, esc, fmt, showToast, defaultLabel } from './helpers';
+import { $, esc, fmt, showToast, defaultLabel, tap } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill } from './state';
 import { calcOwes } from './summary';
 import { goTo } from './navigation';
@@ -39,8 +39,11 @@ export function confirmSave(): void {
   };
 
   state.history.unshift(bill);
-  if (state.history.length > 50) state.history.pop();
-  putBill(bill);
+  if (state.history.length > 50) {
+    const old = state.history.pop();
+    if (old) deleteBillFromDB(old.id).catch(() => {});
+  }
+  putBill(bill).catch(() => showToast('Could not save — storage full?'));
 
   state.billSavedThisSession = true;
   $('saveLabelWrap').classList.remove('show');
@@ -63,7 +66,7 @@ export function renderHistory(): void {
 
   $('historyList').innerHTML = state.history.map(bill => {
     const date = new Date(bill.date);
-    const dateStr = (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+    const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
     const paidCount = bill.people.filter(p => p.paid).length;
     const totalPeople = bill.people.length;
 
@@ -72,20 +75,24 @@ export function renderHistory(): void {
     else if (paidCount >= totalPeople) { statusClass = 'status-done'; statusText = 'All paid'; }
     else { statusClass = 'status-partial'; statusText = paidCount + '/' + totalPeople + ' paid'; }
 
-    return `<div class="history-card" data-bill="${bill.id}" tabindex="0" role="button">
-      <div class="history-top">
-        <span class="history-label">${esc(bill.label)}</span>
-        <span class="history-date">${dateStr}</span>
-      </div>
-      <div class="history-bottom">
-        <span class="history-total">${fmt(bill.total)}</span>
-        <span style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn-ghost" style="display:inline;width:auto;padding:4px 10px;font-size:.7rem;border-radius:20px" data-reshare="${bill.id}">
-            <span class="share-icon" style="margin-right:4px"></span>Share
-          </button>
-          <span class="history-status ${statusClass}">${statusText}</span>
-          <span class="chevron-icon"></span>
-        </span>
+    return `<div class="swipe-wrap" data-swipe="${bill.id}">
+      <div class="swipe-behind"><span class="trash-icon"></span> Delete</div>
+      <div class="history-card" data-bill="${bill.id}" tabindex="0" role="button">
+        <div class="history-top">
+          <span class="history-label">${esc(bill.label)}</span>
+          <span class="history-date">${dateStr}</span>
+        </div>
+        <div class="history-bottom">
+          <span class="history-total">${fmt(bill.total)}</span>
+          <span style="display:flex;align-items:center;gap:8px">
+            <button class="btn btn-ghost" style="display:inline;width:auto;padding:4px 10px;font-size:.7rem;border-radius:20px" data-reshare="${bill.id}">
+              <span class="share-icon" style="margin-right:4px"></span>Share
+            </button>
+            <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete bill"><span class="xmark-icon" style="width:18px;height:18px"></span></button>
+            <span class="history-status ${statusClass}">${statusText}</span>
+            <span class="chevron-icon"></span>
+          </span>
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -102,6 +109,16 @@ export function renderHistory(): void {
       shareBill(Number(btn.dataset.reshare));
     });
   });
+
+  $('historyList').querySelectorAll<HTMLButtonElement>('[data-hist-del]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const id = Number(btn.dataset.histDel);
+      if (confirm('Delete this bill?')) swipeDelete(id);
+    });
+  });
+
+  initSwipe();
 }
 
 export function viewBill(id: number): void {
@@ -117,7 +134,7 @@ export function viewBill(id: number): void {
   titleEl.onclick = () => editBillLabel(bill);
 
   const date = new Date(bill.date);
-  $('detailDate').textContent = date.toLocaleDateString('en-US', {
+  $('detailDate').textContent = date.toLocaleDateString(undefined, {
     weekday: 'long', month: 'long', day: 'numeric',
   });
 
@@ -160,7 +177,7 @@ function togglePaid(billId: number, personIdx: number): void {
 
   const nowPaid = !bill.people[personIdx].paid;
   bill.people[personIdx].paid = nowPaid;
-  putBill(bill);
+  putBill(bill).catch(() => {});
   updateHistoryBadge();
   renderDetailPeople(bill);
 
@@ -190,7 +207,7 @@ function editBillLabel(bill: Bill): void {
   const save = () => {
     const newLabel = input.value.trim() || bill.label;
     bill.label = newLabel;
-    putBill(bill);
+    putBill(bill).catch(() => {});
     titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle;opacity:.5"></span>';
     titleEl.onclick = () => editBillLabel(bill);
     showToast('Label updated');
@@ -218,11 +235,59 @@ export function deleteBill(): void {
   if (state.deleteTimer) clearTimeout(state.deleteTimer);
   const id = state.viewingBillId!;
   state.history = state.history.filter(b => b.id !== id);
-  deleteBillFromDB(id);
+  deleteBillFromDB(id).catch(() => {});
   showToast('Deleted');
   updateHistoryBadge();
   renderHistory();
   goTo('screenHistory');
+}
+
+const SWIPE_THRESHOLD = 80;
+
+function initSwipe(): void {
+  $('historyList').querySelectorAll<HTMLElement>('[data-swipe]').forEach(wrap => {
+    const card = wrap.querySelector('.history-card') as HTMLElement;
+    const billId = Number(wrap.dataset.swipe);
+    let startX = 0, startY = 0, dx = 0, swiping = false;
+
+    card.addEventListener('touchstart', (e) => {
+      startX = e.touches[0].clientX;
+      startY = e.touches[0].clientY;
+      dx = 0;
+      swiping = false;
+      card.style.transition = 'none';
+    }, { passive: true });
+
+    card.addEventListener('touchmove', (e) => {
+      const moveX = e.touches[0].clientX - startX;
+      const moveY = e.touches[0].clientY - startY;
+      if (!swiping && Math.abs(moveY) > Math.abs(moveX)) return;
+      if (Math.abs(moveX) > 10) swiping = true;
+      if (!swiping) return;
+      e.preventDefault();
+      dx = Math.min(0, moveX);
+      card.style.transform = `translateX(${dx}px)`;
+    }, { passive: false });
+
+    card.addEventListener('touchend', () => {
+      card.style.transition = 'transform .25s ease';
+      if (dx < -SWIPE_THRESHOLD) {
+        tap();
+        card.style.transform = `translateX(-100%)`;
+        card.addEventListener('transitionend', () => swipeDelete(billId), { once: true });
+      } else {
+        card.style.transform = '';
+      }
+    });
+  });
+}
+
+function swipeDelete(id: number): void {
+  state.history = state.history.filter(b => b.id !== id);
+  deleteBillFromDB(id).catch(() => {});
+  updateHistoryBadge();
+  renderHistory();
+  showToast('Deleted');
 }
 
 export function updateHistoryBadge(): void {

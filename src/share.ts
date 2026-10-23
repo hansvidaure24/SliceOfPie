@@ -51,11 +51,11 @@ export async function shareBill(id: number): Promise<void> {
   ];
 
   bill.people.forEach(person => {
-    if (person.name === bill.payerName) lines.push(person.name + ' (paid)');
-    else lines.push(person.name + (person.paid ? ' (paid)' : ' owes: ' + fmt(person.amount)));
+    if (person.paid) lines.push(person.name + ' (paid)');
+    else lines.push(person.name + ' owes: ' + fmt(person.amount));
   });
 
-  lines.push(...buildPaymentFooter(bill.payerName));
+  lines.push(...buildPaymentFooter(bill.payerName, true));
   await shareText(lines.join('\n'));
 }
 
@@ -63,12 +63,10 @@ export function reshareDetail(): void {
   shareBill(state.viewingBillId!);
 }
 
-function buildPaymentFooter(payerName: string): string[] {
-  if (state.payer === 'me' && state.imPartOfBill) {
+function buildPaymentFooter(payerName: string, fromHistory = false): string[] {
+  if (!fromHistory && state.payer === 'me' && state.imPartOfBill) {
     const payLines = getPaymentLines();
     if (payLines.length) return payLines;
-  } else {
-    return ['', 'Send to ' + payerName];
   }
-  return [];
+  return ['', 'Send to ' + payerName];
 }
