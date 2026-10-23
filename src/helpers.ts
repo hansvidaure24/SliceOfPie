@@ -16,6 +16,38 @@ const CURRENCIES = [
   { code: 'AUD', symbol: 'A$' },
   { code: 'MXN', symbol: 'MX$' },
   { code: 'PHP', symbol: '₱' },
+  { code: 'INR', symbol: '₹' },
+  { code: 'KRW', symbol: '₩' },
+  { code: 'BRL', symbol: 'R$' },
+  { code: 'CNY', symbol: '¥' },
+  { code: 'CHF', symbol: 'CHF' },
+  { code: 'SEK', symbol: 'kr' },
+  { code: 'NOK', symbol: 'kr' },
+  { code: 'DKK', symbol: 'kr' },
+  { code: 'NZD', symbol: 'NZ$' },
+  { code: 'SGD', symbol: 'S$' },
+  { code: 'HKD', symbol: 'HK$' },
+  { code: 'TWD', symbol: 'NT$' },
+  { code: 'THB', symbol: '฿' },
+  { code: 'IDR', symbol: 'Rp' },
+  { code: 'MYR', symbol: 'RM' },
+  { code: 'VND', symbol: '₫' },
+  { code: 'ZAR', symbol: 'R' },
+  { code: 'TRY', symbol: '₺' },
+  { code: 'PLN', symbol: 'zł' },
+  { code: 'CZK', symbol: 'Kč' },
+  { code: 'HUF', symbol: 'Ft' },
+  { code: 'RON', symbol: 'lei' },
+  { code: 'CLP', symbol: 'CL$' },
+  { code: 'COP', symbol: 'CO$' },
+  { code: 'PEN', symbol: 'S/' },
+  { code: 'ARS', symbol: 'AR$' },
+  { code: 'ILS', symbol: '₪' },
+  { code: 'AED', symbol: 'د.إ' },
+  { code: 'SAR', symbol: '﷼' },
+  { code: 'EGP', symbol: 'E£' },
+  { code: 'NGN', symbol: '₦' },
+  { code: 'KES', symbol: 'KSh' },
 ] as const;
 
 export { CURRENCIES };
@@ -31,7 +63,7 @@ export function getCurrency(): string {
   return currencySymbol;
 }
 
-const ZERO_DECIMAL = new Set(['¥']);
+const ZERO_DECIMAL = new Set(['¥', '₩', '₫', 'CL$', 'Ft', 'Rp']);
 
 export function fmt(n: number): string {
   return currencySymbol + n.toFixed(ZERO_DECIMAL.has(currencySymbol) ? 0 : 2);
