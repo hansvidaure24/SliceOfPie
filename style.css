@@ -443,7 +443,7 @@ body.transitioning .btn{pointer-events:none}
   display:flex;align-items:center;justify-content:flex-end;padding-right:24px;gap:6px;
   border-radius:var(--radius);
 }
-.swipe-wrap .history-card{margin-bottom:0}
+.swipe-wrap .history-card{margin-bottom:0;position:relative;z-index:1}
 .history-card{
   background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;
   cursor:pointer;transition:all .12s;border:1px solid var(--surface-border);box-shadow:var(--shadow);
