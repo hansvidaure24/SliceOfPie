@@ -1,4 +1,5 @@
-import { $, setToggle, CURRENCIES, getCurrency, setCurrency } from './helpers';
+import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme } from './helpers';
+import type { ThemePref } from './helpers';
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
 import { renderPresets, addPreset, renderTipRow, setTipBase } from './tip';
@@ -8,6 +9,7 @@ import { takePhoto, uploadPhoto, skipToManual, addItem, runOCR, updateRunning } 
 import { updateHistoryBadge, startSaveBill, confirmSave, deleteBill, renderHistory } from './history';
 import { goTo, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary } from './navigation';
 import { doShare, reshareDetail } from './share';
+import { exportImage } from './export-image';
 import { loadHistory } from './db';
 import { registerSW } from 'virtual:pwa-register';
 
@@ -22,6 +24,21 @@ Object.assign(window, {
   startSaveBill, confirmSave, deleteBill,
   savePayment, togglePay, addPreset,
   renderHistory,
+  exportImage,
+});
+
+function renderThemeToggle(): void {
+  const current = getThemePref();
+  $('themeToggle').querySelectorAll<HTMLButtonElement>('[data-theme]').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === current);
+  });
+}
+
+$('themeToggle').addEventListener('click', (e) => {
+  const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-theme]');
+  if (!btn) return;
+  setThemePref(btn.dataset.theme as ThemePref);
+  renderThemeToggle();
 });
 
 function renderCurrencyRow(): void {
@@ -45,6 +62,11 @@ function renderCurrencyRow(): void {
 }
 
 // Restore saved state
+applyTheme();
+renderThemeToggle();
+window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+  if (getThemePref() === 'system') applyTheme();
+});
 renderCurrencyRow();
 restorePaymentFields();
 Object.entries(state.payToggles).forEach(([key, on]) => setToggle('tog' + key, on));
@@ -85,6 +107,16 @@ document.addEventListener('focusin', (e) => {
   if (target.matches('input[type="number"],input[type="text"],.item-name,.item-price,.pay-input,.person-name-input')) {
     setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
   }
+});
+
+// Enter key advances screens with numeric inputs
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Enter') return;
+  const active = document.querySelector('.screen.active') as HTMLElement | null;
+  if (!active) return;
+  const id = active.id;
+  if (id === 'screenQuick') quickNext();
+  else if (id === 'screenPeople') goToNextFromPeople();
 });
 
 registerSW({

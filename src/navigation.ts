@@ -1,5 +1,5 @@
 import { $, setToggle, showToast } from './helpers';
-import { state } from './state';
+import { state, getBillTotals } from './state';
 import { renderNames } from './people';
 import { renderTipRow } from './tip';
 import { renderAssign } from './assign';
@@ -117,11 +117,21 @@ export function goToNextFromPeople(): void {
   goTo(state.splitMode === 'even' ? 'screenQuick' : 'screenCapture');
 }
 
+function confirmLeaveSummary(): boolean {
+  const { total } = getBillTotals();
+  if (total > 0 && !state.billSavedThisSession) {
+    return confirm('You have an unsaved bill. Discard it?');
+  }
+  return true;
+}
+
 export function goBackFromSummary(): void {
+  if (!confirmLeaveSummary()) return;
   goTo(state.splitMode === 'even' ? 'screenQuick' : 'screenItems');
 }
 
 export function newBill(): void {
+  if (!confirmLeaveSummary()) return;
   resetState();
   resetUI();
   renderTipRow();

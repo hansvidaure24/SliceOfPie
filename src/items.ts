@@ -115,6 +115,8 @@ export function skipToManual(): void {
   state.taxAmt = 0;
   ($('taxInput') as HTMLInputElement).value = '';
   enterItemsScreen();
+  const first = $('itemsList').querySelector<HTMLInputElement>('.item-name');
+  if (first) setTimeout(() => first.focus(), 300);
 }
 
 export function enterItemsScreen(): void {

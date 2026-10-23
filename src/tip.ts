@@ -1,4 +1,4 @@
-import { $ } from './helpers';
+import { $, tap } from './helpers';
 import { state } from './state';
 import { updateSummary } from './summary';
 
@@ -63,7 +63,12 @@ export function renderTipRow(): void {
   row.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => {
     btn.addEventListener('click', () => setTip(Number(btn.dataset.tip)));
   });
-  ($('customTip') as HTMLInputElement).addEventListener('input', setCustomTip);
+
+  const customInput = $('customTip') as HTMLInputElement;
+  if (!state.tipPresets.includes(state.tipPct)) {
+    customInput.value = String(state.tipPct);
+  }
+  customInput.addEventListener('input', setCustomTip);
 }
 
 export function setTipBase(base: 'pre' | 'post'): void {
@@ -74,6 +79,7 @@ export function setTipBase(base: 'pre' | 'post'): void {
 }
 
 export function setTip(pct: number): void {
+  tap();
   state.tipPct = pct;
   const custom = $('customTip') as HTMLInputElement | null;
   if (custom) custom.value = '';

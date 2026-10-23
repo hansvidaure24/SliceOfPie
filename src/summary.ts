@@ -1,4 +1,4 @@
-import { $, COLORS, esc, fmt, pulse } from './helpers';
+import { $, COLORS, esc, fmt, pulse, tap } from './helpers';
 import { state, getBillTotals, isPayer } from './state';
 import { renderTipRow } from './tip';
 import { renderPieChart } from './pie';
@@ -21,6 +21,7 @@ export function renderPayerRow(): void {
 }
 
 export function setPayer(who: 'me' | number): void {
+  tap();
   state.payer = who;
   renderPayerRow();
   updateSummary();
