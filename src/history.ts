@@ -112,7 +112,9 @@ export function viewBill(id: number): void {
   state.deleteArmed = false;
   $('detailDelBtn').innerHTML = DELETE_ICON + 'Delete Bill';
   $('detailDelBtn').classList.remove('del-confirm');
-  $('detailTitle').innerHTML = esc(bill.label);
+  const titleEl = $('detailTitle');
+  titleEl.innerHTML = esc(bill.label) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle;opacity:.5"></span>';
+  titleEl.onclick = () => editBillLabel(bill);
 
   const date = new Date(bill.date);
   $('detailDate').textContent = date.toLocaleDateString('en-US', {
@@ -172,6 +174,30 @@ function togglePaid(billId: number, personIdx: number): void {
       btn.addEventListener('animationend', () => btn.classList.remove('just-paid'), { once: true });
     }
   }
+}
+
+function editBillLabel(bill: Bill): void {
+  const titleEl = $('detailTitle');
+  const input = document.createElement('input');
+  input.className = 'save-label-input';
+  input.value = bill.label;
+  input.style.cssText = 'font-size:1.2rem;text-align:center;width:100%';
+  titleEl.innerHTML = '';
+  titleEl.appendChild(input);
+  input.focus();
+  input.select();
+
+  const save = () => {
+    const newLabel = input.value.trim() || bill.label;
+    bill.label = newLabel;
+    putBill(bill);
+    titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle;opacity:.5"></span>';
+    titleEl.onclick = () => editBillLabel(bill);
+    showToast('Label updated');
+  };
+
+  input.addEventListener('blur', save, { once: true });
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
 }
 
 export function deleteBill(): void {
