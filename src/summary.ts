@@ -84,12 +84,15 @@ export function updateSummary(): void {
   $('sumTax').textContent = fmt(tax);
   $('sumTipAmt').textContent = fmt(tip);
 
+  const breakdown = calcOwes();
+  const displayTotal = state.roundUp
+    ? breakdown.reduce((s, b) => s + b.amount, 0)
+    : total;
+
   const totalEl = $('sumTotal');
   const oldTotal = totalEl.textContent;
-  totalEl.textContent = fmt(total);
-  if (oldTotal !== fmt(total)) pulse(totalEl);
-
-  const breakdown = calcOwes();
+  totalEl.textContent = fmt(displayTotal);
+  if (oldTotal !== fmt(displayTotal)) pulse(totalEl);
   const breakdownHtml = renderBreakdownLines(breakdown);
 
   if (state.splitMode === 'even') {

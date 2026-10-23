@@ -453,10 +453,11 @@ body.transitioning .btn{pointer-events:none}
 }
 .swipe-wrap .history-card{margin-bottom:0;position:relative;z-index:1}
 .history-card{
+  position:relative;
   background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;
   cursor:pointer;transition:all .12s;border:1px solid var(--surface-border);box-shadow:var(--shadow);
 }
-.history-card:active{transform:scale(.98);opacity:.85}
+.history-card:active{background:var(--surface-border)}
 .history-top{display:flex;justify-content:space-between;align-items:center}
 .history-label{font-weight:600;font-size:.95rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:70%}
 .history-date{font-size:.75rem;color:var(--muted)}
@@ -468,12 +469,16 @@ body.transitioning .btn{pointer-events:none}
 .status-done{background:#27AE6020;color:#2ECC71}
 .empty-state{text-align:center;color:var(--muted);padding:48px 20px;font-size:.9rem;line-height:1.6}
 .history-del{
-  background:none;border:none;color:var(--cherry);cursor:pointer;padding:6px;
-  border-radius:50%;transition:background .12s;opacity:0;pointer-events:none;
-  flex-shrink:0;
+  position:absolute;top:-8px;right:-8px;
+  background:var(--cherry);color:#fff;border:2px solid var(--bg);
+  width:22px;height:22px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;opacity:0;pointer-events:none;transition:opacity .12s;
+  padding:0;z-index:2;font-size:14px;line-height:1;font-weight:700;
 }
-.history-del:active{background:var(--cherry-glow)}
-@media (hover:hover){
+.history-del:active{opacity:.7}
+@media (hover:hover) and (pointer:fine){
+  .swipe-wrap{overflow:visible}
   .history-card:hover .history-del{opacity:1;pointer-events:auto}
 }
 
@@ -528,6 +533,29 @@ body.transitioning .btn{pointer-events:none}
 .toggle:focus-visible{outline-offset:3px}
 
 /* ── Toast ── */
+/* ── Confirm dialog ── */
+.confirm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;
+  display:flex;align-items:center;justify-content:center;padding:24px;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.confirm-overlay.show{opacity:1;pointer-events:auto}
+.confirm-box{
+  background:var(--surface);border-radius:var(--radius);padding:28px 24px 24px;
+  max-width:320px;width:100%;box-shadow:0 12px 40px rgba(0,0,0,.3);
+  text-align:center;transform:scale(.92);transition:transform .2s cubic-bezier(.4,0,.2,1);
+}
+.confirm-overlay.show .confirm-box{transform:scale(1)}
+.confirm-icon{
+  width:44px;height:44px;border-radius:50%;background:var(--cherry);color:#fff;
+  display:flex;align-items:center;justify-content:center;margin:0 auto 16px;
+  font-size:1.4rem;font-weight:800;line-height:1;
+}
+.confirm-msg{margin:0 0 6px;font-size:1.05rem;font-weight:700;color:var(--text)}
+.confirm-sub{margin:0 0 20px;font-size:.85rem;color:var(--muted)}
+.confirm-btns{display:flex;gap:10px}
+.confirm-btns .btn{flex:1}
+
 /* ── Card stagger entrance ── */
 .card{animation:cardIn .3s cubic-bezier(.4,0,.2,1) both}
 .card:nth-child(1){animation-delay:0s}
@@ -555,7 +583,7 @@ body.transitioning .btn{pointer-events:none}
   .container{max-width:720px}
 
   /* Settings: name + payment full-width, rest 2-col */
-  #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;align-items:start}
+  #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px}
   #screenSettings>.card{margin-bottom:0}
   #screenSettings>h1,#screenSettings>.subtitle,#screenSettings>.nav-row{grid-column:1/-1}
   #screenSettings>.card:nth-of-type(3),#screenSettings>.card:last-of-type{grid-column:1/-1}

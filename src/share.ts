@@ -5,8 +5,9 @@ import { getPaymentLines } from './payment';
 import { calcOwes } from './summary';
 
 export async function doShare(): Promise<void> {
-  const { sub, tax, tip, total } = getBillTotals();
+  const { sub, tax, tip, total: rawTotal } = getBillTotals();
   const breakdown = calcOwes();
+  const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
   const label = ($('saveLabelInput') as HTMLInputElement)?.value || defaultLabel();
   const lines: string[] = ['SliceOfPie — ' + label];
 

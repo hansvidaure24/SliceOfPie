@@ -22,6 +22,11 @@ export function uploadPhoto(): void {
 }
 
 export async function runOCR(file: File): Promise<void> {
+  if (typeof Tesseract === 'undefined') {
+    $('progressText').textContent = 'OCR unavailable offline — entering manual mode';
+    setTimeout(skipToManual, 1000);
+    return;
+  }
   try {
     const { data } = await Tesseract.recognize(file, 'eng', {
       logger: m => {
@@ -50,7 +55,7 @@ export function parseReceipt(text: string): { items: { name: string; price: numb
   const SKIP = /\b(total|subtotal|sub-total|balance|change|visa|master|amex|discover|cash|gratuity|tip|payment|tender|amount due|amount paid|card|debit|credit|check|table|server|guest|order|date|time|receipt|thank|welcome|phone|tel|fax|www\.|\.com|discount|coupon|promo|rewards|points|savings|refund)\b/i;
   const TAX = /\b(tax|hst|gst|pst|vat|sales tax)\b/i;
   const QTY_PREFIX = /^\d+\s*[xX@]\s*/;
-  const QTY_LEADING = /^(\d+)\s+/;
+  const QTY_LEADING = /^(\d+)\s+(?!oz|fl|ml|g\b|kg|lb|pc|ct|ea|in|pt|qt|gal|l\b)/i;
 
   // Try $-prefixed first, then bare decimal, then comma-decimal (European)
   const pricePatterns = [

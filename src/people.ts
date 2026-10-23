@@ -81,5 +81,8 @@ export function renderNames(): void {
     input.addEventListener('input', () => {
       state.people[idx].name = input.value || fallback;
     });
+    input.addEventListener('blur', () => {
+      if (!input.value.trim()) input.value = fallback;
+    });
   });
 }

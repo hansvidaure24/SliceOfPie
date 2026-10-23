@@ -1,4 +1,4 @@
-import { $, esc, fmt, showToast, defaultLabel, tap } from './helpers';
+import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill } from './state';
 import { calcOwes } from './summary';
 import { goTo } from './navigation';
@@ -20,7 +20,8 @@ export function startSaveBill(): void {
 export function confirmSave(): void {
   const label = ($('saveLabelInput') as HTMLInputElement).value.trim() || defaultLabel();
   const breakdown = calcOwes();
-  const { total } = getBillTotals();
+  const { total: rawTotal } = getBillTotals();
+  const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
 
   const bill: Bill = {
     id: Date.now(),
@@ -78,6 +79,7 @@ export function renderHistory(): void {
     return `<div class="swipe-wrap" data-swipe="${bill.id}">
       <div class="swipe-behind"><span class="trash-icon"></span> Delete</div>
       <div class="history-card" data-bill="${bill.id}" tabindex="0" role="button">
+        <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete bill">&times;</button>
         <div class="history-top">
           <span class="history-label">${esc(bill.label)}</span>
           <span class="history-date">${dateStr}</span>
@@ -88,7 +90,6 @@ export function renderHistory(): void {
             <button class="btn btn-ghost" style="display:inline;width:auto;padding:4px 10px;font-size:.7rem;border-radius:20px" data-reshare="${bill.id}">
               <span class="share-icon" style="margin-right:4px"></span>Share
             </button>
-            <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete bill"><span class="xmark-icon" style="width:18px;height:18px"></span></button>
             <span class="history-status ${statusClass}">${statusText}</span>
             <span class="chevron-icon"></span>
           </span>
@@ -100,7 +101,7 @@ export function renderHistory(): void {
   $('historyList').querySelectorAll<HTMLElement>('[data-bill]').forEach(card => {
     const open = () => viewBill(Number(card.dataset.bill));
     card.addEventListener('click', open);
-    card.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
 
   $('historyList').querySelectorAll<HTMLButtonElement>('[data-reshare]').forEach(btn => {
@@ -111,10 +112,10 @@ export function renderHistory(): void {
   });
 
   $('historyList').querySelectorAll<HTMLButtonElement>('[data-hist-del]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const id = Number(btn.dataset.histDel);
-      if (confirm('Delete this bill?')) swipeDelete(id);
+      if (await confirmDialog('Delete this bill?', 'This action cannot be undone.')) swipeDelete(id);
     });
   });
 
@@ -274,7 +275,13 @@ function initSwipe(): void {
       if (dx < -SWIPE_THRESHOLD) {
         tap();
         card.style.transform = `translateX(-100%)`;
-        card.addEventListener('transitionend', () => swipeDelete(billId), { once: true });
+        card.addEventListener('transitionend', async () => {
+          if (await confirmDialog('Delete this bill?', 'This action cannot be undone.')) {
+            swipeDelete(billId);
+          } else {
+            card.style.transform = '';
+          }
+        }, { once: true });
       } else {
         card.style.transform = '';
       }

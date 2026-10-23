@@ -133,7 +133,7 @@
     <div id="detailPeople"></div>
   </div>
   <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenHistory');renderHistory()">Back</button>
+    <button class="btn btn-ghost" onclick="goTo('screenHistory')">Back</button>
     <button class="btn btn-primary" onclick="reshareDetail()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
   </div>
   <button class="btn btn-ghost" id="detailDelBtn" style="margin-top:10px;border-color:var(--cherry);color:var(--cherry)" onclick="deleteBill()"><span class="trash-icon" style="margin-right:6px"></span>Delete Bill</button>
@@ -303,6 +303,17 @@
   <button class="btn btn-ghost" style="margin-top:8px;border-color:var(--muted);color:var(--muted)" onclick="newBill()">New Bill</button>
 </div>
 
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">!</div>
+    <p class="confirm-msg" id="confirmMsg"></p>
+    <p class="confirm-sub" id="confirmSub"></p>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" id="confirmNo">Cancel</button>
+      <button class="btn btn-primary" id="confirmYes">Confirm</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
 </main><!-- /container -->
 
