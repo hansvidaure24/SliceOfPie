@@ -8,6 +8,9 @@
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "devDependencies": {
     "typescript": "^7.0.2",
     "vite": "^5.4.0",
