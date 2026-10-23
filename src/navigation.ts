@@ -20,10 +20,15 @@ export function goTo(id: string): void {
     document.body.classList.add('transitioning');
     current.classList.remove('active');
     current.classList.add('leaving');
-    current.addEventListener('animationend', () => {
+    const cleanup = () => {
       current.classList.remove('leaving');
       document.body.classList.remove('transitioning');
-    }, { once: true });
+    };
+    current.addEventListener('animationend', cleanup, { once: true });
+    // Safety: if reduced-motion kills the animation, clean up after a frame
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      if (current.classList.contains('leaving')) cleanup();
+    }));
   } else if (current) {
     current.classList.remove('active');
   }
@@ -83,6 +88,7 @@ function resetState(): void {
   state.taxAmt = 0;
   state.quickTotalAmt = 0;
   state.quickTaxAmt = 0;
+  state.tipPct = parseFloat(localStorage.getItem('sp_tip') ?? '') || 18;
   state.taxIncluded = true;
   state.roundUp = false;
   state.tipBase = 'pre';

@@ -38,7 +38,7 @@ export const state = {
   taxAmt: 0,
   quickTotalAmt: 0,
   quickTaxAmt: 0,
-  tipPct: parseInt(localStorage.getItem('sp_tip') ?? '') || 18,
+  tipPct: parseFloat(localStorage.getItem('sp_tip') ?? '') || 18,
   tipBase: 'pre' as TipBase,
   taxIncluded: true,
   roundUp: false,

@@ -6,7 +6,7 @@ function loadLastGroup(): void {
   if (!last) return;
   state.people = last.people.map((p, i) => ({
     name: p.name,
-    isMe: i === 0,
+    isMe: state.imPartOfBill && i === 0,
   }));
   $('peopleCount').textContent = String(state.people.length);
   renderNames();
@@ -25,7 +25,14 @@ export function changePeople(delta: number): void {
   }
   while (otherCount() > target) {
     for (let i = state.people.length - 1; i >= 0; i--) {
-      if (!state.people[i].isMe) { state.people.splice(i, 1); break; }
+      if (!state.people[i].isMe) {
+        state.people.splice(i, 1);
+        // Fix assignee indices: drop references to removed person, shift down indices above it
+        for (const item of state.items) {
+          if (item.assignees) item.assignees = item.assignees.filter(a => a !== i).map(a => a > i ? a - 1 : a);
+        }
+        break;
+      }
     }
   }
 

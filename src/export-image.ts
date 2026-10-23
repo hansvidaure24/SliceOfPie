@@ -13,6 +13,7 @@ function getColors() {
 interface Line { text: string; color: string; size: number; bold: boolean; y: number }
 
 export async function exportImage(): Promise<void> {
+  await document.fonts.ready;
   const COLORS = getColors();
   const { sub, tax, tip, total } = getBillTotals();
   const breakdown = calcOwes();
@@ -83,6 +84,8 @@ export async function exportImage(): Promise<void> {
         await navigator.share({ files: [file] });
         return;
       }
+    } catch { /* share rejected (e.g. desktop Chrome) — fall through */ }
+    try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
       showToast('Image copied to clipboard!');
     } catch {

@@ -99,6 +99,17 @@ export function renderPieChart(breakdown: Breakdown[]): void {
   legendDiv.innerHTML = legendHtml;
   wrap.appendChild(legendDiv);
 
+  const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if (prefersReduced) {
+    for (let i = 0; i < slices.length; i++) {
+      const sliceStart = START_ANGLE + offsets[i] * Math.PI * 2;
+      const sliceEnd = START_ANGLE + (offsets[i] + slices[i].frac) * Math.PI * 2;
+      pathEls[i].setAttribute('d', arcPath(sliceStart, sliceEnd));
+    }
+    svg.querySelectorAll<SVGTextElement>('.pie-label').forEach(el => el.style.opacity = '1');
+    return;
+  }
+
   let startTime: number | null = null;
 
   function animate(timestamp: number): void {

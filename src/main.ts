@@ -77,14 +77,16 @@ renderNames();
 loadHistory().then(bills => {
   state.history = bills;
   updateHistoryBadge();
-});
+}).catch(() => {});
 
 // Photo input — preview and OCR
 ($('photoInput') as HTMLInputElement).addEventListener('change', async (e) => {
   const file = (e.target as HTMLInputElement).files?.[0];
   if (!file) return;
-  ($('previewImg') as HTMLImageElement).src = URL.createObjectURL(file);
-  ($('previewImg') as HTMLImageElement).style.display = 'block';
+  const img = $('previewImg') as HTMLImageElement;
+  if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  img.src = URL.createObjectURL(file);
+  img.style.display = 'block';
   $('progressWrap').style.display = 'block';
   await runOCR(file);
 });
@@ -112,11 +114,33 @@ document.addEventListener('focusin', (e) => {
 // Enter key advances screens with numeric inputs
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
+  const focused = document.activeElement as HTMLElement | null;
+  if (focused?.classList.contains('person-name-input')) return;
   const active = document.querySelector('.screen.active') as HTMLElement | null;
   if (!active) return;
   const id = active.id;
   if (id === 'screenQuick') quickNext();
   else if (id === 'screenPeople') goToNextFromPeople();
+});
+
+const ESC_BACK: Record<string, () => void> = {
+  screenSettings: () => goTo('screenWelcome'),
+  screenHistory: () => goTo('screenWelcome'),
+  screenDetail: () => { goTo('screenHistory'); renderHistory(); },
+  screenPeople: () => goTo('screenWelcome'),
+  screenQuick: () => goTo('screenPeople'),
+  screenCapture: () => goTo('screenPeople'),
+  screenItems: () => goTo('screenCapture'),
+  screenSummary: () => goBackFromSummary(),
+};
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (document.activeElement instanceof HTMLInputElement) {
+    document.activeElement.blur();
+    return;
+  }
+  const active = document.querySelector('.screen.active') as HTMLElement | null;
+  if (active && ESC_BACK[active.id]) ESC_BACK[active.id]();
 });
 
 registerSW({

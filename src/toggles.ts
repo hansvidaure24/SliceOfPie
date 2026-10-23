@@ -34,10 +34,20 @@ export function togglePartOfBill(): void {
   if (state.imPartOfBill) {
     if (!state.people[0]?.isMe) {
       state.people.unshift({ name: state.payment.name || 'Me', isMe: true });
+      // Shift all assignee indices up by 1 since "me" was inserted at 0
+      for (const item of state.items) {
+        if (item.assignees) item.assignees = item.assignees.map(a => a + 1);
+      }
     }
     state.payer = 'me';
   } else {
-    if (state.people[0]?.isMe) state.people.splice(0, 1);
+    if (state.people[0]?.isMe) {
+      state.people.splice(0, 1);
+      // Shift all assignee indices down by 1, drop any that referenced "me" (index 0)
+      for (const item of state.items) {
+        if (item.assignees) item.assignees = item.assignees.filter(a => a > 0).map(a => a - 1);
+      }
+    }
     if (state.people.length === 0) state.people.push({ name: 'Person 1' });
     state.payer = 0;
   }
