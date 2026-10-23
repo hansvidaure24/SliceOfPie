@@ -19,10 +19,10 @@ function loadPayment(): PaymentSettings {
     cashApp: String(p.cashApp ?? ''),
     otherLabel: String(p.otherLabel ?? ''),
     otherValue: String(p.otherValue ?? ''),
-    togVenmo: p.togVenmo !== false,
-    togZelle: p.togZelle !== false,
-    togCashApp: p.togCashApp !== false,
-    togOther: p.togOther !== false,
+    togVenmo: p.togVenmo === true,
+    togZelle: p.togZelle === true,
+    togCashApp: p.togCashApp === true,
+    togOther: p.togOther === true,
   };
 }
 

@@ -417,7 +417,7 @@ body.transitioning .btn{pointer-events:none}
 
 /* ── Theme Toggle ── */
 .theme-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0}
-.theme-toggle{display:flex;border-radius:8px;overflow:hidden;border:2px solid var(--surface2);background:var(--surface2)}
+.theme-toggle{display:flex;border-radius:8px;background:var(--surface2);gap:2px;padding:2px}
 .theme-opt{
   padding:7px 14px;background:none;border:none;color:var(--muted);
   font-size:.8rem;font-weight:600;cursor:pointer;border-radius:6px;transition:all .12s;
@@ -443,7 +443,7 @@ body.transitioning .btn{pointer-events:none}
   display:flex;align-items:center;justify-content:flex-end;padding-right:24px;gap:6px;
   border-radius:var(--radius);
 }
-.swipe-wrap .history-card{margin-bottom:0}
+.swipe-wrap .history-card{margin-bottom:0;position:relative;z-index:1}
 .history-card{
   background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:12px;
   cursor:pointer;transition:all .12s;border:1px solid var(--surface-border);box-shadow:var(--shadow);

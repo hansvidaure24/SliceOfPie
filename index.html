@@ -76,22 +76,24 @@
     <div class="pay-row">
       <span class="pay-icon">Venmo</span>
       <input class="pay-input" id="payVenmo" placeholder="@username" oninput="savePayment()">
-      <button class="toggle on pay-toggle" id="togVenmo" onclick="togglePay('Venmo')" role="switch" aria-checked="true" aria-label="Include Venmo"></button>
+      <button class="toggle pay-toggle" id="togVenmo" onclick="togglePay('Venmo')" role="switch" aria-checked="false" aria-label="Include Venmo"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Zelle</span>
       <input class="pay-input" id="payZelle" placeholder="email or phone" oninput="savePayment()">
-      <button class="toggle on pay-toggle" id="togZelle" onclick="togglePay('Zelle')" role="switch" aria-checked="true" aria-label="Include Zelle"></button>
+      <button class="toggle pay-toggle" id="togZelle" onclick="togglePay('Zelle')" role="switch" aria-checked="false" aria-label="Include Zelle"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Cash App</span>
       <input class="pay-input" id="payCashApp" placeholder="$cashtag" oninput="savePayment()">
-      <button class="toggle on pay-toggle" id="togCashApp" onclick="togglePay('CashApp')" role="switch" aria-checked="true" aria-label="Include Cash App"></button>
+      <button class="toggle pay-toggle" id="togCashApp" onclick="togglePay('CashApp')" role="switch" aria-checked="false" aria-label="Include Cash App"></button>
     </div>
-    <div class="pay-row" style="flex-wrap:wrap">
-      <input class="pay-input" id="payOtherLabel" placeholder="Other (PayPal, Revolut...)" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
-      <input class="pay-input" id="payOtherValue" placeholder="username or email" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
-      <button class="toggle on pay-toggle" id="togOther" onclick="togglePay('Other')" role="switch" aria-checked="true" aria-label="Include other method"></button>
+    <div class="pay-row">
+      <div style="flex:1;display:flex;flex-wrap:wrap;gap:8px;min-width:0">
+        <input class="pay-input" id="payOtherLabel" placeholder="Other" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
+        <input class="pay-input" id="payOtherValue" placeholder="username or email" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
+      </div>
+      <button class="toggle pay-toggle" id="togOther" onclick="togglePay('Other')" role="switch" aria-checked="false" aria-label="Include other method"></button>
     </div>
   </div>
   <div class="card">
