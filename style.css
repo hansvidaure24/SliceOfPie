@@ -424,8 +424,16 @@ body.transitioning .btn{pointer-events:none}
 }
 .theme-opt.active{background:var(--cherry);color:#fff}
 
+/* ── Currency Select ── */
+.currency-select{
+  width:100%;padding:10px 32px 10px 12px;background:var(--surface2);color:var(--text);
+  border:1.5px solid var(--surface-border);border-radius:var(--radius-sm);
+  font-size:.9rem;font-weight:600;cursor:pointer;appearance:auto;
+}
+.currency-select:focus{border-color:var(--crust);outline:none}
+
 /* ── Who Paid Badges ── */
-.payer-row,.currency-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.payer-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
 .payer-badge{
   padding:8px 16px;border-radius:50px;font-size:.8rem;font-weight:600;
   cursor:pointer;border:2px solid var(--surface2);background:none;color:var(--muted);
@@ -547,7 +555,7 @@ body.transitioning .btn{pointer-events:none}
   .container{max-width:720px}
 
   /* Settings: name + payment full-width, rest 2-col */
-  #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+  #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
   #screenSettings>h1,#screenSettings>.subtitle,#screenSettings>.nav-row{grid-column:1/-1}
   #screenSettings>.card:nth-of-type(3),#screenSettings>.card:last-of-type{grid-column:1/-1}
 
