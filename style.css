@@ -796,6 +796,47 @@ body[data-chrome="tabs"] .tab-bar{display:flex}
   .confirm-overlay.show .confirm-box{transform:none}
 }
 
+/* ── Side panes, drop target, desktop hints ── */
+.side-pane{
+  display:none;background:var(--surface);border:1px solid var(--surface-border);border-radius:var(--radius);
+  padding:var(--space-4);box-shadow:var(--shadow);
+}
+.items-head,.rail-logo{display:none}
+.live-pie{width:120px;height:120px;border-radius:50%;margin:var(--space-2) auto var(--space-3);box-shadow:0 4px 16px #0004}
+.live-totals{margin-top:var(--space-2);border-top:1px solid var(--border-subtle);padding-top:var(--space-1)}
+.live-totals .sum-line{font-size:var(--text-sm)}
+.live-totals .sum-line.total{font-size:var(--text-md)}
+.live-note{font-size:var(--text-xs);color:var(--muted);margin-top:var(--space-2)}
+.live-note:empty{display:none}
+.live-note.warn{color:var(--warn);font-weight:600}
+.pane-bill{
+  display:flex;flex-direction:column;gap:3px;width:100%;text-align:left;cursor:pointer;
+  padding:10px 12px;border-radius:var(--radius-sm);border:1px solid transparent;background:none;color:var(--text);
+}
+.pane-bill:hover{background:var(--surface2)}
+.pane-bill.current{background:var(--surface2);border-color:var(--crust)}
+.pane-bill-top,.pane-bill-bottom{display:flex;justify-content:space-between;gap:var(--space-2)}
+.pane-bill-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-sm)}
+.pane-bill-top span{font-size:var(--text-sm);font-variant-numeric:tabular-nums}
+.pane-bill-bottom{font-size:var(--text-xs);color:var(--muted)}
+.pane-owed{color:var(--status-none)}
+.pane-paid{color:var(--status-done)}
+
+.drop-overlay{
+  position:fixed;inset:12px;z-index:70;display:none;align-items:center;justify-content:center;pointer-events:none;
+  background:color-mix(in srgb,var(--bg) 85%,transparent);border:3px dashed var(--crust);border-radius:24px;
+}
+.drop-overlay.show{display:flex}
+.drop-overlay p{display:flex;align-items:center;gap:10px;font-size:var(--text-lg);font-weight:700}
+.drop-overlay .gallery-icon{--icon-size:28px;color:var(--crust)}
+.drop-hint,.kbd-hint{display:none;font-size:var(--text-xs);color:var(--muted);text-align:center}
+.drop-hint{margin-top:var(--space-4)}
+.kbd-hint{text-align:right;margin-top:var(--space-1)}
+kbd{font-family:ui-monospace,Consolas,monospace;font-size:.7rem;padding:1px 5px;border-radius:4px;background:var(--surface2);color:var(--cream-dim)}
+@media (hover:hover) and (pointer:fine){
+  .drop-hint,.kbd-hint{display:block}
+}
+
 /* ── Desktop responsive ── */
 @media (min-width:768px){
   .container{max-width:720px}
@@ -823,6 +864,86 @@ body[data-chrome="tabs"] .tab-bar{display:flex}
   #historyList .swipe-wrap{margin-bottom:0}
 
   .cta-bar{border-radius:var(--radius) var(--radius) 0 0;margin-inline:0}
+  /* Two-column screens size to their content; the bar still sticks when they scroll */
+  #screenSummary.active,#screenDetail.active{min-height:0;align-content:start}
+}
+
+/* ── Tablet and up: running totals beside the step ── */
+@media (min-width:768px){
+  body[data-aside="live"] .container{
+    max-width:1040px;display:grid;grid-template-columns:minmax(0,1fr) 280px;column-gap:28px;align-items:start;
+  }
+  body[data-aside="live"] .container>.app-bar{grid-column:1/-1}
+  body[data-aside="live"] .container>.screen{grid-column:1}
+  body[data-aside="live"] .live-summary{
+    display:block;grid-column:2;grid-row:2;position:sticky;top:calc(var(--safe-top) + 80px);
+    max-height:calc(100dvh - var(--safe-top) - 104px);overflow-y:auto;
+  }
+  /* In a grid the outgoing screen would take a row of its own while it fades */
+  body[data-aside="live"] .screen.leaving,body[data-aside="bills"] .screen.leaving{display:none}
+}
+
+/* ── Desktop: a side rail replaces the tabs; people become columns ── */
+@media (min-width:1100px){
+  body{padding-left:calc(220px + 32px + env(safe-area-inset-left,0px));padding-right:32px}
+  body[data-chrome="tabs"]{--chrome-bottom:0px;padding-bottom:calc(24px + var(--safe-bottom))}
+  body:not([data-chrome="none"]) .tab-bar{display:flex}
+  .tab-bar{
+    top:0;right:auto;width:220px;flex-direction:column;justify-content:flex-start;gap:4px;
+    padding:calc(20px + var(--safe-top)) 12px 20px calc(12px + env(safe-area-inset-left,0px));
+    border-top:none;border-right:1px solid var(--border-subtle);background:var(--bg2);
+  }
+  .rail-logo{display:flex;align-items:center;gap:10px;margin:0 8px 20px;font-family:var(--font-display);font-weight:800;font-size:1.25rem}
+  .rail-logo img{width:34px;height:34px}
+  .rail-logo .pie{color:var(--cherry)}
+  .tab{
+    flex:none;max-width:none;flex-direction:row;justify-content:flex-start;gap:12px;
+    min-height:44px;padding:0 12px;font-size:var(--text-sm);
+  }
+  .tab:hover{background:var(--surface)}
+  .tab[aria-current="page"]{background:var(--surface);color:var(--text)}
+  .tab[aria-current="page"] svg,.tab[aria-current="page"] .bill-icon{color:var(--cherry)}
+  /* The unpaid count sits at the end of the row instead of on the icon */
+  .tab-icon{display:contents}
+  .tab .badge{position:static;order:3;margin-left:auto}
+  .app-bar{margin-inline:0;padding-inline:0 4px;border-radius:0}
+
+  .container{max-width:760px}
+  body[data-aside="live"] .container{max-width:1100px;grid-template-columns:minmax(0,1fr) 300px;column-gap:32px}
+  body[data-aside="bills"] .container{
+    max-width:1100px;display:grid;grid-template-columns:300px minmax(0,1fr);column-gap:32px;align-items:start;
+  }
+  body[data-aside="bills"] .container>.app-bar{grid-column:1/-1}
+  body[data-aside="bills"] .container>.screen{grid-column:2}
+  body[data-aside="bills"] .bills-pane{
+    display:block;grid-column:1;grid-row:2;position:sticky;top:calc(var(--safe-top) + 80px);
+    max-height:calc(100dvh - var(--safe-top) - 104px);overflow-y:auto;padding:var(--space-3);
+  }
+
+  /* Items as a grid: name, price, one column per person, delete */
+  #itemsList{overflow-x:auto}
+  .items-head,.item-row{
+    display:grid;grid-template-columns:minmax(150px,1fr) 88px var(--who-cols,0px) 40px;
+    align-items:center;column-gap:6px;
+  }
+  .items-head{
+    font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+    padding-bottom:var(--space-2);border-bottom:1px solid var(--border-subtle);
+  }
+  .head-price{text-align:right;padding-right:8px}
+  .head-person{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--who,var(--muted));text-transform:none;letter-spacing:0}
+  .item-row{padding:8px 0}
+  .item-main,.item-who{display:contents}
+  .item-price{width:100%}
+  .item-del{order:99}
+  .who-chip{
+    width:30px;height:30px;min-height:0;padding:0;justify-self:center;justify-content:center;
+    border-radius:8px;font-size:0;max-width:none;gap:0;
+  }
+  .who-chip::before{display:none}
+  .who-chip.on::after{content:'\2713';font-size:16px;font-weight:800;color:#fff}
+  .who-all.on::after{color:var(--brown)}
+  .who-chip:hover{border-color:var(--who)}
 }
 
 /* ── Reduced motion ── */

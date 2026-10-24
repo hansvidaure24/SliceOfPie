@@ -1,7 +1,7 @@
 import { $, COLORS, esc, fmt, receiptHints, confirmDialog, showToast, setToggle } from './helpers';
 import { state } from './state';
 import { goTo, updateQuickCta } from './navigation';
-import { updateItemsCta, whoChips } from './assign';
+import { updateItemsCta, whoChips, itemsHead, whoColumns } from './assign';
 import { processReceipt } from './scan/process';
 import { OcrUnavailableError } from './scan/engine';
 import { prepareImage } from './scan/image';
@@ -166,7 +166,9 @@ export function enterItemsScreen(): void {
 
 export function renderItems(): void {
   const byItem = state.splitMode === 'item';
-  $('itemsList').innerHTML = state.items.map((item, i) => `
+  const cols = whoColumns();
+  $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 52px)` : '0px');
+  $('itemsList').innerHTML = itemsHead() + state.items.map((item, i) => `
     <div class="item-row" data-row="${i}">
       <div class="item-main">
         <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name">
@@ -190,6 +192,22 @@ export function renderItems(): void {
     input.addEventListener('input', () => {
       state.items[Number(input.dataset.itemPrice)].price = parseFloat(input.value) || 0;
       updateRunning();
+    });
+  });
+
+  // Enter moves name → price → next item, adding one at the end
+  list.querySelectorAll<HTMLInputElement>('.item-name, .item-price').forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      e.preventDefault();
+      const i = Number(input.dataset.itemName ?? input.dataset.itemPrice);
+      if (input.dataset.itemName !== undefined) {
+        list.querySelector<HTMLInputElement>(`[data-item-price="${i}"]`)?.focus();
+      } else if (i < state.items.length - 1) {
+        list.querySelector<HTMLInputElement>(`[data-item-name="${i + 1}"]`)?.focus();
+      } else {
+        addItem();
+      }
     });
   });
 

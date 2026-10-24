@@ -6,6 +6,7 @@ import { renderAssign, updateItemsCta, unassignedCount, showFirstUnassigned } fr
 import { renderHistory, renderSaveButton } from './history';
 import { goToSummary } from './summary';
 import { saveDraft, clearDraft } from './draft';
+import { setAside, renderLiveSummary } from './layout';
 
 const HOME = 'screenWelcome';
 
@@ -66,6 +67,7 @@ const STEPS: Record<'even' | 'item', [string, string[]][]> = {
 function renderChrome(id: string): void {
   const chrome = CHROME[id] ?? 'bar';
   document.body.dataset.chrome = chrome;
+  setAside(id);
   $('appTitle').textContent = BAR_TITLES[id] ?? '';
   $('appNewBill').hidden = id !== 'screenSummary';
 
@@ -93,6 +95,7 @@ export function startSplit(mode: 'even' | 'item'): void {
 // The Total screen's bottom bar
 export function updateQuickCta(): void {
   $('quickCtaTotal').textContent = fmt(state.quickTotalAmt + (state.taxIncluded ? 0 : state.quickTaxAmt));
+  renderLiveSummary();
 }
 
 export function currentScreen(): string {

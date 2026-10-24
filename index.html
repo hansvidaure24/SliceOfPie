@@ -207,6 +207,7 @@
     <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon"></span>Upload Photo</button>
     <button class="btn btn-ghost" onclick="skipToManual()"><span class="pencil-icon"></span>Enter Manually</button>
   </div>
+  <p class="drop-hint">You can also drop a photo here, or paste one with Ctrl+V.</p>
   <input type="file" id="photoInput" accept="image/*" aria-label="Upload receipt photo">
   <img id="previewImg" class="preview-img" alt="Receipt preview" style="display:none" aria-hidden="true">
   <div id="progressWrap" class="progress-wrap" style="display:none">
@@ -248,6 +249,7 @@
       <input class="tax-input" id="taxInput" type="number" inputmode="decimal" step="0.01" value="0" placeholder="0.00" aria-label="Tax amount">
     </div>
     <div class="running-sub" id="runningSub">Subtotal: $0.00</div>
+    <p class="kbd-hint"><kbd>Enter</kbd> next field or new item · <kbd>Alt</kbd>+<kbd>1</kbd>–<kbd>9</kbd> toggle a person on the item you're in</p>
     <p class="receipt-check" id="receiptCheck" aria-live="polite"></p>
   </div>
 
@@ -316,7 +318,25 @@
     </div>
   </div>
 </div>
+<!-- Beside the screen on wide layouts: running totals while splitting -->
+<aside class="side-pane live-summary" id="liveSummary" aria-label="Live summary">
+  <div class="section-label">Live summary</div>
+  <div class="live-pie" id="livePie" aria-hidden="true"></div>
+  <div id="livePeople"></div>
+  <div class="live-totals" id="liveTotals"></div>
+  <p class="live-note" id="liveNote" aria-live="polite"></p>
+</aside>
+
+<!-- Beside a saved bill on wide layouts: every bill, to switch between them -->
+<aside class="side-pane bills-pane" id="billsPane" aria-label="Saved bills">
+  <div class="section-label">Bills</div>
+  <div id="billsPaneList"></div>
+</aside>
+
+<div class="drop-overlay" id="dropOverlay" aria-hidden="true"><p><span class="gallery-icon"></span>Drop the receipt photo to scan it</p></div>
+
 <nav class="tab-bar" id="tabBar" aria-label="Main">
+  <div class="rail-logo" aria-hidden="true"><img src="/logo-pie.png" alt=""><span>SliceOf<span class="pie">Pie</span></span></div>
   <button class="tab" data-tab="screenWelcome" onclick="goTo('screenWelcome')">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 2.05A10 10 0 1 0 21.95 13H11z"/><path fill="currentColor" d="M13 2.05V11h8.95A10 10 0 0 0 13 2.05z" opacity=".55"/></svg>
     <span>Split</span>

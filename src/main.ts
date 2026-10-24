@@ -8,13 +8,14 @@ import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './tog
 import { updateItemsCta, initAssign } from './assign';
 import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning, enterItemsScreen } from './items';
 import { takePhoto, closeCamera, shootPhoto, toggleTorch } from './camera';
-import { updateHistoryBadge, startSaveBill, deleteBill } from './history';
-import { goTo, goBack, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary, captureBack, screenForSlug, syncBillUI, settleHomeLocation, startSplit, updateQuickCta } from './navigation';
+import { updateHistoryBadge, startSaveBill, deleteBill, viewBill } from './history';
+import { goTo, goBack, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary, captureBack, screenForSlug, syncBillUI, settleHomeLocation, startSplit, updateQuickCta, currentScreen } from './navigation';
 import { goToSummary } from './summary';
 import { restoreDraft } from './draft';
 import { doShare, reshareDetail } from './share';
 import { exportImage } from './export-image';
 import { loadHistory } from './db';
+import { initReceiptDrop } from './layout';
 import { registerSW } from 'virtual:pwa-register';
 
 // Vite bundles as ESM — expose handlers for inline onclick attributes
@@ -108,6 +109,17 @@ loadHistory().then(bills => {
 }).catch(() => {});
 
 initAssign();
+
+// A dropped or pasted receipt scans like a photo; the total screen hands off to the scan screen
+initReceiptDrop(file => {
+  if (currentScreen() !== 'screenCapture') goTo('screenCapture');
+  void scanPhoto(file);
+});
+
+$('billsPaneList').addEventListener('click', (e) => {
+  const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-pane-bill]');
+  if (btn) viewBill(Number(btn.dataset.paneBill));
+});
 
 // Photo input — preview and OCR
 ($('photoInput') as HTMLInputElement).addEventListener('change', (e) => {

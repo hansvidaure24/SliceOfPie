@@ -1,5 +1,6 @@
 import { $, COLORS, esc, fmt, tap } from './helpers';
 import { state } from './state';
+import { renderLiveSummary } from './layout';
 
 function unassignedIndexes(): number[] {
   if (state.splitMode !== 'item') return [];
@@ -24,6 +25,7 @@ export function updateItemsCta(): void {
   $('itemsList').querySelectorAll<HTMLElement>('[data-row]').forEach(row => {
     row.classList.toggle('unassigned', unassigned.includes(Number(row.dataset.row)));
   });
+  renderLiveSummary();
 }
 
 // The person chips under an item: tap a name to put it on their share
@@ -35,7 +37,7 @@ export function whoChips(itemIdx: number): string {
   const chips = state.people.map((person, personIdx) => {
     const on = item.assignees!.includes(personIdx);
     return `<button class="who-chip${on ? ' on' : ''}" style="--who:${COLORS[personIdx % 8]}"
-      data-assign="${itemIdx}-${personIdx}" aria-pressed="${on}">${esc(person.name)}</button>`;
+      data-assign="${itemIdx}-${personIdx}" aria-pressed="${on}" title="${esc(person.name)}">${esc(person.name)}</button>`;
   }).join('');
   const all = state.people.length > 1
     ? `<button class="who-chip who-all${everyone ? ' on' : ''}" data-assign-all="${itemIdx}" aria-pressed="${everyone}">Everyone</button>`
@@ -43,8 +45,25 @@ export function whoChips(itemIdx: number): string {
   return chips + all;
 }
 
+// Column headings for the wide layout, where people become columns
+export function itemsHead(): string {
+  if (state.splitMode !== 'item') return '';
+  const names = state.people.map((p, i) =>
+    `<span class="head-person" style="--who:${COLORS[i % 8]}" title="${esc(p.name)}">${esc(p.name)}</span>`
+  ).join('');
+  return `<div class="items-head" data-items-head aria-hidden="true"><span>Item</span><span class="head-price">Price</span>${names}${state.people.length > 1 ? '<span class="head-person">All</span>' : ''}</div>`;
+}
+
+export function whoColumns(): number {
+  return state.people.length + (state.people.length > 1 ? 1 : 0);
+}
+
 // Redraws every item's chips, e.g. after people were renamed or added
 export function renderAssign(): void {
+  const head = $('itemsList').querySelector('[data-items-head]');
+  if (head) head.outerHTML = itemsHead();
+  const cols = whoColumns();
+  $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 52px)` : '0px');
   $('itemsList').querySelectorAll<HTMLElement>('[data-who]').forEach(group => {
     group.innerHTML = whoChips(Number(group.dataset.who));
   });
@@ -73,6 +92,16 @@ function toggleAll(itemIdx: number): void {
 
 // One listener for every chip, since rows are redrawn as items change
 export function initAssign(): void {
+  // Alt+1..9 puts person N on the item whose field has focus
+  $('itemsList').addEventListener('keydown', (e) => {
+    if (!e.altKey || !/^Digit[1-9]$/.test(e.code) || state.splitMode !== 'item') return;
+    const row = (e.target as HTMLElement).closest<HTMLElement>('[data-row]');
+    const personIdx = Number(e.code.slice(5)) - 1;
+    if (!row || personIdx >= state.people.length) return;
+    e.preventDefault();
+    toggleAssign(Number(row.dataset.row), personIdx);
+  });
+
   $('itemsList').addEventListener('click', (e) => {
     const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-assign],[data-assign-all]');
     if (!btn) return;
