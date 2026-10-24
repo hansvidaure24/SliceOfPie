@@ -7,6 +7,7 @@ import { renderHistory, renderSaveButton } from './history';
 import { goToSummary } from './summary';
 import { saveDraft, clearDraft } from './draft';
 import { setAside, renderLiveSummary } from './layout';
+import { renderScannerStatus } from './scanner-status';
 
 const HOME = 'screenWelcome';
 
@@ -150,6 +151,7 @@ export function goTo(id: string): void {
 
   if (id === 'screenItems') renderAssign();
   if (id === 'screenHistory') renderHistory();
+  if (id === 'screenSettings' || id === 'screenCapture') void renderScannerStatus();
 
   renderChrome(id);
   syncHistory(id);

@@ -1,3 +1,7 @@
+/* ── Fonts: served with the app and precached, so they work offline (SIL OFL 1.1) ── */
+@font-face{font-family:'Inter';font-style:normal;font-weight:400 800;font-display:swap;src:url('/fonts/inter-latin.woff2') format('woff2')}
+@font-face{font-family:'Fraunces';font-style:normal;font-weight:800;font-display:swap;src:url('/fonts/fraunces-800-latin.woff2') format('woff2')}
+
 /* ── Reset & Variables ── */
 *{margin:0;padding:0;box-sizing:border-box}
 .hidden{display:none!important}
@@ -837,6 +841,30 @@ kbd{font-family:ui-monospace,Consolas,monospace;font-size:.7rem;padding:1px 5px;
   .drop-hint,.kbd-hint{display:block}
 }
 
+/* ── Scanner, install, update ── */
+.status-row{display:flex;align-items:center;gap:var(--space-3)}
+.status-text{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.status-text b{font-size:var(--text-sm)}
+.status-text b.ok{color:var(--status-done)}
+.status-text small{font-size:var(--text-xs);color:var(--muted);line-height:1.4}
+.status-row .btn-inline{flex-shrink:0;min-height:40px}
+#scannerProgress{margin-top:var(--space-3)}
+#scannerProgress[hidden]{display:none}
+.scanner-note{margin-top:var(--space-4);text-align:center;font-size:var(--text-xs);color:var(--muted)}
+.scanner-note:empty{display:none}
+.scanner-note.ok{color:var(--status-done)}
+.scanner-note.ok::before{content:'¹3  '}
+.rail-install{display:none}
+.update-toast{
+  position:fixed;left:50%;transform:translateX(-50%);z-index:65;
+  bottom:calc(var(--chrome-bottom,0px) + 16px + var(--safe-bottom));
+  display:flex;align-items:center;gap:var(--space-3);width:max-content;max-width:calc(100vw - 32px);
+  padding:8px 8px 8px 18px;border-radius:50px;background:var(--surface);border:1px solid var(--surface-border);
+  box-shadow:var(--shadow-lg);font-size:var(--text-sm);font-weight:600;
+}
+.update-toast[hidden]{display:none}
+.update-toast .btn{min-height:36px;padding:6px 16px}
+
 /* ── Desktop responsive ── */
 @media (min-width:768px){
   .container{max-width:720px}
@@ -896,6 +924,13 @@ kbd{font-family:ui-monospace,Consolas,monospace;font-size:.7rem;padding:1px 5px;
   .rail-logo{display:flex;align-items:center;gap:10px;margin:0 8px 20px;font-family:var(--font-display);font-weight:800;font-size:1.25rem}
   .rail-logo img{width:34px;height:34px}
   .rail-logo .pie{color:var(--cherry)}
+  .rail-install:not([hidden]){
+    display:flex;flex-direction:column;gap:2px;margin-top:auto;padding:12px;text-align:left;cursor:pointer;
+    border:1.5px dashed var(--surface-border);border-radius:var(--radius-sm);background:none;color:var(--cream-dim);
+  }
+  .rail-install b{color:var(--text);font-size:var(--text-sm)}
+  .rail-install small{font-size:var(--text-xs)}
+  .rail-install:hover{border-color:var(--crust)}
   .tab{
     flex:none;max-width:none;flex-direction:row;justify-content:flex-start;gap:12px;
     min-height:44px;padding:0 12px;font-size:var(--text-sm);

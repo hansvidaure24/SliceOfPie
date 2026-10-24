@@ -116,6 +116,8 @@ function openDialog(msg: string, sub: string, labels: { yes?: string; no?: strin
     const input = $('confirmInput') as HTMLInputElement;
     yesBtn.textContent = labels.yes ?? 'Confirm';
     noBtn.textContent = labels.no ?? 'Cancel';
+    // An empty label means there's nothing to choose, just a message to close
+    noBtn.hidden = labels.no === '';
     $('confirmMsg').textContent = msg;
     $('confirmSub').textContent = sub;
     $('confirmSub').style.display = sub ? '' : 'none';
@@ -128,12 +130,12 @@ function openDialog(msg: string, sub: string, labels: { yes?: string; no?: strin
     box.setAttribute('aria-describedby', 'confirmSub');
     overlay.classList.add('show');
     if (value === null) {
-      noBtn.focus();
+      (noBtn.hidden ? yesBtn : noBtn).focus();
     } else {
       input.focus();
       input.select();
     }
-    const focusable = value === null ? [noBtn, yesBtn] : [input, noBtn, yesBtn];
+    const focusable = [value === null ? null : input, noBtn.hidden ? null : noBtn, yesBtn].filter(Boolean) as HTMLElement[];
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && e.target === input) {
         e.preventDefault();
