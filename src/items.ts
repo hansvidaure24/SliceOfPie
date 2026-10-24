@@ -6,6 +6,7 @@ import { processReceipt } from './scan/process';
 import { OcrUnavailableError } from './scan/engine';
 import { prepareImage } from './scan/image';
 import { assessQuality } from './scan/quality';
+import { okToDownloadScanner } from './scanner-status';
 
 // The phone's own camera app via the file input (the live camera is in camera.ts)
 export function takePhotoNative(): void {
@@ -47,6 +48,10 @@ export async function scanPhoto(photo: Blob): Promise<void> {
 }
 
 export async function runOCR(file: Blob): Promise<void> {
+  if (!(await okToDownloadScanner())) {
+    skipToManual();
+    return;
+  }
   let image = file;
   try {
     const prepared = await prepareImage(file);

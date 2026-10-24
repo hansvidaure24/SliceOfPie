@@ -4,6 +4,7 @@ import { calcOwes } from './summary';
 import { goTo } from './navigation';
 
 import { putBill, deleteBillFromDB } from './db';
+import { maybeNudgeInstall } from './install';
 import type { Bill } from './types';
 
 const DELETE_ICON = '<span class="trash-icon"></span>';
@@ -65,6 +66,7 @@ function saveBill(label: string): void {
   renderSaveButton();
   updateHistoryBadge();
   showToast('Bill saved!');
+  setTimeout(() => void maybeNudgeInstall(), 1200);
 }
 
 export function renderSaveButton(): void {

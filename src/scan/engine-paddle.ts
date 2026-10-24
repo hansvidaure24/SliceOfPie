@@ -35,6 +35,14 @@ export interface PaddleScan {
 }
 
 export interface PaddleEngine extends OcrEngine {
+  // Roughly how much the first scan downloads
+  downloadBytes: number;
+  // Whether everything is in the offline cache already
+  isCached(): Promise<boolean>;
+  // Downloads into the cache without starting the worker
+  prefetch(onProgress?: (p: OcrProgress) => void): Promise<void>;
+  // Drops the cached files; the next scan downloads them again
+  forget(): Promise<void>;
   // Downloads (if needed) and starts the worker; resolves to init time in ms
   warm(onProgress?: (p: OcrProgress) => void): Promise<number>;
   recognizeDetailed(image: Blob, onProgress?: (p: OcrProgress) => void): Promise<PaddleScan>;
@@ -161,8 +169,25 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
     return { lines: mergeRows(res.segments), segments: res.segments, detMs: res.detMs, recMs: res.recMs, totalMs: res.totalMs };
   }
 
+  async function prefetch(onProgress?: (p: OcrProgress) => void): Promise<void> {
+    const urls = files.map(f => f.url);
+    if (await allCached(urls)) return;
+    await download(files, pct => onProgress?.({ phase: 'download', pct }));
+    // The service worker writes each response to the cache just after we finish reading it
+    for (let i = 0; i < 40 && !(await allCached(urls)); i++) await new Promise(r => setTimeout(r, 250));
+  }
+
+  async function forget(): Promise<void> {
+    dispose();
+    await caches.delete(OCR_CACHE);
+  }
+
   return {
     isAvailable: () => typeof Worker === 'function' && typeof WebAssembly === 'object',
+    downloadBytes: files.reduce((s, f) => s + f.bytes, 0),
+    isCached: () => allCached(files.map(f => f.url)),
+    prefetch,
+    forget,
     warm,
     recognizeDetailed,
     recognize: async (image, onProgress) => (await recognizeDetailed(image, onProgress)).lines,
