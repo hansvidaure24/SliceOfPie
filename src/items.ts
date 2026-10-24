@@ -164,7 +164,11 @@ export function skipToManual(): void {
   $('itemsSubtitle').textContent = 'Add your items';
   enterItemsScreen();
   const first = $('itemsList').querySelector<HTMLInputElement>('.item-name');
-  if (first) setTimeout(() => first.focus(), 300);
+  // Start typing in the first item, unless you've already moved on (a tap or a key)
+  const heading = $('screenItems').querySelector('h1');
+  if (first) setTimeout(() => {
+    if (document.activeElement === heading || document.activeElement === document.body) first.focus();
+  }, 300);
 }
 
 export function enterItemsScreen(): void {
