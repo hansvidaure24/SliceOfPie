@@ -1,6 +1,6 @@
 # Real-device test checklist
 
-For the UI/UX redesign on `ui-shell` (phases 0–4). The checks below need a real phone. Everything that could be checked in a desktop browser already has been (see the end of this file).
+The checks below need a real phone. Everything that could be checked in a desktop browser already has been (see the end of this file).
 
 ## Before you start
 
@@ -29,6 +29,8 @@ Devices: **iPhone (Safari)**, **Android (Chrome)**, and optionally an **iPad** a
 |---|---|---|
 | The top bar and Home's logo sit **below** the clock/notch/Dynamic Island, with nothing hidden under it | ☐ | ☐ |
 | The bottom tabs and the Next/Share bar sit **above** the home indicator, with no gap below them | ☐ | ☐ |
+| Right after opening the installed app (before any scrolling), the tabs are already at the bottom, not floating a status bar's height above it | ☐ | ☐ |
+| A toast right after opening (e.g. "Picked up where you left off") sits just above the tabs or the Next bar | ☐ | ☐ |
 | Scrolling a long Items list: content slides under the top bar and nothing shows through above it | ☐ | ☐ |
 | Landscape: nothing is hidden behind the notch on the left or right | ☐ | ☐ |
 
@@ -50,6 +52,8 @@ Devices: **iPhone (Safari)**, **Android (Chrome)**, and optionally an **iPad** a
 | With the keyboard open on Items, the field you're typing in stays visible (not hidden behind the bottom bar or keyboard) | ☐ | ☐ |
 | The keyboard's Next/Go key moves name → price → next item, and adds a new item from the last price | ☐ | ☐ |
 | The "Name this bill" sheet: the keyboard doesn't cover the Save button | ☐ | ☐ |
+| Tapping any field (Settings, tip, total, tax) doesn't zoom the page | ☐ | ☐ |
+| Installed app: pinching doesn't zoom; in a browser tab it still does | ☐ | ☐ |
 
 ## 5. Scanning
 
@@ -95,6 +99,13 @@ Devices: **iPhone (Safari)**, **Android (Chrome)**, and optionally an **iPad** a
 | Share as image produces a readable PNG you can send in Messages/WhatsApp | ☐ | ☐ |
 | Light taps (haptics) on chips and toggles (Android) | – | ☐ |
 
+## 9b. Backing up bills
+
+| Check | iPhone | Android |
+|---|---|---|
+| Settings → Your bills → Export opens the share sheet; Save to Files / Drive keeps a `.json` file | ☐ | ☐ |
+| On another phone (or after clearing the app's data), Import that file: the bills and who's paid come back | ☐ | ☐ |
+
 ## 10. Look and feel
 
 | Check | iPhone | Android |
@@ -108,8 +119,8 @@ Devices: **iPhone (Safari)**, **Android (Chrome)**, and optionally an **iPad** a
 
 | Check | Any |
 |---|---|
-| After a new deploy, the installed app shows "A new version is ready. Reload" instead of a dialog | ☐ |
-| Reloading mid-split brings the bill back | ☐ |
+| After a new deploy, opening the app on Home switches to the new version by itself (one quick reload) | ☐ |
+| Mid-split it shows "A new version is ready" instead; Reload switches and brings the bill back | ☐ |
 
 ## 12. Tablet and laptop (optional)
 

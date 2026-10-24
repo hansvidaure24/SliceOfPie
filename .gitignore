@@ -12,3 +12,4 @@ bench/models/
 test-results/
 playwright-report/
 .lighthouseci/
+.claude/

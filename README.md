@@ -32,7 +32,7 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 - **OCR receipt scanning** — snap a photo with the in-app camera (guide frame, light and hold-still hints), upload one, drop or paste one on a computer, or share one from your gallery (Android, desktop Chrome). PaddleOCR reads it on-device in a Web Worker and picks out the items (including names that wrap onto a second line and "2 x" quantities), discounts, subtotal, tax, tip, total, merchant and date. A live line shows whether the items match the receipt's total, and a photo that can't be read or doesn't add up offers a retake. In an even split, a scan fills in the total
 - **Offline scanner, on your terms** — the scanner (~36 MB) downloads once, after you say yes; Settings shows whether it's ready offline and can download or remove it
 - **Tip & tax** — preset tip buttons, custom %, pre-tax or post-tax, round-up toggle; a tip already printed on a scanned receipt is used as-is instead of adding another
-- **Bill history** — saved to IndexedDB under a name you choose, track who's paid with one tap; Home lists the bills still unpaid
+- **Bill history** — saved to IndexedDB under a name you choose, track who's paid with one tap; Home lists the bills still unpaid. The app asks the browser to keep it, and Settings exports it to a file and imports it back, for a backup or a new phone
 - **Share or copy** — on a computer the bill copies to the clipboard in one click; on a phone it opens the share sheet. Either way your payment details (Venmo, Zelle, Cash App, or your own) are included, and there's a PNG version too
 - **Picks up where you left off** — a reload, or the phone dropping the app while you open Venmo, brings you back to the same screen with the bill intact
 - **Works like an app** — installable, with home-screen shortcuts (scan, enter a total, who owes me), the system back gesture, and updates that apply themselves (held back with a "new version ready" notice while you're in the middle of a bill)
@@ -53,7 +53,7 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 ## Architecture Decisions
 
 **Why vanilla TS instead of React/Vue/Svelte?**
-The app is ~4,600 lines across 46 modules. A framework would add a virtual DOM and a state management library to solve problems this app doesn't have. Manual DOM updates via `renderX()` functions mean every state change is explicit and traceable. The result is a small startup bundle (about 22 KB of JavaScript gzipped) and zero framework churn.
+The app is ~4,800 lines across 49 modules. A framework would add a virtual DOM and a state management library to solve problems this app doesn't have. Manual DOM updates via `renderX()` functions mean every state change is explicit and traceable. The result is a small startup bundle (about 22 KB of JavaScript gzipped) and zero framework churn.
 
 **Why a mutable state object instead of a store/signals?**
 A single `state.ts` object holds all app state. Each module imports it, mutates directly, and calls the appropriate render function. This works because:
@@ -89,8 +89,8 @@ npm run build
 npm run test:e2e    # Playwright: phone (Pixel 7) and desktop, against the built app
 ```
 
-- **Unit tests** (`test/`): the money math and its rounding to the cent, starting up with storage blocked, draft resume and its 3-hour expiry, the receipt parser with saved OCR output from real receipts, image quality checks, when a new version is applied, clearing old scanner files from the offline cache, and the security headers.
-- **End-to-end tests** (`e2e/`): even and by-item splits with known answers, back navigation and resume, offline use, scanning a drawn receipt online then offline, the share target, axe on every screen in both themes, 200% text, the desktop grid and live summary, drop-to-scan, copy to clipboard, the Content-Security-Policy, a real app update (applied at once on a first visit, held for Reload mid-bill), blocked storage, failed saves, swipe to delete, 16px text fields on touch screens, and pinch zoom off only when installed. Real receipt photos are gitignored; when they're present in `test/fixtures/receipts/photos/`, a test scans one too.
+- **Unit tests** (`test/`): the money math and its rounding to the cent, starting up with storage blocked, draft resume and its 3-hour expiry, the receipt parser with saved OCR output from real receipts, image quality checks, when a new version is applied, clearing old scanner files from the offline cache, the bills export file (including files that aren't one, or try to sneak in styles), and the security headers.
+- **End-to-end tests** (`e2e/`): even and by-item splits with known answers, back navigation and resume, offline use, scanning a drawn receipt online then offline, the share target, axe on every screen in both themes, 200% text, the desktop grid and live summary, drop-to-scan, copy to clipboard, the Content-Security-Policy, a real app update (applied at once on a first visit, held for Reload mid-bill), blocked storage, failed saves, swipe to delete, 16px text fields on touch screens, pinch zoom off only when installed, the tabs and toasts at the bottom of the screen, the live camera (with Chromium's test camera) and a blocked one, the bill as an image, and exporting bills then importing them into a fresh browser. Real receipt photos are gitignored; when they're present in `test/fixtures/receipts/photos/`, a test scans one too.
 - **CI** (`.github/workflows/ci.yml`): every push and pull request runs the type check, both suites and Lighthouse; the build fails if performance drops below 90 or accessibility below 100.
 - **Before a release**, [docs/device-test-checklist.md](docs/device-test-checklist.md) lists what needs a real phone.
 
@@ -134,7 +134,9 @@ src/
   chrome.ts        Top bar, step bar and tabs for each screen
   flow.ts          Moving through a split, and starting a new one
   layout.ts        Wide-screen side panes, drop and paste to scan
-  db.ts            IndexedDB wrapper
+  db.ts            IndexedDB wrapper, and asking the browser to keep the data
+  backup.ts        Export and import saved bills (Settings)
+  backup-format.ts The export file: writing it, and checking one that's imported
   people.ts        People counter, names, contacts, "Add again"
   items.ts         Capture, the item list, running the scan
   assign.ts        Name chips / person columns on each item

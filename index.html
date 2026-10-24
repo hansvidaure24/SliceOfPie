@@ -122,6 +122,17 @@
     </div>
     <div class="progress-bar" id="scannerProgress" hidden><div class="progress-fill"></div></div>
   </div>
+  <div class="card" id="backupCard">
+    <div class="section-label">Your bills</div>
+    <div class="status-row">
+      <div class="status-text"><b>Back up saved bills</b><small>Saved bills stay on this device. Export them to a file to keep a copy or move them to a new phone.</small></div>
+    </div>
+    <div class="backup-actions">
+      <button class="btn btn-secondary btn-inline" data-action="exportBills">Export</button>
+      <button class="btn btn-secondary btn-inline" data-action="importBills">Import</button>
+      <input type="file" id="importInput" accept=".json,application/json" hidden>
+    </div>
+  </div>
   <div class="card" id="installCard" hidden>
     <div class="section-label">App</div>
     <div class="status-row">
