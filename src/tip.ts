@@ -97,6 +97,7 @@ export function setCustomTip(): void {
   const val = Math.min(100, parseFloat(custom.value));
   if (!isNaN(val) && val >= 0) {
     state.tipPct = val;
+    if (val !== parseFloat(custom.value)) custom.value = String(val);
     document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => btn.classList.remove('active'));
     localStorage.setItem('sp_tip', String(val));
     updateSummary();

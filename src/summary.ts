@@ -84,25 +84,28 @@ export function updateSummary(): void {
   $('sumTax').textContent = fmt(tax);
   $('sumTipAmt').textContent = fmt(tip);
 
+  const breakdown = calcOwes();
+  const displayTotal = state.roundUp
+    ? breakdown.reduce((s, b) => s + b.amount, 0)
+    : total;
+
   const totalEl = $('sumTotal');
   const oldTotal = totalEl.textContent;
-  totalEl.textContent = fmt(total);
-  if (oldTotal !== fmt(total)) pulse(totalEl);
-
-  const breakdown = calcOwes();
+  totalEl.textContent = fmt(displayTotal);
+  if (oldTotal !== fmt(displayTotal)) pulse(totalEl);
   const breakdownHtml = renderBreakdownLines(breakdown);
 
   if (state.splitMode === 'even') {
-    $('evenResult').style.display = 'block';
-    $('itemResult').style.display = 'none';
+    $('evenResult').classList.remove('hidden');
+    $('itemResult').classList.add('hidden');
     const ppEl = $('perPerson');
     const oldPP = ppEl.textContent;
     ppEl.textContent = fmt(breakdown[0]?.amount || 0);
     if (oldPP !== ppEl.textContent) pulse(ppEl);
     $('evenBreakdown').innerHTML = breakdownHtml;
   } else {
-    $('evenResult').style.display = 'none';
-    $('itemResult').style.display = 'block';
+    $('evenResult').classList.add('hidden');
+    $('itemResult').classList.remove('hidden');
     renderPieChart(breakdown);
     $('breakdownList').innerHTML = breakdownHtml;
   }

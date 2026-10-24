@@ -15,8 +15,9 @@ interface Line { text: string; color: string; size: number; bold: boolean; y: nu
 export async function exportImage(): Promise<void> {
   await document.fonts.ready;
   const COLORS = getColors();
-  const { sub, tax, tip, total } = getBillTotals();
+  const { sub, tax, tip, total: rawTotal } = getBillTotals();
   const breakdown = calcOwes();
+  const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
   const label = (document.getElementById('saveLabelInput') as HTMLInputElement)?.value || 'Bill';
 
   const lines: Line[] = [];
@@ -94,7 +95,7 @@ export async function exportImage(): Promise<void> {
       a.href = url;
       a.download = 'bill.png';
       a.click();
-      URL.revokeObjectURL(url);
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
       showToast('Image downloaded');
     }
   }, 'image/png');

@@ -8,7 +8,9 @@ function loadLastGroup(): void {
     name: p.name,
     isMe: state.imPartOfBill && i === 0,
   }));
-  $('peopleCount').textContent = String(state.people.length);
+  const el = $('peopleCount');
+  el.textContent = String(state.people.length);
+  el.setAttribute('aria-label', state.people.length + ' people splitting');
   renderNames();
   showToast('Loaded ' + last.people.length + ' people from "' + last.label + '"');
 }
@@ -40,8 +42,19 @@ export function changePeople(delta: number): void {
     state.payer = state.imPartOfBill ? 'me' : 0;
   }
 
-  $('peopleCount').textContent = String(state.people.length);
+  const ctr = $('peopleCount');
+  ctr.textContent = String(state.people.length);
+  ctr.setAttribute('aria-label', state.people.length + ' people splitting');
+  updateCounterState();
   renderNames();
+}
+
+export function updateCounterState(): void {
+  ($('btnMinus') as HTMLButtonElement).disabled = otherCount() <= 1;
+  ($('btnPlus') as HTMLButtonElement).disabled = otherCount() >= 8;
+  $('peopleSubtitle').textContent = state.imPartOfBill
+    ? 'How many others are splitting?'
+    : 'How many people at the table?';
 }
 
 export function renderNames(): void {
@@ -50,22 +63,23 @@ export function renderNames(): void {
       <div class="person-icon" style="background:${person.isMe ? 'var(--crust)' : COLORS[i % 8]}"></div>
       <input class="person-name-input" value="${esc(person.name)}"
              placeholder="${person.isMe ? 'Your name' : 'Name'}"
+             maxlength="20"
              data-person="${i}"
              aria-label="${person.isMe ? 'Your name' : 'Person ' + (i + 1) + ' name'}"
              style="${person.isMe ? 'border-bottom-color:var(--crust)' : ''}">
-      ${person.isMe ? '<button class="toggle on" id="partOfBillToggle" onclick="togglePartOfBill()" role="switch" aria-checked="true" aria-label="I\'m part of this bill" style="flex-shrink:0"></button>' : ''}
+      ${person.isMe ? '<div class="me-toggle-row"><span style="font-size:.75rem;color:var(--muted)">I\'m splitting</span><button class="toggle on" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="true" aria-label="I\'m part of this bill"></button></div>' : ''}
     </div>
   `).join('');
 
   const joinRow = !state.imPartOfBill ? `
-    <div class="person-name-row" style="justify-content:center;gap:8px;padding:10px 0;opacity:.7">
-      <span style="font-size:.8rem;color:var(--muted)">Not splitting?</span>
-      <button class="toggle" id="partOfBillToggle" onclick="togglePartOfBill()" role="switch" aria-checked="false" aria-label="Join this bill" style="flex-shrink:0"></button>
+    <div class="person-name-row" style="gap:8px;padding:10px 0">
+      <span style="font-size:.8rem;color:var(--cream-dim)">Not splitting?</span>
+      <button class="toggle" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="false" aria-label="Join this bill" style="flex-shrink:0"></button>
     </div>
   ` : '';
 
   const lastGroupBtn = state.history.length > 0
-    ? '<button class="btn btn-ghost last-group-btn" style="margin-top:8px;padding:8px;font-size:.75rem;width:auto;display:inline-block;border-color:var(--surface2)">Last group</button>'
+    ? '<button class="btn btn-ghost last-group-btn" style="padding:8px;font-size:.75rem;border-color:var(--surface-border)">Last group</button>'
     : '';
 
   $('namesList').innerHTML = rows + joinRow + lastGroupBtn;
@@ -80,6 +94,9 @@ export function renderNames(): void {
     const fallback = state.people[idx].isMe ? 'Me' : 'Person ' + (idx + 1);
     input.addEventListener('input', () => {
       state.people[idx].name = input.value || fallback;
+    });
+    input.addEventListener('blur', () => {
+      if (!input.value.trim()) input.value = fallback;
     });
   });
 }

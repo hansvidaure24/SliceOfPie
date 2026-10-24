@@ -1,6 +1,6 @@
 import { $, setToggle, tap } from './helpers';
 import { state } from './state';
-import { renderNames } from './people';
+import { renderNames, updateCounterState } from './people';
 import { updateSummary } from './summary';
 
 export function setSplitMode(mode: 'even' | 'item'): void {
@@ -13,7 +13,7 @@ export function toggleTaxInc(): void {
   tap();
   state.taxIncluded = !state.taxIncluded;
   setToggle('taxIncToggle', state.taxIncluded);
-  $('quickTaxCard').style.display = state.taxIncluded ? 'none' : 'block';
+  $('quickTaxCard').classList.toggle('hidden', state.taxIncluded);
   if (state.taxIncluded) {
     state.quickTaxAmt = 0;
     ($('quickTax') as HTMLInputElement).value = '';
@@ -53,5 +53,7 @@ export function togglePartOfBill(): void {
   }
 
   $('peopleCount').textContent = String(state.people.length);
+  $('peopleCount').setAttribute('aria-label', state.people.length + ' people splitting');
+  updateCounterState();
   renderNames();
 }

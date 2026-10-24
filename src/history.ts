@@ -1,12 +1,13 @@
-import { $, esc, fmt, showToast, defaultLabel, tap } from './helpers';
+import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill } from './state';
 import { calcOwes } from './summary';
 import { goTo } from './navigation';
-import { shareBill } from './share';
+
 import { putBill, deleteBillFromDB } from './db';
 import type { Bill } from './types';
 
 const DELETE_ICON = '<span class="trash-icon" style="margin-right:6px"></span>';
+let swipeHintShown = false;
 
 export function startSaveBill(): void {
   const { total } = getBillTotals();
@@ -20,7 +21,8 @@ export function startSaveBill(): void {
 export function confirmSave(): void {
   const label = ($('saveLabelInput') as HTMLInputElement).value.trim() || defaultLabel();
   const breakdown = calcOwes();
-  const { total } = getBillTotals();
+  const { total: rawTotal } = getBillTotals();
+  const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
 
   const bill: Bill = {
     id: Date.now(),
@@ -57,7 +59,6 @@ export function renderHistory(): void {
   if (state.history.length === 0) {
     $('historyList').innerHTML = `
       <div class="empty-state">
-        <div class="bill-icon" style="width:48px;height:48px;background:var(--muted);margin:0 auto 12px;display:block"></div>
         No saved bills yet.<br>
         <span style="color:var(--muted)">Split a bill and tap Save!</span>
       </div>`;
@@ -75,9 +76,10 @@ export function renderHistory(): void {
     else if (paidCount >= totalPeople) { statusClass = 'status-done'; statusText = 'All paid'; }
     else { statusClass = 'status-partial'; statusText = paidCount + '/' + totalPeople + ' paid'; }
 
-    return `<div class="swipe-wrap" data-swipe="${bill.id}">
+    return `<div class="swipe-wrap" role="listitem" data-swipe="${bill.id}">
       <div class="swipe-behind"><span class="trash-icon"></span> Delete</div>
       <div class="history-card" data-bill="${bill.id}" tabindex="0" role="button">
+        <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete bill">&times;</button>
         <div class="history-top">
           <span class="history-label">${esc(bill.label)}</span>
           <span class="history-date">${dateStr}</span>
@@ -85,10 +87,6 @@ export function renderHistory(): void {
         <div class="history-bottom">
           <span class="history-total">${fmt(bill.total)}</span>
           <span style="display:flex;align-items:center;gap:8px">
-            <button class="btn btn-ghost" style="display:inline;width:auto;padding:4px 10px;font-size:.7rem;border-radius:20px" data-reshare="${bill.id}">
-              <span class="share-icon" style="margin-right:4px"></span>Share
-            </button>
-            <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete bill"><span class="xmark-icon" style="width:18px;height:18px"></span></button>
             <span class="history-status ${statusClass}">${statusText}</span>
             <span class="chevron-icon"></span>
           </span>
@@ -100,23 +98,22 @@ export function renderHistory(): void {
   $('historyList').querySelectorAll<HTMLElement>('[data-bill]').forEach(card => {
     const open = () => viewBill(Number(card.dataset.bill));
     card.addEventListener('click', open);
-    card.addEventListener('keydown', (e) => { if (e.key === 'Enter') open(); });
-  });
-
-  $('historyList').querySelectorAll<HTMLButtonElement>('[data-reshare]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      shareBill(Number(btn.dataset.reshare));
-    });
+    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
   });
 
   $('historyList').querySelectorAll<HTMLButtonElement>('[data-hist-del]').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const id = Number(btn.dataset.histDel);
-      if (confirm('Delete this bill?')) swipeDelete(id);
+      if (await confirmDialog('Delete this bill?', 'This action cannot be undone.')) swipeDelete(id);
     });
   });
+
+  if (!swipeHintShown) {
+    swipeHintShown = true;
+    const first = $('historyList').querySelector('.swipe-wrap');
+    if (first) first.classList.add('swipe-hint');
+  }
 
   initSwipe();
 }
@@ -130,8 +127,12 @@ export function viewBill(id: number): void {
   $('detailDelBtn').innerHTML = DELETE_ICON + 'Delete Bill';
   $('detailDelBtn').classList.remove('del-confirm');
   const titleEl = $('detailTitle');
-  titleEl.innerHTML = esc(bill.label) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle;opacity:.5"></span>';
+  titleEl.innerHTML = esc(bill.label) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle" aria-hidden="true"></span>';
+  titleEl.setAttribute('role', 'button');
+  titleEl.setAttribute('tabindex', '0');
+  titleEl.setAttribute('aria-label', 'Edit bill label');
   titleEl.onclick = () => editBillLabel(bill);
+  titleEl.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
 
   const date = new Date(bill.date);
   $('detailDate').textContent = date.toLocaleDateString(undefined, {
@@ -139,6 +140,7 @@ export function viewBill(id: number): void {
   });
 
   $('detailSummaryCard').innerHTML = `
+    <div class="section-label">Summary</div>
     <div class="sum-line"><span>Total</span><span>${fmt(bill.total)}</span></div>
     <div class="sum-line"><span>Tip</span><span>${bill.tipPct}%</span></div>
     <div class="sum-line"><span>Split</span><span>${bill.splitMode === 'even' ? 'Even' : 'By item'}</span></div>
@@ -156,10 +158,11 @@ function renderDetailPeople(bill: Bill): void {
         <div class="person-icon" style="background:${person.color}"></div>
         <div>
           <div class="detail-name" style="color:${person.color}">${esc(person.name)}</div>
-          <div class="detail-amount">${person.paid ? 'Paid' : 'Owes ' + fmt(person.amount)}</div>
+          <div class="detail-amount${person.paid ? ' paid-text' : ''}">${person.paid ? 'Paid' : 'Owes ' + fmt(person.amount)}</div>
         </div>
       </div>
-      <button class="paid-btn ${person.paid ? 'paid' : ''}" data-toggle-paid="${bill.id}-${i}">
+      <button class="paid-btn ${person.paid ? 'paid' : ''}" data-toggle-paid="${bill.id}-${i}"
+              aria-label="${esc(person.name)}: mark as ${person.paid ? 'unpaid' : 'paid'}" aria-pressed="${person.paid}">
         ${person.paid ? '<span class="check-icon" style="margin-right:4px"></span>Paid' : 'Not yet'}
       </button>
     </div>
@@ -208,8 +211,9 @@ function editBillLabel(bill: Bill): void {
     const newLabel = input.value.trim() || bill.label;
     bill.label = newLabel;
     putBill(bill).catch(() => {});
-    titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle;opacity:.5"></span>';
+    titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle" aria-hidden="true"></span>';
     titleEl.onclick = () => editBillLabel(bill);
+    titleEl.onkeydown = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
     showToast('Label updated');
   };
 
@@ -274,7 +278,13 @@ function initSwipe(): void {
       if (dx < -SWIPE_THRESHOLD) {
         tap();
         card.style.transform = `translateX(-100%)`;
-        card.addEventListener('transitionend', () => swipeDelete(billId), { once: true });
+        card.addEventListener('transitionend', async () => {
+          if (await confirmDialog('Delete this bill?', 'This action cannot be undone.')) {
+            swipeDelete(billId);
+          } else {
+            card.style.transform = '';
+          }
+        }, { once: true });
       } else {
         card.style.transform = '';
       }

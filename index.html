@@ -40,9 +40,9 @@
     <img src="/logo-pie.png" alt="" class="logo-pie">
     <img src="/logo-slice.png" alt="" class="logo-slice">
   </div>
-  <div class="app-title">SliceOf<span class="pie">Pie</span></div>
+  <h1 class="app-title">SliceOf<span class="pie">Pie</span></h1>
   <p class="subtitle">Everybody gets their slice</p>
-  <div style="margin-top:32px;display:flex;flex-direction:column;gap:12px;width:100%">
+  <div class="welcome-actions">
     <button class="btn btn-primary" onclick="goTo('screenPeople')">Get Started</button>
     <div class="history-btn-wrap">
       <button class="btn btn-secondary" onclick="goTo('screenHistory')"><span class="bill-icon" style="margin-right:6px"></span>History</button>
@@ -57,17 +57,17 @@
   <p class="subtitle">Personalize your experience</p>
   <div class="card">
     <div class="section-label">Your Name</div>
-    <input class="pay-input" id="payName" placeholder="Your name" style="width:100%;margin-bottom:8px"
+    <input class="pay-input" id="payName" placeholder="Your name" aria-label="Your name" style="width:100%"
            oninput="savePayment()">
   </div>
   <div class="card">
     <div class="section-label">Appearance</div>
     <div class="theme-row">
       <span class="round-label">Theme</span>
-      <div class="theme-toggle" id="themeToggle">
-        <button class="theme-opt" data-theme="system">Auto</button>
-        <button class="theme-opt" data-theme="light">Light</button>
-        <button class="theme-opt" data-theme="dark">Dark</button>
+      <div class="theme-toggle" id="themeToggle" role="radiogroup" aria-label="Theme">
+        <button class="theme-opt" data-theme="system" role="radio" aria-checked="false">Auto</button>
+        <button class="theme-opt" data-theme="light" role="radio" aria-checked="false">Light</button>
+        <button class="theme-opt" data-theme="dark" role="radio" aria-checked="false">Dark</button>
       </div>
     </div>
   </div>
@@ -75,38 +75,38 @@
     <div class="section-label">Payment Methods</div>
     <div class="pay-row">
       <span class="pay-icon">Venmo</span>
-      <input class="pay-input" id="payVenmo" placeholder="@username" oninput="savePayment()">
+      <input class="pay-input" id="payVenmo" placeholder="@username" aria-label="Venmo username" oninput="savePayment()">
       <button class="toggle pay-toggle" id="togVenmo" onclick="togglePay('Venmo')" role="switch" aria-checked="false" aria-label="Include Venmo"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Zelle</span>
-      <input class="pay-input" id="payZelle" placeholder="email or phone" oninput="savePayment()">
+      <input class="pay-input" id="payZelle" placeholder="email or phone" aria-label="Zelle email or phone" oninput="savePayment()">
       <button class="toggle pay-toggle" id="togZelle" onclick="togglePay('Zelle')" role="switch" aria-checked="false" aria-label="Include Zelle"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Cash App</span>
-      <input class="pay-input" id="payCashApp" placeholder="$cashtag" oninput="savePayment()">
+      <input class="pay-input" id="payCashApp" placeholder="$cashtag" aria-label="Cash App cashtag" oninput="savePayment()">
       <button class="toggle pay-toggle" id="togCashApp" onclick="togglePay('CashApp')" role="switch" aria-checked="false" aria-label="Include Cash App"></button>
     </div>
     <div class="pay-row">
       <div style="flex:1;display:flex;flex-wrap:wrap;gap:8px;min-width:0">
-        <input class="pay-input" id="payOtherLabel" placeholder="Other" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
-        <input class="pay-input" id="payOtherValue" placeholder="username or email" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
+        <input class="pay-input" id="payOtherLabel" placeholder="Other" aria-label="Other payment method name" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
+        <input class="pay-input" id="payOtherValue" placeholder="username or email" aria-label="Other payment method username" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
       </div>
       <button class="toggle pay-toggle" id="togOther" onclick="togglePay('Other')" role="switch" aria-checked="false" aria-label="Include other method"></button>
     </div>
   </div>
   <div class="card">
     <div class="section-label">Currency</div>
-    <select class="currency-select" id="currencySelect"></select>
+    <select class="currency-select" id="currencySelect" aria-label="Currency"></select>
   </div>
   <div class="card">
     <div class="section-label">Tip Presets</div>
     <div id="presetsList"></div>
-    <button class="preset-add" id="presetAddBtn" onclick="addPreset()"><span class="add-icon" style="margin-right:4px"></span>Add Preset</button>
+    <button class="preset-add" id="presetAddBtn" onclick="addPreset()"><span class="add-icon" aria-hidden="true" style="margin-right:4px"></span>Add Preset</button>
   </div>
-  <div class="card" style="background:var(--bg);border:1px dashed var(--muted);text-align:center;padding:12px 16px">
-    <p style="margin:0;font-size:.8rem;color:var(--muted)">Your data is saved locally on this device only. Nothing is sent to a server.</p>
+  <div class="card privacy-note">
+    <p>Your data is saved locally on this device only. Nothing is sent to a server.</p>
   </div>
   <div class="nav-row">
     <button class="btn btn-ghost" onclick="goTo('screenWelcome')">Back</button>
@@ -117,7 +117,7 @@
 <div id="screenHistory" class="screen">
   <h1>Bill <span class="accent">History</span></h1>
   <p class="subtitle">Past splits and who still owes</p>
-  <div id="historyList"></div>
+  <div id="historyList" role="list" aria-label="Saved bills"></div>
   <div class="nav-row">
     <button class="btn btn-ghost" onclick="goTo('screenWelcome')">Back</button>
   </div>
@@ -133,22 +133,22 @@
     <div id="detailPeople"></div>
   </div>
   <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenHistory');renderHistory()">Back</button>
+    <button class="btn btn-ghost" onclick="goTo('screenHistory')">Back to History</button>
     <button class="btn btn-primary" onclick="reshareDetail()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
   </div>
-  <button class="btn btn-ghost" id="detailDelBtn" style="margin-top:10px;border-color:var(--cherry);color:var(--cherry)" onclick="deleteBill()"><span class="trash-icon" style="margin-right:6px"></span>Delete Bill</button>
+  <button class="btn btn-ghost-danger" id="detailDelBtn" onclick="deleteBill()"><span class="trash-icon" style="margin-right:6px"></span>Delete Bill</button>
 </div>
 
 <!-- SCREEN 1: People Setup -->
 <div id="screenPeople" class="screen">
   <div class="progress-dots"><span class="progress-dot active"></span><span class="progress-dot"></span><span class="progress-dot"></span></div>
   <h1>Who's <span class="accent">splitting?</span></h1>
-  <p class="subtitle">How many people at the table?</p>
+  <p class="subtitle" id="peopleSubtitle">How many people at the table?</p>
   <div class="card">
     <div class="people-counter">
-      <button class="counter-btn" onclick="changePeople(-1)" aria-label="Remove person">−</button>
+      <button class="counter-btn" id="btnMinus" onclick="changePeople(-1)" aria-label="Remove person">−</button>
       <span class="counter-val" id="peopleCount" aria-live="polite" aria-label="Number of people">2</span>
-      <button class="counter-btn" onclick="changePeople(1)" aria-label="Add person">+</button>
+      <button class="counter-btn" id="btnPlus" onclick="changePeople(1)" aria-label="Add person">+</button>
     </div>
     <div id="namesList"></div>
   </div>
@@ -172,24 +172,22 @@
   <p class="subtitle">Enter the bottom-line number from the receipt</p>
   <div class="card">
     <div class="section-label">Receipt Total</div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <span id="quickTotalSymbol" style="font-size:1.4rem;color:var(--crust);font-weight:700">$</span>
-      <input id="quickTotal" class="item-price" type="number" inputmode="decimal" step="0.01"
-             placeholder="0.00" style="width:100%;font-size:1.3rem;padding:10px 8px"
-             aria-label="Receipt total">
+    <div class="currency-row">
+      <span id="quickTotalSymbol" class="currency-symbol">$</span>
+      <input id="quickTotal" class="item-price quick-entry-input" type="number" inputmode="decimal" step="0.01"
+             placeholder="0.00" aria-label="Receipt total">
     </div>
     <div class="tax-toggle-row">
-      <span class="round-label">Tax already included?</span>
+      <span class="round-label">Tax is included</span>
       <button class="toggle on" id="taxIncToggle" onclick="toggleTaxInc()" role="switch" aria-checked="true" aria-label="Tax included"></button>
     </div>
   </div>
-  <div class="card" id="quickTaxCard" style="display:none">
+  <div class="card hidden" id="quickTaxCard">
     <div class="section-label">Tax Amount</div>
-    <div style="display:flex;align-items:center;gap:6px">
-      <span id="quickTaxSymbol" style="font-size:1.1rem;color:var(--crust)">$</span>
-      <input id="quickTax" class="item-price" type="number" inputmode="decimal" step="0.01"
-             placeholder="0.00" style="width:100%;font-size:1rem;padding:8px"
-             aria-label="Tax amount">
+    <div class="currency-row">
+      <span id="quickTaxSymbol" class="currency-symbol">$</span>
+      <input id="quickTax" class="item-price quick-entry-input" type="number" inputmode="decimal" step="0.01"
+             placeholder="0.00" aria-label="Tax amount">
     </div>
   </div>
   <div class="nav-row">
@@ -205,16 +203,16 @@
   <p class="subtitle">Take a photo or enter items manually</p>
   <div class="capture-btns">
     <button class="btn btn-primary camera-btn" onclick="takePhoto()"><span class="camera-icon" style="margin-right:6px"></span>Take Photo</button>
-    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon" style="margin-right:6px"></span>Upload from Gallery</button>
-    <input type="file" id="photoInput" accept="image/*" aria-label="Upload receipt photo">
+    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon" style="margin-right:6px"></span>Upload Photo</button>
     <button class="btn btn-ghost" onclick="skipToManual()"><span class="pencil-icon" style="margin-right:6px"></span>Enter Manually</button>
   </div>
-  <img id="previewImg" class="preview-img" alt="Receipt preview" style="display:none">
+  <input type="file" id="photoInput" accept="image/*" aria-label="Upload receipt photo">
+  <img id="previewImg" class="preview-img" alt="Receipt preview" style="display:none" aria-hidden="true">
   <div id="progressWrap" class="progress-wrap" style="display:none">
-    <p class="progress-text" id="progressText">Scanning receipt...</p>
-    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <p class="progress-text" id="progressText" aria-live="polite">Scanning receipt...</p>
+    <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" id="progressFill"></div></div>
   </div>
-  <div class="nav-row" style="margin-top:12px">
+  <div class="nav-row">
     <button class="btn btn-ghost" onclick="goTo('screenPeople')">Back</button>
   </div>
 </div>
@@ -223,7 +221,7 @@
 <div id="screenItems" class="screen">
   <div class="progress-dots" id="dotItems"><span class="progress-dot done"></span><span class="progress-dot active"></span><span class="progress-dot"></span></div>
   <h1>Your <span class="accent">items</span></h1>
-  <p class="subtitle">Fix anything the scan missed</p>
+  <p class="subtitle" id="itemsSubtitle">Fix anything the scan missed</p>
   <div class="card">
     <div id="itemsList"></div>
     <button class="add-btn" onclick="addItem()"><span class="add-icon" style="margin-right:4px"></span>Add Item</button>
@@ -263,7 +261,7 @@
     </div>
     <div class="card-divider"></div>
     <div class="round-row">
-      <span class="round-label"><span class="arrow-up-icon" style="margin-right:4px"></span>Round up to nearest dollar</span>
+      <span class="round-label"><span class="arrow-up-icon" aria-hidden="true" style="margin-right:4px"></span>Round up to nearest dollar</span>
       <button class="toggle" id="roundToggle" onclick="toggleRound()" role="switch" aria-checked="false" aria-label="Round up"></button>
     </div>
     <div class="card-divider"></div>
@@ -271,7 +269,7 @@
     <div class="payer-row" id="payerRow"></div>
   </div>
 
-  <div class="card" id="summaryCard" style="border-top:3px solid var(--crust)">
+  <div class="card card-accent" id="summaryCard">
     <div class="sum-line"><span id="sumSubLabel">Subtotal</span><span id="sumSub">$0.00</span></div>
     <div class="sum-line" id="sumTaxLine"><span>Tax</span><span id="sumTax">$0.00</span></div>
     <div class="sum-line"><span id="sumTipLabel">Tip (18%)</span><span id="sumTipAmt">$0.00</span></div>
@@ -283,26 +281,41 @@
       <div id="evenBreakdown"></div>
     </div>
 
-    <div id="itemResult" style="display:none">
+    <div id="itemResult" class="hidden">
       <div class="pie-chart-wrap" id="pieChartWrap"></div>
-      <div class="section-label" style="margin-top:8px">Each person owes</div>
+      <div class="section-label" style="margin-top:14px">Each person owes</div>
       <div id="breakdownList"></div>
     </div>
   </div>
 
-  <div class="nav-row" style="margin-top:12px">
-    <button class="btn btn-ghost" onclick="goBackFromSummary()">Back</button>
-    <button class="btn btn-secondary" onclick="exportImage()" style="flex:.6"><span class="gallery-icon" style="margin-right:6px"></span>Image</button>
-    <button class="btn btn-primary" onclick="doShare()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
+  <div class="summary-actions">
+    <div class="nav-row">
+      <button class="btn btn-ghost" onclick="goBackFromSummary()">Back</button>
+      <button class="btn btn-secondary" onclick="exportImage()"><span class="gallery-icon" style="margin-right:4px"></span>Image</button>
+      <button class="btn btn-primary" onclick="doShare()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
+    </div>
+    <div class="save-label-wrap" id="saveLabelWrap">
+      <input class="save-label-input" id="saveLabelInput" placeholder="Label this bill..." aria-label="Bill label">
+      <button class="btn btn-primary btn-inline" onclick="confirmSave()">Save</button>
+    </div>
+    <div class="nav-row">
+      <button class="btn btn-secondary" id="saveBillBtn" onclick="startSaveBill()"><span class="bill-icon" style="margin-right:6px"></span>Save Bill</button>
+      <button class="btn btn-ghost" onclick="newBill()">New Bill</button>
+    </div>
   </div>
-  <div class="save-label-wrap" id="saveLabelWrap" style="margin-top:8px">
-    <input class="save-label-input" id="saveLabelInput" placeholder="Label this bill..." aria-label="Bill label">
-    <button class="btn btn-primary btn-small" onclick="confirmSave()" style="display:inline-block;width:auto;padding:8px 16px">Save</button>
-  </div>
-  <button class="btn btn-secondary" style="margin-top:8px" id="saveBillBtn" onclick="startSaveBill()"><span class="bill-icon" style="margin-right:6px"></span>Save Bill</button>
-  <button class="btn btn-ghost" style="margin-top:8px;border-color:var(--muted);color:var(--muted)" onclick="newBill()">New Bill</button>
 </div>
 
+<div class="confirm-overlay" id="confirmOverlay">
+  <div class="confirm-box">
+    <div class="confirm-icon">!</div>
+    <p class="confirm-msg" id="confirmMsg"></p>
+    <p class="confirm-sub" id="confirmSub"></p>
+    <div class="confirm-btns">
+      <button class="btn btn-ghost" id="confirmNo">Cancel</button>
+      <button class="btn btn-primary" id="confirmYes">Confirm</button>
+    </div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
 </main><!-- /container -->
 

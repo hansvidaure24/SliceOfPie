@@ -76,6 +76,7 @@ export function renderPieChart(breakdown: Breakdown[]): void {
   svg.setAttribute('width', String(SIZE));
   svg.setAttribute('height', String(SIZE));
   svg.setAttribute('viewBox', `0 0 ${SIZE} ${SIZE}`);
+  svg.setAttribute('aria-hidden', 'true');
 
   for (const slice of slices) {
     const path = document.createElementNS(SVG_NS, 'path');
