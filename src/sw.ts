@@ -3,7 +3,7 @@ import { precacheAndRoute } from 'workbox-precaching';
 import { registerRoute } from 'workbox-routing';
 import { CacheFirst } from 'workbox-strategies';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
-import { OCR_CACHE } from './scan/cache-name';
+import { OCR_CACHE, SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
 
 declare const self: ServiceWorkerGlobalScope;
 
@@ -19,6 +19,22 @@ registerRoute(
     cacheName: OCR_CACHE,
     plugins: [new CacheableResponsePlugin({ statuses: [200] })],
   }),
+);
+
+// "Share → SliceOfPie" from the photo gallery (Android, desktop Chrome) posts the
+// image here. Park it in a cache and open the app, which picks it up and scans it.
+registerRoute(
+  ({ url }) => url.pathname === '/share-target',
+  async ({ request }) => {
+    const form = await request.formData();
+    const file = form.get('receipt');
+    if (file instanceof File && file.type.startsWith('image/')) {
+      const cache = await caches.open(SHARE_CACHE);
+      await cache.put(SHARED_RECEIPT_URL, new Response(file, { headers: { 'Content-Type': file.type } }));
+    }
+    return Response.redirect('/?shared=receipt', 303);
+  },
+  'POST',
 );
 
 self.addEventListener('install', () => {

@@ -1,4 +1,4 @@
-import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, confirmDialog, showToast } from './helpers';
+import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, showToast } from './helpers';
 import type { ThemePref } from './helpers';
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
@@ -16,6 +16,9 @@ import { doShare, reshareDetail } from './share';
 import { exportImage } from './export-image';
 import { loadHistory } from './db';
 import { initReceiptDrop } from './layout';
+import { initInstall } from './install';
+import { initScannerStatus } from './scanner-status';
+import { SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
 import { registerSW } from 'virtual:pwa-register';
 
 // Vite bundles as ESM — expose handlers for inline onclick attributes
@@ -85,6 +88,12 @@ renderPresets();
 // Pick up a bill in progress, or open the screen named in the address bar
 const draftScreen = restoreDraft();
 syncBillUI();
+initInstall();
+initScannerStatus();
+
+// App shortcuts (long-press the icon) and photos shared from other apps arrive as query params
+const launch = new URLSearchParams(location.search);
+history.replaceState(history.state, '', location.pathname + location.hash);
 const RESUME: Record<string, () => void> = {
   screenPeople: () => goTo('screenPeople'),
   screenQuick: () => goTo('screenQuick'),
@@ -94,7 +103,11 @@ const RESUME: Record<string, () => void> = {
   screenSummary: () => goToSummary(),
 };
 const linked = screenForSlug(location.hash.slice(1));
-if (draftScreen && RESUME[draftScreen]) {
+if (launch.get('shared') === 'receipt') {
+  void openSharedReceipt();
+} else if (launch.get('start') === 'scan' || launch.get('start') === 'total') {
+  startSplit(launch.get('start') === 'scan' ? 'item' : 'even');
+} else if (draftScreen && RESUME[draftScreen]) {
   RESUME[draftScreen]();
   showToast('Picked up where you left off');
 } else if (linked === 'screenHistory' || linked === 'screenSettings') {
@@ -175,8 +188,26 @@ document.addEventListener('keydown', (e) => {
   void goBack();
 });
 
+// A photo shared to SliceOfPie: the service worker parked it in a cache
+async function openSharedReceipt(): Promise<void> {
+  try {
+    const cache = await caches.open(SHARE_CACHE);
+    const res = await cache.match(SHARED_RECEIPT_URL);
+    await cache.delete(SHARED_RECEIPT_URL);
+    if (!res) { settleHomeLocation(); return; }
+    startSplit('item');
+    goTo('screenCapture');
+    showToast('Scanning the shared photo');
+    void scanPhoto(await res.blob());
+  } catch {
+    settleHomeLocation();
+  }
+}
+
+// A new version doesn't interrupt; a bill in progress survives the reload as a draft
 registerSW({
-  async onNeedRefresh() {
-    if (await confirmDialog('New version available. Update now?')) location.reload();
+  onNeedRefresh() {
+    $('updateToast').hidden = false;
   },
 });
+$('updateReload').addEventListener('click', () => location.reload());
