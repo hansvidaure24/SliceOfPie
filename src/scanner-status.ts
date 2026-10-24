@@ -21,7 +21,9 @@ export async function renderScannerStatus(): Promise<void> {
   $('scannerBtn').textContent = cached ? 'Remove' : 'Download';
   $('captureScannerNote').textContent = cached
     ? 'Scanner ready offline'
-    : `Your first scan downloads the scanner (about ${sizeMb()} MB)`;
+    : navigator.onLine
+      ? `Your first scan downloads the scanner (about ${sizeMb()} MB)`
+      : 'Scanning needs a connection the first time. You can enter items by hand.';
   $('captureScannerNote').classList.toggle('ok', cached);
 }
 
