@@ -1,4 +1,5 @@
-import { fmt, shareText, defaultLabel } from './helpers';
+import { fmt, shareText } from './helpers';
+import { billLabel } from './history';
 import { $, esc } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill, tipLabel } from './state';
 import { getPaymentLines } from './payment';
@@ -8,7 +9,7 @@ export async function doShare(): Promise<void> {
   const { sub, tax, tip, total: rawTotal } = getBillTotals();
   const breakdown = calcOwes();
   const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
-  const label = ($('saveLabelInput') as HTMLInputElement)?.value || defaultLabel();
+  const label = billLabel();
   const lines: string[] = ['SliceOfPie — ' + label];
 
   if (state.splitMode === 'item') {

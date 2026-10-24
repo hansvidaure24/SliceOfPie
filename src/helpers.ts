@@ -99,39 +99,66 @@ export function pulse(el: HTMLElement): void {
 }
 
 export function confirmDialog(msg: string, sub = '', labels: { yes?: string; no?: string } = {}): Promise<boolean> {
+  return openDialog(msg, sub, labels, null).then(result => result !== null);
+}
+
+// The same sheet with a text field; resolves to the text, or null when cancelled
+export function promptDialog(msg: string, value: string, labels: { yes?: string; no?: string } = {}): Promise<string | null> {
+  return openDialog(msg, '', labels, value);
+}
+
+function openDialog(msg: string, sub: string, labels: { yes?: string; no?: string }, value: string | null): Promise<string | null> {
   return new Promise(resolve => {
     const overlay = $('confirmOverlay');
     const box = overlay.querySelector('.confirm-box') as HTMLElement;
     const yesBtn = $('confirmYes');
     const noBtn = $('confirmNo');
+    const input = $('confirmInput') as HTMLInputElement;
     yesBtn.textContent = labels.yes ?? 'Confirm';
     noBtn.textContent = labels.no ?? 'Cancel';
     $('confirmMsg').textContent = msg;
     $('confirmSub').textContent = sub;
     $('confirmSub').style.display = sub ? '' : 'none';
-    box.setAttribute('role', 'alertdialog');
+    input.hidden = value === null;
+    input.value = value ?? '';
+    overlay.classList.toggle('prompt', value !== null);
+    box.setAttribute('role', value === null ? 'alertdialog' : 'dialog');
     box.setAttribute('aria-modal', 'true');
     box.setAttribute('aria-labelledby', 'confirmMsg');
     box.setAttribute('aria-describedby', 'confirmSub');
     overlay.classList.add('show');
-    noBtn.focus();
-    const trapFocus = (e: KeyboardEvent) => {
+    if (value === null) {
+      noBtn.focus();
+    } else {
+      input.focus();
+      input.select();
+    }
+    const focusable = value === null ? [noBtn, yesBtn] : [input, noBtn, yesBtn];
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && e.target === input) {
+        e.preventDefault();
+        cleanup(input.value);
+        return;
+      }
       if (e.key !== 'Tab') return;
-      const els = [noBtn, yesBtn];
-      const idx = els.indexOf(document.activeElement as HTMLElement);
+      const idx = focusable.indexOf(document.activeElement as HTMLElement);
       e.preventDefault();
-      els[(idx + (e.shiftKey ? -1 : 1) + els.length) % els.length].focus();
+      focusable[(idx + (e.shiftKey ? -1 : 1) + focusable.length) % focusable.length].focus();
     };
-    overlay.addEventListener('keydown', trapFocus);
-    const cleanup = (result: boolean) => {
+    overlay.addEventListener('keydown', onKey);
+    // Tapping the dimmed area outside the sheet cancels
+    const onScrim = (e: MouseEvent) => { if (e.target === overlay) cleanup(null); };
+    overlay.addEventListener('click', onScrim);
+    const cleanup = (result: string | null) => {
       overlay.classList.remove('show');
-      overlay.removeEventListener('keydown', trapFocus);
+      overlay.removeEventListener('keydown', onKey);
+      overlay.removeEventListener('click', onScrim);
       yesBtn.onclick = null;
       noBtn.onclick = null;
       resolve(result);
     };
-    yesBtn.onclick = () => cleanup(true);
-    noBtn.onclick = () => cleanup(false);
+    yesBtn.onclick = () => cleanup(input.value);
+    noBtn.onclick = () => cleanup(null);
   });
 }
 

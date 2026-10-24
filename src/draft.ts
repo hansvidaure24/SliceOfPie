@@ -8,7 +8,7 @@ const MAX_AGE_MS = 3 * 60 * 60 * 1000;
 const FIELDS = [
   'people', 'splitMode', 'items', 'taxAmt', 'quickTotalAmt', 'quickTaxAmt',
   'tipPct', 'tipBase', 'receipt', 'useReceiptTip', 'taxIncluded', 'roundUp',
-  'payer', 'imPartOfBill', 'billSavedThisSession',
+  'payer', 'imPartOfBill', 'billSavedThisSession', 'billLabel',
 ] as const;
 
 type DraftFields = Pick<typeof state, typeof FIELDS[number]>;

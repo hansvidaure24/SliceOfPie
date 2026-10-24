@@ -1,6 +1,20 @@
 import { $, COLORS, esc, fmt } from './helpers';
 import { state } from './state';
 
+// The Items screen's bottom bar: the running total, and whether anything still needs a person
+export function updateItemsCta(): void {
+  const sub = state.items.reduce((s, it) => s + (it.price || 0), 0);
+  $('itemsCtaTotal').textContent = fmt(sub + state.taxAmt);
+  const unassigned = state.splitMode === 'item'
+    ? state.items.filter(it => (it.price || 0) !== 0 && !it.assignees?.length).length
+    : 0;
+  const note = $('itemsCtaNote');
+  note.textContent = unassigned
+    ? unassigned + (unassigned === 1 ? ' item' : ' items') + ' unassigned'
+    : state.taxAmt ? 'Items + tax' : 'Subtotal';
+  note.classList.toggle('warn', unassigned > 0);
+}
+
 export function renderAssign(): void {
   $('assignList').innerHTML = state.items.map((item, itemIdx) => {
     if (!item.assignees) item.assignees = [];
@@ -21,6 +35,7 @@ export function renderAssign(): void {
       </div>
     </div>`;
   }).join('');
+  updateItemsCta();
 
   const list = $('assignList');
 

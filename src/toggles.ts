@@ -2,6 +2,7 @@ import { $, setToggle, tap } from './helpers';
 import { state } from './state';
 import { renderNames, updateCounterState } from './people';
 import { updateSummary } from './summary';
+import { updateQuickCta } from './navigation';
 
 export function setSplitMode(mode: 'even' | 'item'): void {
   state.splitMode = mode;
@@ -18,6 +19,7 @@ export function toggleTaxInc(): void {
     state.quickTaxAmt = 0;
     ($('quickTax') as HTMLInputElement).value = '';
   }
+  updateQuickCta();
 }
 
 export function toggleRound(): void {

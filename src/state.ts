@@ -50,6 +50,8 @@ export const state = {
   history: [] as Bill[],
   viewingBillId: null as number | null,
   billSavedThisSession: false,
+  // The name it was saved under; empty until saved
+  billLabel: '',
   deleteArmed: false,
   deleteTimer: null as ReturnType<typeof setTimeout> | null,
   payment,

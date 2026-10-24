@@ -1,4 +1,4 @@
-import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog } from './helpers';
+import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog, promptDialog } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill, effectiveTipPct } from './state';
 import { calcOwes } from './summary';
 import { goTo } from './navigation';
@@ -9,13 +9,19 @@ import type { Bill } from './types';
 const DELETE_ICON = '<span class="trash-icon"></span>';
 let swipeHintShown = false;
 
-export function startSaveBill(): void {
+export async function startSaveBill(): Promise<void> {
   const { total } = getBillTotals();
   if (total <= 0) { showToast('Nothing to save'); return; }
   if (state.billSavedThisSession) { showToast('Already saved'); return; }
-  ($('saveLabelInput') as HTMLInputElement).value = state.receipt?.merchant ? displayName(state.receipt.merchant) : defaultLabel();
-  $('saveLabelWrap').classList.add('show');
-  ($('saveLabelInput') as HTMLInputElement).focus();
+  const label = await promptDialog('Name this bill', billLabel(), { yes: 'Save' });
+  if (label === null) return;
+  saveBill(label.trim() || billLabel());
+}
+
+// What the current bill is called: its saved name, else the merchant or the date
+export function billLabel(): string {
+  if (state.billLabel) return state.billLabel;
+  return state.receipt?.merchant ? displayName(state.receipt.merchant) : defaultLabel();
 }
 
 // Receipts often print the merchant in capitals; "AROMA CAFE" reads better as "Aroma Cafe"
@@ -24,8 +30,7 @@ function displayName(merchant: string): string {
   return merchant.toLowerCase().replace(/(^|[\s\-/&])(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase());
 }
 
-export function confirmSave(): void {
-  const label = ($('saveLabelInput') as HTMLInputElement).value.trim() || defaultLabel();
+function saveBill(label: string): void {
   const breakdown = calcOwes();
   const { total: rawTotal } = getBillTotals();
   const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
@@ -56,7 +61,7 @@ export function confirmSave(): void {
   putBill(bill).catch(() => showToast('Could not save — storage full?'));
 
   state.billSavedThisSession = true;
-  $('saveLabelWrap').classList.remove('show');
+  state.billLabel = label;
   renderSaveButton();
   updateHistoryBadge();
   showToast('Bill saved!');
@@ -333,4 +338,23 @@ export function updateHistoryBadge(): void {
   } else {
     badge.style.display = 'none';
   }
+  renderOwed();
+}
+
+// Home lists the most recent bills that someone hasn't paid back yet
+function renderOwed(): void {
+  const owed = state.history.filter(b => b.people.some(p => !p.paid)).slice(0, 3);
+  $('owedSection').hidden = owed.length === 0;
+  $('owedList').innerHTML = owed.map(bill => {
+    const unpaid = bill.people.filter(p => !p.paid);
+    const paidCount = bill.people.length - unpaid.length;
+    const who = unpaid.length === 1 ? unpaid[0].name : unpaid.length + ' people';
+    return `<button class="owed-card" data-owed="${bill.id}">
+      <span class="owed-top"><b>${esc(bill.label)}</b><b class="owed-amt">${fmt(unpaid.reduce((s, p) => s + p.amount, 0))}</b></span>
+      <span class="owed-bottom"><span>${esc(who)}</span><span class="history-status ${paidCount ? 'status-partial' : 'status-none'}">${paidCount} of ${bill.people.length} paid</span></span>
+    </button>`;
+  }).join('');
+  $('owedList').querySelectorAll<HTMLButtonElement>('[data-owed]').forEach(btn => {
+    btn.addEventListener('click', () => viewBill(Number(btn.dataset.owed)));
+  });
 }

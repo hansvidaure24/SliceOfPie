@@ -1,8 +1,8 @@
-import { $, setToggle, showToast, confirmDialog } from './helpers';
+import { $, esc, fmt, setToggle, showToast, confirmDialog } from './helpers';
 import { state, getBillTotals } from './state';
 import { renderNames, updateCounterState } from './people';
 import { renderTipRow } from './tip';
-import { renderAssign } from './assign';
+import { renderAssign, updateItemsCta } from './assign';
 import { renderHistory, renderSaveButton } from './history';
 import { goToSummary } from './summary';
 import { saveDraft, clearDraft } from './draft';
@@ -40,6 +40,60 @@ const BACK: Record<string, () => void | Promise<void>> = {
   screenItems: () => goTo('screenCapture'),
   screenSummary: () => goBackFromSummary(),
 };
+
+// What surrounds each screen: the bottom tabs, the top bar, or nothing (camera)
+type Chrome = 'tabs' | 'bar' | 'flow' | 'none';
+const CHROME: Record<string, Chrome> = {
+  screenWelcome: 'tabs',
+  screenHistory: 'tabs',
+  screenSettings: 'tabs',
+  screenDetail: 'bar',
+  screenPeople: 'flow',
+  screenQuick: 'flow',
+  screenCapture: 'flow',
+  screenItems: 'flow',
+  screenSummary: 'flow',
+  screenCamera: 'none',
+};
+const BAR_TITLES: Record<string, string> = { screenDetail: 'Saved bill' };
+
+// The steps of each kind of split, as shown in the top bar
+const STEPS: Record<'even' | 'item', [string, string[]][]> = {
+  even: [['People', ['screenPeople']], ['Total', ['screenQuick', 'screenCapture']], ['Bill', ['screenSummary']]],
+  item: [['People', ['screenPeople']], ['Scan', ['screenCapture']], ['Items', ['screenItems']], ['Bill', ['screenSummary']]],
+};
+
+function renderChrome(id: string): void {
+  const chrome = CHROME[id] ?? 'bar';
+  document.body.dataset.chrome = chrome;
+  $('appTitle').textContent = BAR_TITLES[id] ?? '';
+  $('appNewBill').hidden = id !== 'screenSummary';
+
+  const steps = chrome === 'flow' ? STEPS[state.splitMode] : [];
+  const at = steps.findIndex(([, screens]) => screens.includes(id));
+  $('appSteps').innerHTML = steps.map(([label], i) =>
+    `<li class="${i < at ? 'done' : ''}"${i === at ? ' aria-current="step"' : ''}>${esc(label)}</li>`
+  ).join('');
+  $('appSteps').setAttribute('aria-label', at >= 0 ? `Step ${at + 1} of ${steps.length}` : 'Progress');
+
+  document.querySelectorAll<HTMLElement>('#tabBar [data-tab]').forEach(tab => {
+    if (tab.dataset.tab === id) tab.setAttribute('aria-current', 'page');
+    else tab.removeAttribute('aria-current');
+  });
+}
+
+// Home's two ways in: scan for a by-item split, or type the total for an even one
+export function startSplit(mode: 'even' | 'item'): void {
+  state.splitMode = mode;
+  $('modeEven').classList.toggle('active', mode === 'even');
+  $('modeItem').classList.toggle('active', mode === 'item');
+  goTo('screenPeople');
+}
+
+// The Total screen's bottom bar
+export function updateQuickCta(): void {
+  $('quickCtaTotal').textContent = fmt(state.quickTotalAmt + (state.taxIncluded ? 0 : state.quickTaxAmt));
+}
 
 export function currentScreen(): string {
   return document.querySelector('.screen.active')?.id ?? HOME;
@@ -97,6 +151,7 @@ export function goTo(id: string): void {
   }
   if (id === 'screenHistory') renderHistory();
 
+  renderChrome(id);
   syncHistory(id);
   saveDraft(id);
 }
@@ -112,6 +167,7 @@ let droppingGuard = false;
 
 // Start-up landed on home: turn the entry we're on back into a plain one
 export function settleHomeLocation(): void {
+  renderChrome(HOME);
   guardId = null;
   history.replaceState(null, '', location.pathname + location.search);
 }
@@ -209,6 +265,7 @@ function resetState(): void {
   state.billSavedThisSession = false;
   state.receipt = null;
   state.useReceiptTip = false;
+  state.billLabel = '';
 }
 
 // Puts the bill's inputs and toggles in line with state, after a reset or a restored draft
@@ -228,13 +285,14 @@ export function syncBillUI(): void {
   renderSaveButton();
   renderTipRow();
   renderNames();
+  updateQuickCta();
+  updateItemsCta();
 }
 
 function resetUI(): void {
   syncBillUI();
   $('unassignedWarn').classList.remove('show');
   resetCapture();
-  $('saveLabelWrap').classList.remove('show');
 }
 
 // The capture screen is reached from People (by item) or from the total screen (even split)
