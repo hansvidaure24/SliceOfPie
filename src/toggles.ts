@@ -2,12 +2,14 @@ import { $, setToggle, tap } from './helpers';
 import { state } from './state';
 import { renderNames, updateCounterState } from './people';
 import { updateSummary } from './summary';
-import { updateQuickCta } from './navigation';
+import { updateQuickCta, refreshSteps } from './navigation';
 
 export function setSplitMode(mode: 'even' | 'item'): void {
   state.splitMode = mode;
   $('modeEven').classList.toggle('active', mode === 'even');
   $('modeItem').classList.toggle('active', mode === 'item');
+  // Even and by-item splits have different steps in the top bar
+  refreshSteps();
 }
 
 export function toggleTaxInc(): void {
