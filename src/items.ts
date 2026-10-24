@@ -107,11 +107,14 @@ export async function runOCR(file: Blob): Promise<void> {
 
     // The parser checks items + tax + tip against the printed totals; when that
     // fails the photo was usually misread
+    const noTotals = parsed.subtotal === null && parsed.total === null;
     if (parsed.confidence === 'low' && await offerRetake(
-      parsed.items.length ? 'Some amounts may be wrong' : 'No prices found',
-      parsed.items.length
-        ? "The items don't add up to the receipt's total. Retake the photo, or check the items yourself."
-        : 'Retake the photo with the whole receipt in view, or enter the items yourself.',
+      !parsed.items.length ? 'No prices found' : noTotals ? 'No total to check against' : 'Some amounts may be wrong',
+      !parsed.items.length
+        ? 'Retake the photo with the whole receipt in view, or enter the items yourself.'
+        : noTotals
+          ? "The receipt's total wasn't found, so the items couldn't be double-checked. Look them over, or retake the photo with the bottom of the receipt in view."
+          : "The items don't add up to the receipt's total. Retake the photo, or check the items yourself.",
       parsed.items.length ? 'Check items' : 'Enter manually',
     )) return;
     state.receipt = receipt;

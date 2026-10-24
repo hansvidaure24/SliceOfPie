@@ -1,0 +1,18 @@
+{
+  "merchant": "Restaurant Name",
+  "date": "2012-03-15",
+  "items": [
+    { "name": "Bloody Mary", "price": 8.15 },
+    { "name": "Bloody Mary", "price": 8.15 },
+    { "name": "Bloody Mary", "price": 8.15 },
+    { "name": "Bloody Mary", "price": 8.15 },
+    { "name": "Bloody Mary", "price": 8.15 },
+    { "name": "fresh oyster", "price": 12.50 },
+    { "name": "Fudge Cake", "price": 4.25 }
+  ],
+  "subtotal": null,
+  "tax": 0,
+  "tip": null,
+  "total": null,
+  "confidence": "low"
+}

@@ -12,10 +12,12 @@ interface Expected {
   merchant: string | null;
   date: string | null;
   items: { name: string; price: number }[];
-  subtotal: number;
+  subtotal: number | null;
   tax: number;
   tip: number | null;
-  total: number;
+  total: number | null;
+  // Defaults to 'high'; 'low' for receipts that print no totals to check against
+  confidence?: 'high' | 'low';
 }
 
 const ocr = import.meta.glob<OcrFixture>('./fixtures/receipts/real/*.ocr.json', { import: 'default', eager: true });
@@ -67,8 +69,8 @@ describe('real receipts', () => {
         expect({ merchant, date }).toEqual({ merchant: f.expected.merchant, date: f.expected.date });
       });
 
-      check('marked high confidence', () => {
-        expect(parsed().confidence).toBe('high');
+      check('confidence', () => {
+        expect(parsed().confidence).toBe(f.expected.confidence ?? 'high');
       });
     });
   }

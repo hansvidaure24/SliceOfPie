@@ -237,12 +237,20 @@ function adjacent(above: OcrLine, below: OcrLine): boolean {
   return below.box[1] - above.box[3] < 0.8 * h && Math.abs(below.box[0] - above.box[0]) < 2 * h;
 }
 
+// Menu section headings ("Mains", "Desserts") sit right under the last item of
+// the previous section and look just like a wrapped name
+const SECTION = /^(mains?|main\s+courses?|starters?|appeti[sz]ers?|apps|entr[ée]es?|sides?|desserts?|sweets|drinks?|beverages?|bar|cocktails?|wines?|beers?|salads?|soups?|kids|specials?|breakfast|brunch|lunch|dinner|food|sandwiches|burgers?|pizzas?|pastas?|sushi|noodles|extras?|add[\s-]?ons?|bebidas|postres|boissons|vins|getränke|nachspeisen|vorspeisen|hauptgerichte)\s*:?$/i;
+
 // A wrapped name line: real words, read confidently. Filters the fragments the
 // Latin model makes of CJK lines ("A12()", "(3)", "B").
 function looksLikeName(line: OcrLine): boolean {
   return /\p{L}{3,}/u.test(line.text) && (line.score === undefined || line.score >= 0.8)
-    && !META.test(line.text) && !PAYMENT.test(line.text) && !ADDRESS.test(line.text);
+    && !SECTION.test(line.text) && !META.test(line.text) && !PAYMENT.test(line.text) && !ADDRESS.test(line.text);
 }
+
+// "1 x Fudge Cake  $4.25" is a one-line-per-item layout; nothing below it is
+// part of its name
+const ONE_LINE_ITEM = /^\d{1,2}\s*[xX×]\s/;
 
 // ── Parse ──
 
@@ -265,7 +273,7 @@ export function parseReceipt(input: string | OcrLine[], opts: ParseOptions = {})
   const items: { name: string; price: number }[] = [];
   let discount = 0;
   let prefix: string[] = [];
-  let lastItem: { name: string; prices: number[]; line: OcrLine } | null = null;
+  let lastItem: { name: string; prices: number[]; line: OcrLine; oneLine: boolean } | null = null;
   const flush = () => {
     if (lastItem) for (const price of lastItem.prices) items.push({ name: lastItem.name, price });
     lastItem = null;
@@ -283,7 +291,7 @@ export function parseReceipt(input: string | OcrLine[], opts: ParseOptions = {})
         prefix = [line.text];
       } else if (prefix.length && leadsIntoItem && looksLikeName(line)) {
         prefix.push(line.text);
-      } else if (lastItem && !prefix.length && looksLikeName(line) && !startsWithQty(line.text) && adjacent(lastItem.line, line)) {
+      } else if (lastItem && !lastItem.oneLine && !prefix.length && looksLikeName(line) && !startsWithQty(line.text) && adjacent(lastItem.line, line)) {
         // Name that wraps below the price ("R1 Supreme Fish $17.70" / "Maw Chicken")
         lastItem.name = cleanName(lastItem.name + ' ' + line.text).slice(0, 80);
         lastItem.line = line;
@@ -300,7 +308,7 @@ export function parseReceipt(input: string | OcrLine[], opts: ParseOptions = {})
     } else if (kind === 'item' && amount.value > 0 && amount.value < 10000) {
       // $10k ceiling covers electronics/Amazon splits; $0.00 modifiers don't change anyone's share
       const { name, prices } = splitQty([...prefix, amount.label].join(' '), amount.value);
-      lastItem = { name, prices, line };
+      lastItem = { name, prices, line, oneLine: !prefix.length && ONE_LINE_ITEM.test(amount.label) };
     }
     prefix = [];
   }
