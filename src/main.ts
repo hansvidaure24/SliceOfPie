@@ -1,4 +1,4 @@
-import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme } from './helpers';
+import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, confirmDialog } from './helpers';
 import type { ThemePref } from './helpers';
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
@@ -6,7 +6,7 @@ import { renderPresets, addPreset, renderTipRow, setTipBase } from './tip';
 import { changePeople, renderNames } from './people';
 import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './toggles';
 import { takePhoto, uploadPhoto, skipToManual, addItem, runOCR, updateRunning } from './items';
-import { updateHistoryBadge, startSaveBill, confirmSave, deleteBill, renderHistory } from './history';
+import { updateHistoryBadge, startSaveBill, confirmSave, deleteBill } from './history';
 import { goTo, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary } from './navigation';
 import { doShare, reshareDetail } from './share';
 import { exportImage } from './export-image';
@@ -23,14 +23,15 @@ Object.assign(window, {
   doShare, reshareDetail, newBill,
   startSaveBill, confirmSave, deleteBill,
   savePayment, togglePay, addPreset,
-  renderHistory,
   exportImage,
 });
 
 function renderThemeToggle(): void {
   const current = getThemePref();
   $('themeToggle').querySelectorAll<HTMLButtonElement>('[data-theme]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.theme === current);
+    const selected = btn.dataset.theme === current;
+    btn.classList.toggle('active', selected);
+    btn.setAttribute('aria-checked', String(selected));
   });
 }
 
@@ -81,15 +82,19 @@ loadHistory().then(bills => {
 }).catch(() => {});
 
 // Photo input — preview and OCR
+let ocrRunning = false;
 ($('photoInput') as HTMLInputElement).addEventListener('change', async (e) => {
   const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file) return;
+  if (!file || ocrRunning) return;
+  ocrRunning = true;
   const img = $('previewImg') as HTMLImageElement;
   if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
   img.src = URL.createObjectURL(file);
   img.style.display = 'block';
+  img.setAttribute('aria-hidden', 'false');
   $('progressWrap').style.display = 'block';
   await runOCR(file);
+  ocrRunning = false;
 });
 
 // Bind numeric inputs to state
@@ -127,7 +132,7 @@ document.addEventListener('keydown', (e) => {
 const ESC_BACK: Record<string, () => void> = {
   screenSettings: () => goTo('screenWelcome'),
   screenHistory: () => goTo('screenWelcome'),
-  screenDetail: () => { goTo('screenHistory'); renderHistory(); },
+  screenDetail: () => goTo('screenHistory'),
   screenPeople: () => goTo('screenWelcome'),
   screenQuick: () => goTo('screenPeople'),
   screenCapture: () => goTo('screenPeople'),
@@ -136,6 +141,11 @@ const ESC_BACK: Record<string, () => void> = {
 };
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
+  const overlay = document.getElementById('confirmOverlay');
+  if (overlay?.classList.contains('show')) {
+    document.getElementById('confirmNo')?.click();
+    return;
+  }
   if (document.activeElement instanceof HTMLInputElement) {
     document.activeElement.blur();
     return;
@@ -145,7 +155,7 @@ document.addEventListener('keydown', (e) => {
 });
 
 registerSW({
-  onNeedRefresh() {
-    if (confirm('New version available. Update now?')) location.reload();
+  async onNeedRefresh() {
+    if (await confirmDialog('New version available. Update now?')) location.reload();
   },
 });

@@ -19,7 +19,7 @@ const CURRENCIES = [
   { code: 'INR', symbol: '₹', name: 'Indian Rupee' },
   { code: 'KRW', symbol: '₩', name: 'South Korean Won' },
   { code: 'BRL', symbol: 'R$', name: 'Brazilian Real' },
-  { code: 'CNY', symbol: '¥', name: 'Chinese Yuan' },
+  { code: 'CNY', symbol: 'CN¥', name: 'Chinese Yuan' },
   { code: 'CHF', symbol: 'CHF', name: 'Swiss Franc' },
   { code: 'SEK', symbol: 'kr', name: 'Swedish Krona' },
   { code: 'NOK', symbol: 'kr', name: 'Norwegian Krone' },
@@ -90,6 +90,41 @@ export function pulse(el: HTMLElement): void {
   el.classList.add('pulse');
 }
 
+export function confirmDialog(msg: string, sub = ''): Promise<boolean> {
+  return new Promise(resolve => {
+    const overlay = $('confirmOverlay');
+    const box = overlay.querySelector('.confirm-box') as HTMLElement;
+    const yesBtn = $('confirmYes');
+    const noBtn = $('confirmNo');
+    $('confirmMsg').textContent = msg;
+    $('confirmSub').textContent = sub;
+    $('confirmSub').style.display = sub ? '' : 'none';
+    box.setAttribute('role', 'alertdialog');
+    box.setAttribute('aria-modal', 'true');
+    box.setAttribute('aria-labelledby', 'confirmMsg');
+    box.setAttribute('aria-describedby', 'confirmSub');
+    overlay.classList.add('show');
+    noBtn.focus();
+    const trapFocus = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return;
+      const els = [noBtn, yesBtn];
+      const idx = els.indexOf(document.activeElement as HTMLElement);
+      e.preventDefault();
+      els[(idx + (e.shiftKey ? -1 : 1) + els.length) % els.length].focus();
+    };
+    overlay.addEventListener('keydown', trapFocus);
+    const cleanup = (result: boolean) => {
+      overlay.classList.remove('show');
+      overlay.removeEventListener('keydown', trapFocus);
+      yesBtn.onclick = null;
+      noBtn.onclick = null;
+      resolve(result);
+    };
+    yesBtn.onclick = () => cleanup(true);
+    noBtn.onclick = () => cleanup(false);
+  });
+}
+
 export function showToast(msg: string): void {
   const toast = $('toast');
   toast.textContent = msg;
@@ -140,5 +175,5 @@ export function applyTheme(): void {
 export function defaultLabel(): string {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const d = new Date();
-  return months[d.getMonth()] + ' ' + d.getDate() + ' food';
+  return months[d.getMonth()] + ' ' + d.getDate() + ' bill';
 }
