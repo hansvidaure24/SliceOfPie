@@ -1,0 +1,37 @@
+{
+  "items": [
+    {
+      "name": "BANANAS 2 lb",
+      "price": 1.18
+    },
+    {
+      "name": "ORGANIC MILK 1 GAL",
+      "price": 6.49
+    },
+    {
+      "name": "YOGURT CUPS",
+      "price": 1.29
+    },
+    {
+      "name": "YOGURT CUPS",
+      "price": 1.29
+    },
+    {
+      "name": "YOGURT CUPS",
+      "price": 1.29
+    },
+    {
+      "name": "SOURDOUGH LOAF",
+      "price": 4.99
+    },
+    {
+      "name": "12 oz COFFEE BEANS",
+      "price": 11.49
+    },
+    {
+      "name": "PAPER TOWELS 6PK",
+      "price": 8.99
+    }
+  ],
+  "tax": 1.62
+}

@@ -62,8 +62,8 @@ Bill history can grow to 50 entries with nested people arrays. localStorage has 
 **Why CSS mask for icons instead of an icon library?**
 SVG files in `public/` are referenced via CSS `mask-image`. This means icons inherit `currentColor` and respond to theme changes automatically — no icon component, no fill props, no sprite sheet. One line of CSS per icon.
 
-**Why no tests?**
-Honest answer: it's a portfolio project and the scope didn't justify a test harness yet. The OCR parser (`parseReceipt`) and bill calculator (`calcOwes`) are the two functions that would benefit most from unit tests — they have the most branching logic and edge cases.
+**What's tested?**
+The receipt scanning pipeline (`src/scan/`) has Vitest unit tests, plus fixture tests in `test/fixtures/receipts/` that run saved OCR output through the parser. The bill calculator (`calcOwes`) is next on the list. Run `npm test`.
 
 ## Getting Started
 
@@ -91,7 +91,12 @@ src/
   state.ts         Centralized app state
   db.ts            IndexedDB wrapper
   people.ts        People counter & name inputs
-  items.ts         OCR parsing & item list
+  items.ts         Capture buttons & item list
+  scan/
+    process.ts     processReceipt(): image → parsed items
+    engine.ts      OcrEngine interface
+    engine-tesseract.ts  Tesseract.js engine (CDN)
+    parse.ts       Receipt text → items & tax
   assign.ts        Item-to-person assignment
   summary.ts       Bill calculation & breakdown
   tip.ts           Tip presets & custom tip
