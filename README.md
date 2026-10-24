@@ -53,7 +53,7 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 ## Architecture Decisions
 
 **Why vanilla TS instead of React/Vue/Svelte?**
-The app is ~4,500 lines across 37 modules. A framework would add a virtual DOM and a state management library to solve problems this app doesn't have. Manual DOM updates via `renderX()` functions mean every state change is explicit and traceable. The result is a small startup bundle (about 22 KB of JavaScript gzipped) and zero framework churn.
+The app is ~4,600 lines across 46 modules. A framework would add a virtual DOM and a state management library to solve problems this app doesn't have. Manual DOM updates via `renderX()` functions mean every state change is explicit and traceable. The result is a small startup bundle (about 22 KB of JavaScript gzipped) and zero framework churn.
 
 **Why a mutable state object instead of a store/signals?**
 A single `state.ts` object holds all app state. Each module imports it, mutates directly, and calls the appropriate render function. This works because:
@@ -67,7 +67,10 @@ Reactive patterns (signals, proxies, event buses) solve coordination problems th
 Buttons say what they do (`data-action="goTo" data-arg="screenHistory"`) and one delegated listener in `actions.ts` runs it. That keeps inline script out of the page, which is what lets it ship a strict Content-Security-Policy. The policies live in `security-headers.json`; `vite preview` serves them, and a test keeps `vercel.json` in step.
 
 **Why is the money math in its own module?**
-`bill.ts` has no page dependencies, so who-owes-what (shares, tax and tip, discounts, rounding, people joining and leaving) is unit-tested directly, including a 200-case sweep checking that the shares always add up to the total.
+`bill.ts` has no page dependencies, so who-owes-what (shares, tax and tip, discounts, rounding, people joining and leaving) is unit-tested directly, including a 200-case sweep checking that the shares always add up to the total. Shares are worked out in whole cents: everyone else's is rounded to the nearest cent and whoever paid takes the leftover, so $100 three ways is $33.33, $33.33 and $33.34, and what's owed back always matches the rows.
+
+**Why can every module be loaded in any order?**
+There are no import cycles. Screens hook into the router (`onEnterScreen`, `onLeaveScreen`, `setBackRoutes`) instead of the router importing every screen, and lists that are redrawn use `data-action` buttons or one listener on the list rather than a listener per row.
 
 **Why IndexedDB instead of localStorage?**
 Bill history can grow to 50 entries with nested people arrays. localStorage has a ~5MB limit and blocks the main thread on read. IndexedDB is async, has no practical size limit, and supports structured cloning. The app auto-migrates existing localStorage data on first load.
@@ -86,7 +89,7 @@ npm run build
 npm run test:e2e    # Playwright: phone (Pixel 7) and desktop, against the built app
 ```
 
-- **Unit tests** (`test/`): the money math, draft resume and its 3-hour expiry, the receipt parser with saved OCR output from real receipts, image quality checks, and the security headers.
+- **Unit tests** (`test/`): the money math and its rounding to the cent, starting up with storage blocked, draft resume and its 3-hour expiry, the receipt parser with saved OCR output from real receipts, image quality checks, and the security headers.
 - **End-to-end tests** (`e2e/`): even and by-item splits with known answers, back navigation and resume, offline use, scanning a drawn receipt online then offline, the share target, axe on every screen in both themes, 200% text, the desktop grid and live summary, drop-to-scan, copy to clipboard, and the Content-Security-Policy. Real receipt photos are gitignored; when they're present in `test/fixtures/receipts/photos/`, a test scans one too.
 - **CI** (`.github/workflows/ci.yml`): every push and pull request runs the type check, both suites and Lighthouse; the build fails if performance drops below 90 or accessibility below 100.
 - **Before a release**, [docs/device-test-checklist.md](docs/device-test-checklist.md) lists what needs a real phone.
@@ -124,9 +127,12 @@ src/
   main.ts          Entry point: start-up, resume, the data-action table
   actions.ts       Delegated data-action listener
   state.ts         Centralized app state and bill totals
-  bill.ts          Who owes what; keeping item assignments right as people change
+  bill.ts          Who owes what, in whole cents; keeping item assignments right as people change
   draft.ts         The bill in progress, kept for 3 hours across reloads
-  navigation.ts    Screens, the system back gesture, top bar and tabs
+  storage.ts       localStorage that falls back to defaults when the browser blocks it
+  router.ts        Which screen shows, the address bar, the system back gesture
+  chrome.ts        Top bar, step bar and tabs for each screen
+  flow.ts          Moving through a split, and starting a new one
   layout.ts        Wide-screen side panes, drop and paste to scan
   db.ts            IndexedDB wrapper
   people.ts        People counter, names, contacts, "Add again"
@@ -151,12 +157,17 @@ src/
   tip.ts           Tip presets & custom tip
   pie.ts           Animated pie chart (rAF) with a text alternative
   history.ts       Save, rename, delete, paid tracking, unpaid list
-  share.ts         Share / copy text
+  share.ts         Share / copy text, and which of the two a device leads with
   export-image.ts  Canvas-based PNG export
   payment.ts       Payment method settings
   install.ts       Install prompt, iOS instructions, the one-time nudge
   toggles.ts       Toggle switch handlers
-  helpers.ts       Formatting, dialogs, toasts, theme, currency, person colors
+  money.ts         Currencies, rounding and formatting amounts
+  dialog.ts        The confirm / prompt sheet (native <dialog>)
+  notify.ts        Toasts and screen-reader announcements
+  theme.ts         System, light or dark
+  colors.ts        Person colors and the text color that reads on each
+  helpers.ts       Small DOM helpers
   types.ts         TypeScript interfaces
   sw.ts            Service worker: precache, OCR cache, share target
 test/              Vitest unit tests and receipt fixtures

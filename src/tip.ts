@@ -1,9 +1,11 @@
-import { $, tap, fmt } from './helpers';
+import { $, tap } from './helpers';
+import { fmt } from './money';
 import { state } from './state';
+import { save } from './storage';
 import { updateSummary } from './summary';
 
 export function savePresets(): void {
-  localStorage.setItem('sp_tipPresets', JSON.stringify(state.tipPresets));
+  save('sp_tipPresets', JSON.stringify(state.tipPresets));
 }
 
 export function renderPresets(): void {
@@ -14,17 +16,10 @@ export function renderPresets(): void {
              data-preset="${i}" aria-label="Tip preset ${i + 1}">
       <span class="unit-label">%</span>
       ${state.tipPresets.length > 2
-        ? `<button class="preset-del" data-preset-del="${i}" aria-label="Remove ${pct}% preset"><span class="trash-icon"></span></button>`
+        ? `<button class="preset-del" data-action="removePreset" data-arg="${i}" aria-label="Remove ${pct}% preset"><span class="trash-icon"></span></button>`
         : ''}
     </div>
   `).join('');
-
-  list.querySelectorAll<HTMLInputElement>('[data-preset]').forEach(input => {
-    input.addEventListener('change', () => updatePreset(Number(input.dataset.preset), input.value));
-  });
-  list.querySelectorAll<HTMLButtonElement>('[data-preset-del]').forEach(btn => {
-    btn.addEventListener('click', () => removePreset(Number(btn.dataset.presetDel)));
-  });
 
   $('presetAddBtn').style.display = state.tipPresets.length >= 4 ? 'none' : 'block';
 }
@@ -47,9 +42,9 @@ export function addPreset(): void {
   renderPresets();
 }
 
-export function removePreset(index: number): void {
+export function removePreset(index: string): void {
   if (state.tipPresets.length <= 2) return;
-  state.tipPresets.splice(index, 1);
+  state.tipPresets.splice(Number(index), 1);
   savePresets();
   renderPresets();
 }
@@ -59,22 +54,16 @@ export function renderTipRow(): void {
   const printed = state.receipt?.tip ?? null;
   // A tip already printed on the scanned receipt, offered so it isn't added twice
   const receiptBtn = printed !== null
-    ? `<button class="tip-btn receipt-tip ${state.useReceiptTip ? 'active' : ''}" data-tip-receipt>Tip on receipt: ${fmt(printed)}</button>`
+    ? `<button class="tip-btn receipt-tip ${state.useReceiptTip ? 'active' : ''}" data-action="chooseReceiptTip">Tip on receipt: ${fmt(printed)}</button>`
     : '';
   row.innerHTML = receiptBtn + state.tipPresets.map((pct: number) =>
-    `<button class="tip-btn ${pct === state.tipPct && !state.useReceiptTip ? 'active' : ''}" data-tip="${pct}">${pct}%</button>`
-  ).join('') + `<input class="custom-tip" id="customTip" type="number" inputmode="decimal" placeholder="%" aria-label="Custom tip percent">`;
-
-  row.querySelectorAll<HTMLButtonElement>('[data-tip]').forEach(btn => {
-    btn.addEventListener('click', () => setTip(Number(btn.dataset.tip)));
-  });
-  row.querySelector<HTMLButtonElement>('[data-tip-receipt]')?.addEventListener('click', chooseReceiptTip);
+    `<button class="tip-btn ${pct === state.tipPct && !state.useReceiptTip ? 'active' : ''}" data-action="setTip" data-arg="${pct}">${pct}%</button>`
+  ).join('') + `<input class="custom-tip" id="customTip" type="number" inputmode="decimal" placeholder="%" aria-label="Custom tip percent" data-action="setCustomTip">`;
 
   const customInput = $('customTip') as HTMLInputElement;
   if (!state.useReceiptTip && !state.tipPresets.includes(state.tipPct)) {
     customInput.value = String(state.tipPct);
   }
-  customInput.addEventListener('input', setCustomTip);
 }
 
 export function chooseReceiptTip(): void {
@@ -91,16 +80,17 @@ export function setTipBase(base: 'pre' | 'post'): void {
   updateSummary();
 }
 
-export function setTip(pct: number): void {
+export function setTip(arg: string): void {
   tap();
+  const pct = Number(arg);
   state.tipPct = pct;
   state.useReceiptTip = false;
   const custom = $('customTip') as HTMLInputElement | null;
   if (custom) custom.value = '';
   document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.tip !== undefined && Number(btn.dataset.tip) === pct)
+    btn.classList.toggle('active', btn.dataset.action === 'setTip' && Number(btn.dataset.arg) === pct)
   );
-  localStorage.setItem('sp_tip', String(pct));
+  save('sp_tip', String(pct));
   updateSummary();
 }
 
@@ -113,7 +103,15 @@ export function setCustomTip(): void {
     state.useReceiptTip = false;
     if (val !== parseFloat(custom.value)) custom.value = String(val);
     document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => btn.classList.remove('active'));
-    localStorage.setItem('sp_tip', String(val));
+    save('sp_tip', String(val));
     updateSummary();
   }
+}
+
+// The preset fields save when you leave them, not on every keystroke
+export function initTipSettings(): void {
+  $('presetsList').addEventListener('change', (e) => {
+    const input = (e.target as HTMLElement).closest<HTMLInputElement>('[data-preset]');
+    if (input) updatePreset(Number(input.dataset.preset), input.value);
+  });
 }

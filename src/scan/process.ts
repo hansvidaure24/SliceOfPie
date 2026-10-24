@@ -2,6 +2,7 @@ import { OcrUnavailableError, type OcrEngine, type OcrLine, type OcrProgress } f
 import { tesseractEngine } from './engine-tesseract';
 import { paddleEngine } from './engine-paddle';
 import { parseReceipt, type ParsedReceipt, type ParseOptions } from './parse';
+import { load } from '../storage';
 
 export interface ScanResult extends ParsedReceipt {
   lines: OcrLine[];
@@ -18,9 +19,7 @@ export interface ProcessOptions {
 // PaddleOCR first, Tesseract as a fallback for browsers that can't run it.
 // Set localStorage sp_ocrEngine = 'tesseract' to compare against the old engine.
 function defaultEngines(): OcrEngine[] {
-  let pref: string | null = null;
-  try { pref = localStorage.getItem('sp_ocrEngine'); } catch { /* storage blocked */ }
-  return pref === 'tesseract' ? [tesseractEngine] : [paddleEngine, tesseractEngine];
+  return load('sp_ocrEngine') === 'tesseract' ? [tesseractEngine] : [paddleEngine, tesseractEngine];
 }
 
 // Single entry point from a captured/uploaded image to parsed receipt fields.

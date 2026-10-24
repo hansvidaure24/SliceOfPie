@@ -1,38 +1,23 @@
-import { $, esc, fmt, pulse, tap } from './helpers';
+import { $, esc, pulse, tap } from './helpers';
+import { fmt } from './money';
 import { calcOwes } from './bill';
 import { state, getBillTotals, isPayer, receiptTip } from './state';
-import { renderTipRow } from './tip';
 import { renderPieChart } from './pie';
-import { goTo } from './navigation';
 import type { Breakdown } from './types';
 
 export function renderPayerRow(): void {
   $('payerRow').innerHTML = state.people.map((person, i) => {
     const on = (person.isMe ? state.payer === 'me' : state.payer === i) ? 'on' : '';
     const label = person.isMe ? esc(person.name) + ' (you)' : esc(person.name);
-    return `<button class="payer-badge ${on}" data-payer="${person.isMe ? 'me' : i}">${label}</button>`;
+    return `<button class="payer-badge ${on}" data-action="setPayer" data-arg="${person.isMe ? 'me' : i}">${label}</button>`;
   }).join('');
-
-  $('payerRow').querySelectorAll<HTMLButtonElement>('[data-payer]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const val = btn.dataset.payer!;
-      setPayer(val === 'me' ? 'me' : Number(val));
-    });
-  });
 }
 
-export function setPayer(who: 'me' | number): void {
+export function setPayer(who: string): void {
   tap();
-  state.payer = who;
+  state.payer = who === 'me' ? 'me' : Number(who);
   renderPayerRow();
   updateSummary();
-}
-
-export function goToSummary(): void {
-  renderTipRow();
-  renderPayerRow();
-  updateSummary();
-  goTo('screenSummary');
 }
 
 export function updateSummary(): void {
@@ -83,7 +68,8 @@ function renderResult(breakdown: Breakdown[], total: number): void {
   const others = breakdown.filter((_, i) => i !== payerIdx);
   const owedBack = others.reduce((s, b) => s + b.amount, 0);
   const by = others.length === 1 ? others[0].name : others.length + ' people';
-  const each = state.splitMode === 'even' && breakdown.length > 1 ? ' · ' + fmt(breakdown[0].amount) + ' each' : '';
+  // The payer may carry a leftover cent, so "each" is what the others owe
+  const each = state.splitMode === 'even' && others.length ? ' · ' + fmt(others[0].amount) + ' each' : '';
 
   let label: string, amount: number, note: string;
   if (!payer) {

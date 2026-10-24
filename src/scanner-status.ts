@@ -1,4 +1,8 @@
-import { $, confirmDialog, showToast } from './helpers';
+import { $ } from './helpers';
+import { confirmDialog } from './dialog';
+import { showToast } from './notify';
+import { load } from './storage';
+import { onEnterScreen } from './router';
 import type { PaddleEngine } from './scan/engine-paddle';
 
 // The scanner's code is its own chunk, loaded the first time anything here needs it
@@ -9,7 +13,7 @@ const sizeMb = (e: PaddleEngine) => Math.round(e.downloadBytes / 1e6);
 let busy = false;
 
 function preferredEngineIsTesseract(): boolean {
-  try { return localStorage.getItem('sp_ocrEngine') === 'tesseract'; } catch { return false; }
+  return load('sp_ocrEngine') === 'tesseract';
 }
 
 // Settings shows whether the scanner is saved for offline use; the scan screen says what the first scan costs
@@ -93,4 +97,9 @@ export async function okToDownloadScanner(): Promise<boolean> {
 
 export function initScannerStatus(): void {
   $('scannerBtn').addEventListener('click', () => void onScannerButton());
+  onEnterScreen('screenSettings', () => void renderScannerStatus());
+  onEnterScreen('screenCapture', () => {
+    void renderScannerStatus();
+    void warmScannerIfReady();
+  });
 }

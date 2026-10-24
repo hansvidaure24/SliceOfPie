@@ -1,17 +1,8 @@
 import type { Person, Item, Bill, Payer, SplitMode, TipBase, PaymentSettings, ReceiptInfo } from './types';
-
-function safeParse(key: string, fallback: unknown = {}): unknown {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    localStorage.removeItem(key);
-    return fallback;
-  }
-}
+import { load, loadJSON } from './storage';
 
 function loadPayment(): PaymentSettings {
-  const p = safeParse('sp_payment') as Record<string, string | boolean | undefined>;
+  const p = loadJSON<Record<string, string | boolean | undefined>>('sp_payment', {}) ?? {};
   return {
     name: String(p.name ?? ''),
     venmo: String(p.venmo ?? ''),
@@ -28,6 +19,11 @@ function loadPayment(): PaymentSettings {
 
 const payment = loadPayment();
 
+// The tip last picked, which a new bill starts with
+export function savedTipPct(): number {
+  return parseFloat(load('sp_tip') ?? '') || 18;
+}
+
 export const state = {
   people: [
     { name: payment.name || 'Me', isMe: true },
@@ -38,7 +34,7 @@ export const state = {
   taxAmt: 0,
   quickTotalAmt: 0,
   quickTaxAmt: 0,
-  tipPct: parseFloat(localStorage.getItem('sp_tip') ?? '') || 18,
+  tipPct: savedTipPct(),
   tipBase: 'pre' as TipBase,
   receipt: null as ReceiptInfo | null,
   // Use the tip printed on the scanned receipt instead of a percentage
@@ -48,12 +44,11 @@ export const state = {
   payer: 'me' as Payer,
   imPartOfBill: true,
   history: [] as Bill[],
+  // The saved bill open on the detail screen
   viewingBillId: null as number | null,
   billSavedThisSession: false,
   // The name it was saved under; empty until saved
   billLabel: '',
-  deleteArmed: false,
-  deleteTimer: null as ReturnType<typeof setTimeout> | null,
   payment,
   payToggles: {
     Venmo: payment.togVenmo,
@@ -61,7 +56,7 @@ export const state = {
     CashApp: payment.togCashApp,
     Other: payment.togOther,
   },
-  tipPresets: (safeParse('sp_tipPresets', null) || [15, 18, 20]) as number[],
+  tipPresets: loadJSON<number[] | null>('sp_tipPresets', null) || [15, 18, 20],
 };
 
 export function getBillTotals() {
