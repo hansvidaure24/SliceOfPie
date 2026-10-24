@@ -570,9 +570,9 @@ body.transitioning .btn{pointer-events:none}
   padding:0;z-index:2;font-size:14px;line-height:1;font-weight:700;
 }
 .history-del:active{opacity:.7}
-@media (hover:none){
-  .history-del{opacity:1;pointer-events:auto}
-}
+/* Phones and tablets delete by swiping (or from the bill's detail screen), so
+   the ✕ only appears on hover with a mouse, or when reached by keyboard */
+.history-del:focus-visible{opacity:1;pointer-events:auto}
 @media (hover:hover) and (pointer:fine){
   .swipe-wrap{overflow:visible}
   .history-card:hover .history-del{opacity:1;pointer-events:auto}
