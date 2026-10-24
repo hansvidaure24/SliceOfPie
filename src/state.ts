@@ -1,4 +1,4 @@
-import type { Person, Item, Bill, Payer, SplitMode, TipBase, PaymentSettings } from './types';
+import type { Person, Item, Bill, Payer, SplitMode, TipBase, PaymentSettings, ReceiptInfo } from './types';
 
 function safeParse(key: string, fallback: unknown = {}): unknown {
   try {
@@ -40,6 +40,9 @@ export const state = {
   quickTaxAmt: 0,
   tipPct: parseFloat(localStorage.getItem('sp_tip') ?? '') || 18,
   tipBase: 'pre' as TipBase,
+  receipt: null as ReceiptInfo | null,
+  // Use the tip printed on the scanned receipt instead of a percentage
+  useReceiptTip: false,
   taxIncluded: true,
   roundUp: false,
   payer: 'me' as Payer,
@@ -65,8 +68,26 @@ export function getBillTotals() {
     : state.items.reduce((s, it) => s + (it.price || 0), 0);
   const tax = state.splitMode === 'even' ? state.quickTaxAmt : state.taxAmt;
   const tipOn = state.tipBase === 'post' ? sub + tax : sub;
-  const tip = tipOn * (state.tipPct / 100);
+  const tip = receiptTip() ?? tipOn * (state.tipPct / 100);
   return { sub, tax, tip, total: sub + tax + tip };
+}
+
+// The printed tip, when the user is going with it
+export function receiptTip(): number | null {
+  return state.useReceiptTip ? state.receipt?.tip ?? null : null;
+}
+
+export function tipLabel(): string {
+  return receiptTip() !== null ? 'Tip (from receipt)' : 'Tip (' + state.tipPct + '%)';
+}
+
+// Tip as a percentage for the history record, even when it came from the receipt
+export function effectiveTipPct(): number {
+  const tip = receiptTip();
+  if (tip === null) return state.tipPct;
+  const { sub, tax } = getBillTotals();
+  const tipOn = state.tipBase === 'post' ? sub + tax : sub;
+  return tipOn > 0 ? Math.round((tip / tipOn) * 1000) / 10 : 0;
 }
 
 export function getPayerName(): string {

@@ -1,5 +1,5 @@
 import { $, COLORS, esc, fmt, pulse, tap } from './helpers';
-import { state, getBillTotals, isPayer } from './state';
+import { state, getBillTotals, isPayer, receiptTip } from './state';
 import { renderTipRow } from './tip';
 import { renderPieChart } from './pie';
 import { goTo } from './navigation';
@@ -73,12 +73,15 @@ export function updateSummary(): void {
   const evenTaxInc = state.splitMode === 'even' && state.taxIncluded;
   $('sumSubLabel').textContent = evenTaxInc ? 'Bill Total' : 'Subtotal';
   $('sumTaxLine').style.display = evenTaxInc ? 'none' : 'flex';
-  $('tipBaseRow').style.display = evenTaxInc ? 'none' : 'flex';
+  // Pre/post-tax only matters for a percentage tip
+  $('tipBaseRow').style.display = evenTaxInc || receiptTip() !== null ? 'none' : 'flex';
 
   const tipLabel = state.tipBase === 'post' && !evenTaxInc
     ? 'on post-tax'
     : evenTaxInc ? '' : 'on pre-tax';
-  $('sumTipLabel').textContent = 'Tip (' + state.tipPct + '%' + (tipLabel ? ' ' + tipLabel : '') + ')';
+  $('sumTipLabel').textContent = receiptTip() !== null
+    ? 'Tip (from receipt)'
+    : 'Tip (' + state.tipPct + '%' + (tipLabel ? ' ' + tipLabel : '') + ')';
 
   $('sumSub').textContent = fmt(sub);
   $('sumTax').textContent = fmt(tax);

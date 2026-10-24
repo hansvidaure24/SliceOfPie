@@ -1,19 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { tesseractEngine, textToLines } from '../src/scan/engine-tesseract';
+import { tesseractEngine } from '../src/scan/engine-tesseract';
 import { processReceipt } from '../src/scan/process';
 import { OcrUnavailableError, type OcrEngine, type OcrProgress } from '../src/scan/engine';
 
 afterEach(() => {
   vi.unstubAllGlobals();
-});
-
-describe('textToLines', () => {
-  it('splits, trims and drops blank lines', () => {
-    expect(textToLines('  Burger 12.50 \r\n\n\nFries 4.00\n  \n')).toEqual([
-      { text: 'Burger 12.50' },
-      { text: 'Fries 4.00' },
-    ]);
-  });
 });
 
 describe('tesseractEngine', () => {

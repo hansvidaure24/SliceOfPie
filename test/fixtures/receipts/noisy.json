@@ -1,25 +1,18 @@
 {
+  "merchant": "JOE'S PIZZA",
+  "date": null,
   "items": [
-    {
-      "name": "Lg Pepperoni Pizza ...",
-      "price": 18.99
-    },
-    {
-      "name": "G rlic Knots 6",
-      "price": 6.5
-    },
-    {
-      "name": "Soda",
-      "price": 2.5
-    },
-    {
-      "name": "Item",
-      "price": 4
-    },
-    {
-      "name": "Wings - 10pc Buffalo",
-      "price": 1049
-    }
+    { "name": "Lg Pepperoni Pizza", "price": 18.99 },
+    { "name": "G rlic Knots (6)", "price": 6.5 },
+    { "name": "Soda", "price": 2.5 },
+    { "name": "Item", "price": 4 },
+    { "name": "Wings - 10pc Buffalo", "price": 1049 }
   ],
-  "tax": 3.75
+  "subtotal": null,
+  "discount": 0,
+  "tax": 5.19,
+  "taxIncluded": false,
+  "tip": null,
+  "total": 39.68,
+  "confidence": "low"
 }

@@ -23,8 +23,20 @@ export interface Bill {
   total: number;
   tipPct: number;
   splitMode: 'even' | 'item';
+  // From a scanned receipt, when found
+  merchant?: string;
+  receiptDate?: string;
   payerName: string;
   people: BillPerson[];
+}
+
+// What a scanned receipt said beyond the items, kept for the current bill
+export interface ReceiptInfo {
+  merchant: string | null;
+  // ISO yyyy-mm-dd
+  date: string | null;
+  total: number | null;
+  tip: number | null;
 }
 
 export interface Breakdown {

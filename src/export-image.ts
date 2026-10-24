@@ -1,5 +1,5 @@
 import { fmt, showToast } from './helpers';
-import { state, getBillTotals, isPayer } from './state';
+import { state, getBillTotals, isPayer, tipLabel } from './state';
 import { calcOwes } from './summary';
 
 const PAD = 40;
@@ -33,7 +33,7 @@ export async function exportImage(): Promise<void> {
 
   add('Subtotal  ' + fmt(sub), { size: 15 });
   if (tax > 0) add('Tax  ' + fmt(tax), { size: 15 });
-  add('Tip (' + state.tipPct + '%)  ' + fmt(tip), { size: 15, gap: 12 });
+  add(tipLabel() + '  ' + fmt(tip), { size: 15, gap: 12 });
 
   y += 4;
   add('Total  ' + fmt(total), { color: COLORS.cream, size: 20, bold: true, gap: 20 });

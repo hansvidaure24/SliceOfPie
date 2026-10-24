@@ -1,0 +1,20 @@
+{
+  "merchant": null,
+  "date": null,
+  "items": [
+    { "name": "A12 Cold Cut Chicken(spicy)", "price": 9.25 },
+    { "name": "Mala Spicy Soup Beef Slices", "price": 14.70 },
+    { "name": "Tofu Puff", "price": 2.25 },
+    { "name": "R1 Supreme Fish Maw Chicken", "price": 17.70 },
+    { "name": "Quail Egg(3)", "price": 3.00 },
+    { "name": "Original Bone Soup Pork Intestine", "price": 14.70 },
+    { "name": "Tomato Soup Beef Slices", "price": 14.70 },
+    { "name": "Pork Intestine", "price": 4.50 },
+    { "name": "Original Bone Soup Beef Slices", "price": 14.70 },
+    { "name": "A21 Roti Canai W. Curry Chicken", "price": 7.00 }
+  ],
+  "subtotal": 102.50,
+  "tax": 9.10,
+  "tip": 20.09,
+  "total": 131.69
+}

@@ -13,5 +13,5 @@ export type WorkerRequest =
 
 export type WorkerResponse =
   | { type: 'ready'; initMs: number }
-  | { type: 'result'; id: number; segments: OcrSegment[]; totalMs: number }
+  | { type: 'result'; id: number; segments: OcrSegment[]; detMs: number; recMs: number; totalMs: number }
   | { type: 'error'; id?: number; message: string };
