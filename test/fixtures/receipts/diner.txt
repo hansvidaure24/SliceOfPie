@@ -1,0 +1,19 @@
+THE BLUE PLATE DINER
+1234 Main St, Springfield
+Tel (555) 123-4567
+Server: Maria   Table 12
+Guests: 4
+Date: 10/18/2026  7:42 PM
+
+2 Cheeseburger         25.98
+Chicken Caesar Salad   13.50
+3 Fries                11.97
+Iced Tea                3.25
+2x Milkshake           13.00
+Apple Pie a la Mode     7.95
+
+Subtotal               75.65
+Sales Tax 8.25%         6.24
+TOTAL                  81.89
+VISA ****4821          81.89
+Thank you for dining with us!

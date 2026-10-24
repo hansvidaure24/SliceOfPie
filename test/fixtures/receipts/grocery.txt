@@ -1,0 +1,18 @@
+FRESH MART #0427
+www.freshmart.com
+ORDER # 88213
+
+BANANAS 2 lb           $ 1.18
+ORGANIC MILK 1 GAL     $ 6.49
+3 YOGURT CUPS          $ 3.87
+SOURDOUGH LOAF         $ 4.99
+12 oz COFFEE BEANS     $ 11.49
+DISCOUNT MEMBER        -1.00
+PAPER TOWELS 6PK       $ 8.99
+
+SUBTOTAL              $ 36.01
+TAX                    $ 1.62
+BALANCE DUE           $ 37.63
+DEBIT                 $ 37.63
+CHANGE                 $ 0.00
+Rewards points earned: 37

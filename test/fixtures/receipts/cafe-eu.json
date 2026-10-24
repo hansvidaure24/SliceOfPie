@@ -1,0 +1,29 @@
+{
+  "items": [
+    {
+      "name": "Cappuccino",
+      "price": 3.5
+    },
+    {
+      "name": "Croissant",
+      "price": 2.4
+    },
+    {
+      "name": "Croissant",
+      "price": 2.4
+    },
+    {
+      "name": "Jus d'orange",
+      "price": 4.2
+    },
+    {
+      "name": "Tarte Tatin",
+      "price": 6.9
+    },
+    {
+      "name": "CARTE BANCAIRE",
+      "price": 19.4
+    }
+  ],
+  "tax": 1.76
+}
