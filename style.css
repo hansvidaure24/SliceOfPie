@@ -848,8 +848,10 @@ body[data-chrome="tabs"] .tab-bar{display:flex}
 .pane-bill-top b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--text-sm)}
 .pane-bill-top span{font-size:var(--text-sm);font-variant-numeric:tabular-nums}
 .pane-bill-bottom{font-size:var(--text-xs);color:var(--muted)}
-.pane-owed{color:var(--status-none)}
-.pane-paid{color:var(--status-done)}
+/* Status in the text color, with a dot for the color cue, so it reads on any row background */
+.pane-owed,.pane-paid{color:var(--cream-dim);display:inline-flex;align-items:center;gap:5px}
+.pane-owed::before,.pane-paid::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cherry)}
+.pane-paid::before{background:var(--status-done)}
 
 .drop-overlay{
   position:fixed;inset:12px;z-index:70;display:none;align-items:center;justify-content:center;pointer-events:none;
@@ -983,7 +985,8 @@ kbd{font-family:ui-monospace,Consolas,monospace;font-size:var(--text-2xs);paddin
       padding-bottom:var(--space-2);border-bottom:1px solid var(--border-subtle);
     }
     .head-price{text-align:right;padding-right:var(--space-2)}
-    .head-person{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--who,var(--muted));text-transform:none;letter-spacing:0}
+    /* Names in the text color for contrast; the underline carries the person's color */
+    .head-person{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--cream-dim);text-transform:none;letter-spacing:0;padding-bottom:2px;box-shadow:inset 0 -2px 0 var(--who,transparent)}
     .item-row{padding:var(--space-2) 0}
     .item-main,.item-who{display:contents}
     .item-price{width:100%}
