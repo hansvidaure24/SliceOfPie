@@ -5,6 +5,28 @@ import headers from './security-headers.json'
 // `vite preview` sends the same security headers as vercel.json, so the
 // production build is tested under the policy it ships with
 const OCR_WORKER = /^\/assets\/paddle\.worker-/
+// The stylesheet goes inline in index.html, so the first paint doesn't wait
+// on a second request (Lighthouse counted ~150 ms on a phone)
+type BundleFile = { type: 'asset' | 'chunk'; source?: string | Uint8Array }
+const inlineCss = {
+  name: 'inline-css',
+  apply: 'build' as const,
+  enforce: 'post' as const,
+  generateBundle(_: unknown, bundle: Record<string, BundleFile>) {
+    const html = bundle['index.html']
+    if (!html || typeof html.source !== 'string') return
+    for (const [name, file] of Object.entries(bundle)) {
+      if (!name.endsWith('.css') || file.type !== 'asset') continue
+      const href = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const link = new RegExp(`<link rel="stylesheet"[^>]*href="/${href}"[^>]*>`)
+      if (!link.test(html.source)) continue
+      const css = typeof file.source === 'string' ? file.source : new TextDecoder().decode(file.source)
+      html.source = html.source.replace(link, () => `<style>${css}</style>`)
+      delete bundle[name]
+    }
+  },
+}
+
 const securityHeaders = {
   name: 'security-headers',
   configurePreviewServer(server: { middlewares: { use: (fn: (req: { url?: string }, res: { setHeader: (k: string, v: string) => void }, next: () => void) => void) => void } }) {
@@ -43,6 +65,7 @@ export default defineConfig({
   },
   plugins: [
     securityHeaders,
+    inlineCss,
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',
