@@ -518,7 +518,7 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 /* ── Privacy Note ── */
 .privacy-note{background:var(--bg);border:1px solid var(--surface-border);text-align:left;padding:var(--space-3) var(--space-4)}
 .privacy-note p{margin:0;font-size:var(--text-s);color:var(--muted)}
-/* Which build is running; tap for screen sizes (src/launch-viewport.ts) */
+/* Which build is running; tap for screen sizes (src/app-info.ts) */
 .app-version{display:block;margin:var(--space-2) auto 0;min-height:44px;padding:0 var(--space-4);background:none;border:none;color:var(--muted);font-size:var(--text-xs);cursor:pointer}
 
 /* ── Theme Toggle ── */

@@ -207,23 +207,8 @@ test('Settings shows the build, and tapping it shows the screen sizes', async ({
   await page.click('#confirmNo');
 });
 
-test('an iPhone Home Screen app scrolls a pixel and back as it opens and while it settles, and ends where it started', async ({ page }) => {
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'standalone', { get: () => true });
-    (window as unknown as { scrolls: number[] }).scrolls = [];
-    const real = window.scrollBy.bind(window);
-    window.scrollBy = ((x: number, y: number) => { (window as unknown as { scrolls: number[] }).scrolls.push(y); real(x, y); }) as typeof window.scrollBy;
-  });
+test('the installed iPhone app has a solid status bar, so it opens at full height', async ({ page }) => {
+  // black-translucent made iOS open the app 62pt short until it resized it seconds later
   await open(page);
-  // At once, at load, then at 0.6, 1.5 and 3 s: each a pixel down and straight back up
-  await expect.poll(() => page.evaluate(() => (window as unknown as { scrolls: number[] }).scrolls.length), { timeout: 6000 }).toBeGreaterThanOrEqual(8);
-  await page.waitForTimeout(300);
-  const scrolls = await page.evaluate(() => (window as unknown as { scrolls: number[] }).scrolls);
-  expect(scrolls.every(y => y === 1 || y === -1)).toBe(true);
-  expect(scrolls.filter(y => y === 1).length).toBe(scrolls.filter(y => y === -1).length);
-  expect(await page.evaluate(() => [scrollY, document.documentElement.style.minHeight])).toEqual([0, '']);
-  // The version box lists the window height after each nudge
-  await page.click('[data-tab=screenSettings]');
-  await page.click('#appVersion');
-  await expect(page.locator('#confirmSub')).toContainText('Window height after each nudge: 0.');
+  await expect(page.locator('meta[name=apple-mobile-web-app-status-bar-style]')).toHaveAttribute('content', 'black');
 });

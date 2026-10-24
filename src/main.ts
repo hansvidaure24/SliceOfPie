@@ -23,7 +23,7 @@ import { initActions } from './actions';
 import { exportBills, importBills, initBackup } from './backup';
 import { initReceiptDrop } from './layout';
 import { initInstall, lockZoomWhenInstalled } from './install';
-import { initLaunchViewport, showAppInfo } from './launch-viewport';
+import { initAppInfo, showAppInfo } from './app-info';
 import { initScannerStatus } from './scanner-status';
 import { SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
 import { initUpdates } from './update';
@@ -91,7 +91,7 @@ function updateCurrencySymbols(): void {
 
 // Restore saved state
 lockZoomWhenInstalled();
-initLaunchViewport();
+initAppInfo();
 applyTheme();
 renderThemeToggle();
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
