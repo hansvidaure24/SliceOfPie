@@ -2,6 +2,15 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import headers from './security-headers.json' with { type: 'json' }
+import pkg from './package.json' with { type: 'json' }
+import { execSync } from 'node:child_process'
+
+// Shown at the bottom of Settings, so a screenshot says which build a phone is running
+function buildId(): string {
+  const sha = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.GITHUB_SHA
+  if (sha) return sha.slice(0, 7)
+  try { return execSync('git rev-parse --short HEAD').toString().trim() } catch { return 'dev' }
+}
 
 // `vite preview` sends the same security headers as vercel.json, so the
 // production build is tested under the policy it ships with
@@ -40,6 +49,7 @@ const securityHeaders = {
 }
 
 export default defineConfig({
+  define: { __APP_VERSION__: JSON.stringify(`${pkg.version} (${buildId()})`) },
   // Unit tests only; the Playwright suite in e2e/ runs separately
   test: { include: ['test/**/*.test.ts'] },
   resolve: {

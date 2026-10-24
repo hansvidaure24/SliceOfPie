@@ -195,3 +195,20 @@ test('a toast shows just above the tabs', async ({ page }, info) => {
   expect(toast!.y + toast!.height).toBeLessThan(tabs!.y);
   expect(tabs!.y - (toast!.y + toast!.height)).toBeLessThan(40);
 });
+
+test('Settings shows the build, and tapping it shows the screen sizes', async ({ page }) => {
+  await open(page);
+  await page.click('[data-tab=screenSettings]');
+  await expect(page.locator('#appVersion')).toHaveText(/^SliceOfPie \d+\.\d+\.\d+ \(\w+\)$/);
+  await page.click('#appVersion');
+  await expect(page.locator('#confirmMsg')).toHaveText(/^SliceOfPie /);
+  await expect(page.locator('#confirmSub')).toContainText('At launch: window');
+  await expect(page.locator('#confirmSub')).toContainText('100dvh');
+  await page.click('#confirmNo');
+});
+
+test('the installed iPhone app has a solid status bar, so it opens at full height', async ({ page }) => {
+  // black-translucent made iOS open the app 62pt short until it resized it seconds later
+  await open(page);
+  await expect(page.locator('meta[name=apple-mobile-web-app-status-bar-style]')).toHaveAttribute('content', 'black');
+});

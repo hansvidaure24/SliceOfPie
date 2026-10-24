@@ -5,7 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#3A2418">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <!-- Solid, not black-translucent: an iPhone Home Screen app drawn under the status bar
+       opens with its page 62pt short of the screen until iOS resizes it 2-4 s later
+       (or on the first finger scroll), so the bottom tabs jump. Measured with the
+       version box at the bottom of Settings (src/app-info.ts). -->
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png">
   <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
 
@@ -143,6 +147,7 @@
   <div class="card privacy-note">
     <p>Your data is saved locally on this device only. Nothing is sent to a server.</p>
   </div>
+  <button class="app-version" id="appVersion" data-action="showAppInfo">SliceOfPie</button>
 </div>
 
 <!-- SCREEN: History -->
