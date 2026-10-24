@@ -195,3 +195,26 @@ test('a toast shows just above the tabs', async ({ page }, info) => {
   expect(toast!.y + toast!.height).toBeLessThan(tabs!.y);
   expect(tabs!.y - (toast!.y + toast!.height)).toBeLessThan(40);
 });
+
+test('Settings shows the build, and tapping it shows the screen sizes', async ({ page }) => {
+  await open(page);
+  await page.click('[data-tab=screenSettings]');
+  await expect(page.locator('#appVersion')).toHaveText(/^SliceOfPie \d+\.\d+\.\d+ \(\w+\)$/);
+  await page.click('#appVersion');
+  await expect(page.locator('#confirmMsg')).toHaveText(/^SliceOfPie /);
+  await expect(page.locator('#confirmSub')).toContainText('At launch: window');
+  await expect(page.locator('#confirmSub')).toContainText('100dvh');
+  await page.click('#confirmNo');
+});
+
+test('an iPhone Home Screen app scrolls a pixel and back as it opens, and ends where it started', async ({ page }) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'standalone', { get: () => true });
+    (window as unknown as { scrolls: number[] }).scrolls = [];
+    const real = window.scrollBy.bind(window);
+    window.scrollBy = ((x: number, y: number) => { (window as unknown as { scrolls: number[] }).scrolls.push(y); real(x, y); }) as typeof window.scrollBy;
+  });
+  await open(page);
+  await expect.poll(() => page.evaluate(() => (window as unknown as { scrolls: number[] }).scrolls)).toEqual([1, -1]);
+  expect(await page.evaluate(() => [scrollY, document.documentElement.style.minHeight])).toEqual([0, '']);
+});
