@@ -66,20 +66,20 @@ export function renderNames(): void {
              maxlength="20"
              data-person="${i}"
              aria-label="${person.isMe ? 'Your name' : 'Person ' + (i + 1) + ' name'}"
-             style="${person.isMe ? 'border-bottom-color:var(--crust)' : ''}">
-      ${person.isMe ? '<div class="me-toggle-row"><span style="font-size:.75rem;color:var(--muted)">I\'m splitting</span><button class="toggle on" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="true" aria-label="I\'m part of this bill"></button></div>' : ''}
+             ${person.isMe ? 'data-me' : ''}>
+      ${person.isMe ? '<div class="me-toggle-row"><span class="me-label">I\'m splitting</span><button class="toggle on" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="true" aria-label="I\'m part of this bill"></button></div>' : ''}
     </div>
   `).join('');
 
   const joinRow = !state.imPartOfBill ? `
-    <div class="person-name-row" style="gap:8px;padding:10px 0">
-      <span style="font-size:.8rem;color:var(--cream-dim)">Not splitting?</span>
-      <button class="toggle" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="false" aria-label="Join this bill" style="flex-shrink:0"></button>
+    <div class="person-name-row join-row">
+      <span class="join-label">Not splitting?</span>
+      <button class="toggle" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="false" aria-label="Join this bill"></button>
     </div>
   ` : '';
 
   const lastGroupBtn = state.history.length > 0
-    ? '<button class="btn btn-ghost last-group-btn" style="padding:8px;font-size:.75rem;border-color:var(--surface-border)">Last group</button>'
+    ? '<button class="btn btn-ghost last-group-btn">Last group</button>'
     : '';
 
   $('namesList').innerHTML = rows + joinRow + lastGroupBtn;
