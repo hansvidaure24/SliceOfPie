@@ -135,3 +135,63 @@ test('the tabs end at the bottom of the screen, and the total and tax fields fit
     expect(field!.x + field!.width).toBeLessThanOrEqual(card!.x + card!.width - 8);
   }
 });
+
+test('saved bills export to a file and import into a fresh browser', async ({ page, browser }, info) => {
+  test.skip(info.project.name !== 'desktop', 'a computer downloads the file; a phone shares it');
+  // Saving the first bill asks the browser to keep the app's data
+  await page.addInitScript(() => {
+    (window as unknown as { persistAsked: boolean }).persistAsked = false;
+    navigator.storage.persisted = async () => false;
+    navigator.storage.persist = async () => { (window as unknown as { persistAsked: boolean }).persistAsked = true; return true; };
+  });
+  await open(page);
+  await people(page, 'even', ['Carmine']);
+  await page.fill('#quickTotal', '40');
+  await page.click('#screenQuick [data-action=quickNext]');
+  await page.click('#saveBillBtn');
+  await page.fill('#confirmInput', 'Lunch');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('#saveBillBtn')).toHaveText('Saved!');
+  expect(await page.evaluate(() => (window as unknown as { persistAsked: boolean }).persistAsked)).toBe(true);
+
+  await page.click('#appNewBill');
+  await page.click('[data-tab=screenSettings]');
+  const [download] = await Promise.all([page.waitForEvent('download'), page.click('[data-action=exportBills]')]);
+  expect(download.suggestedFilename()).toMatch(/^sliceofpie-bills-\d{4}-\d{2}-\d{2}\.json$/);
+  const file = await download.path();
+
+  // A different browser profile: no bills until the file comes in
+  const fresh = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const other = await fresh.newPage();
+  await open(other);
+  await other.click('[data-tab=screenSettings]');
+  await other.locator('#importInput').setInputFiles(file);
+  await expect(other.locator('#toast')).toHaveText('Imported 1 bill');
+  await other.click('[data-tab=screenHistory]');
+  await expect(other.locator('.history-card')).toContainText('Lunch');
+  // The same file again adds nothing
+  await other.click('[data-tab=screenSettings]');
+  await other.locator('#importInput').setInputFiles(file);
+  await expect(other.locator('#toast')).toHaveText('Those bills are already here');
+  await fresh.close();
+});
+
+test('a file that is not an export is turned away', async ({ page }) => {
+  await open(page);
+  await page.click('[data-tab=screenSettings]');
+  await page.locator('#importInput').setInputFiles({ name: 'notes.json', mimeType: 'application/json', buffer: Buffer.from('{"hello":1}') });
+  await expect(page.locator('#toast')).toHaveText("That file isn't a SliceOfPie export");
+});
+
+test('a toast shows just above the tabs', async ({ page }, info) => {
+  test.skip(info.project.name !== 'phone', 'phones have the bottom tabs');
+  await open(page);
+  await page.click('[data-tab=screenSettings]');
+  await page.click('[data-action=exportBills]');
+  await expect(page.locator('#toast')).toHaveText('No saved bills to export');
+  await page.waitForTimeout(400);
+  const toast = await page.locator('#toast').boundingBox();
+  const tabs = await page.locator('#tabBar').boundingBox();
+  expect(toast!.y + toast!.height).toBeLessThan(tabs!.y);
+  expect(tabs!.y - (toast!.y + toast!.height)).toBeLessThan(40);
+});

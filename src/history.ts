@@ -6,7 +6,7 @@ import { goTo, onEnterScreen } from './router';
 import { state, getBillTotals, getPayerName, isPayer, findBill, effectiveTipPct } from './state';
 import { calcOwes } from './bill';
 
-import { putBill, deleteBillFromDB } from './db';
+import { putBill, deleteBillFromDB, keepDataOnDevice } from './db';
 import { maybeNudgeInstall } from './install';
 import type { Bill } from './types';
 
@@ -85,6 +85,7 @@ async function saveBill(label: string): Promise<void> {
     if (old) deleteBillFromDB(old.id).catch(() => {});
   }
 
+  keepDataOnDevice();
   state.billSavedThisSession = true;
   state.billLabel = label;
   renderSaveButton();
@@ -189,9 +190,8 @@ function renderDetailPeople(bill: Bill): void {
           <div class="detail-amount${person.paid ? ' paid-text' : ''}">${person.paid ? 'Paid' : 'Owes ' + fmt(person.amount)}</div>
         </div>
       </div>
-      <button class="paid-btn ${person.paid ? 'paid' : ''}" data-action="togglePaid" data-arg="${i}"
-              aria-label="${esc(person.name)}: mark as ${person.paid ? 'unpaid' : 'paid'}" aria-pressed="${person.paid}">
-        ${person.paid ? '<span class="check-icon"></span>Paid' : 'Not yet'}
+      <button class="paid-btn ${person.paid ? 'paid' : ''}" data-action="togglePaid" data-arg="${i}" aria-pressed="${person.paid}">
+        <span class="check-icon"></span><span class="sr-only">${esc(person.name)} </span>Paid
       </button>
     </div>
   `).join('');
