@@ -119,3 +119,19 @@ test('text fields are at least 16px on a touch screen, so iOS does not zoom into
   expect(sizes.length).toBeGreaterThan(5);
   expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
 });
+
+test('the tabs end at the bottom of the screen, and the total and tax fields fit their card', async ({ page }) => {
+  await open(page);
+  const tabs = await page.locator('#tabBar').boundingBox();
+  const viewport = page.viewportSize()!;
+  // The phone's bottom tabs; on a computer it's the side rail, full height
+  expect(Math.round(tabs!.y + tabs!.height)).toBe(viewport.height);
+
+  await people(page, 'even', ['Carmine']);
+  await page.click('#taxIncToggle');
+  for (const id of ['#quickTotal', '#quickTax']) {
+    const field = await page.locator(id).boundingBox();
+    const card = await page.locator(id).locator('xpath=ancestor::div[contains(@class,"card")][1]').boundingBox();
+    expect(field!.x + field!.width).toBeLessThanOrEqual(card!.x + card!.width - 8);
+  }
+});

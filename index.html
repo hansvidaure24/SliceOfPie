@@ -357,6 +357,13 @@
 
 <div class="drop-overlay" id="dropOverlay" aria-hidden="true"><p><span class="gallery-icon"></span>Drop the receipt photo to scan it</p></div>
 
+<div class="update-toast" id="updateToast" role="status" hidden>
+  <span>A new version is ready.</span>
+  <button class="btn btn-primary btn-inline" id="updateReload">Reload</button>
+</div>
+<p class="sr-only" id="announcer" aria-live="polite"></p>
+<div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
+</main><!-- /container -->
 <nav class="tab-bar" id="tabBar" aria-label="Main">
   <div class="rail-logo" aria-hidden="true"><img src="/logo-pie.png" alt="" width="34" height="34" loading="lazy"><span>SliceOf<span class="pie">Pie</span></span></div>
   <button class="tab" data-tab="screenWelcome" data-action="goTo" data-arg="screenWelcome">
@@ -375,13 +382,6 @@
   </button>
   <button class="rail-install" id="railInstall" hidden><b>Install app</b><small>Opens from your dock, works offline.</small></button>
 </nav>
-<div class="update-toast" id="updateToast" role="status" hidden>
-  <span>A new version is ready.</span>
-  <button class="btn btn-primary btn-inline" id="updateReload">Reload</button>
-</div>
-<p class="sr-only" id="announcer" aria-live="polite"></p>
-<div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
-</main><!-- /container -->
 
 <script type="module" src="/src/main.ts"></script>
 </body>
