@@ -1,11 +1,11 @@
-import { fmt, shareText } from './helpers';
+import { fmt, shareText, type ShareMode } from './helpers';
 import { billLabel } from './history';
 import { $, esc } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill, tipLabel } from './state';
 import { getPaymentLines } from './payment';
 import { calcOwes } from './summary';
 
-export async function doShare(): Promise<void> {
+export async function doShare(mode: ShareMode = 'auto'): Promise<void> {
   const { sub, tax, tip, total: rawTotal } = getBillTotals();
   const breakdown = calcOwes();
   const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
@@ -38,10 +38,10 @@ export async function doShare(): Promise<void> {
   });
 
   lines.push(...buildPaymentFooter(payerName));
-  await shareText(lines.join('\n'));
+  await shareText(lines.join('\n'), mode);
 }
 
-export async function shareBill(id: number): Promise<void> {
+export async function shareBill(id: number, mode: ShareMode = 'auto'): Promise<void> {
   const bill = findBill(id);
   if (!bill) return;
 
@@ -58,11 +58,11 @@ export async function shareBill(id: number): Promise<void> {
   });
 
   lines.push(...buildPaymentFooter(bill.payerName, true));
-  await shareText(lines.join('\n'));
+  await shareText(lines.join('\n'), mode);
 }
 
-export function reshareDetail(): void {
-  shareBill(state.viewingBillId!);
+export function reshareDetail(mode: ShareMode = 'auto'): void {
+  void shareBill(state.viewingBillId!, mode);
 }
 
 function buildPaymentFooter(payerName: string, fromHistory = false): string[] {

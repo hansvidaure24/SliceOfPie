@@ -1,4 +1,4 @@
-import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, showToast } from './helpers';
+import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, showToast, labelShareButtons } from './helpers';
 import type { ThemePref } from './helpers';
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
@@ -90,6 +90,7 @@ const draftScreen = restoreDraft();
 syncBillUI();
 initInstall();
 initScannerStatus();
+labelShareButtons();
 
 // App shortcuts (long-press the icon) and photos shared from other apps arrive as query params
 const launch = new URLSearchParams(location.search);
