@@ -1,5 +1,9 @@
 # SliceOfPie
 
+[![CI](https://github.com/hansvidaure24/SliceOfPie/actions/workflows/ci.yml/badge.svg)](https://github.com/hansvidaure24/SliceOfPie/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/hansvidaure24/SliceOfPie)](https://github.com/hansvidaure24/SliceOfPie/releases)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+
 Split bills without the awkward math. Snap a receipt, assign items, add tip, and share who owes what — all offline, all on-device.
 
 **[Live Demo](https://slice-of-pie-xi.vercel.app/)**
@@ -84,7 +88,7 @@ The parser, photo checks, OCR engines and live camera are separate chunks loaded
 ## Testing
 
 ```bash
-npm test            # Vitest: bill math, draft resume, receipt parsing, OCR fixtures, headers
+npm test            # Vitest: money math, storage, receipt parsing, updates, backups, headers
 npm run build
 npm run test:e2e    # Playwright: phone (Pixel 7) and desktop, against the built app
 ```
@@ -105,11 +109,11 @@ npm install
 npm run dev
 ```
 
+Then open `http://localhost:5173` in your browser.
+
 `npm run dev` and `npm run build` first run `scripts/fetch-ocr-assets.mjs`, which downloads the pinned OCR models (~13 MB, SHA-256 checked) into `public/ocr/`. That folder is gitignored.
 
 `npm run bench` opens an OCR benchmark page comparing model sets and Tesseract on synthetic receipt images (see `bench/README.md`).
-
-Open `http://localhost:5173` in your browser.
 
 ## Build
 
@@ -150,6 +154,7 @@ src/
     engine.ts      OcrEngine interface
     engine-paddle.ts     PaddleOCR engine: download, cache, worker client
     paddle.worker.ts     Runs PaddleOCR off the main thread
+    paddle-protocol.ts   Messages between the page and the worker
     engine-tesseract.ts  Tesseract.js fallback engine (loaded from the CDN on demand)
     rows.ts        Merge OCR text boxes into receipt lines (tilt-aware)
     parse.ts       OCR lines → items, subtotal, tax, tip, total, merchant, date
@@ -175,6 +180,10 @@ src/
   update.ts        When a new version of the app takes over
 test/              Vitest unit tests and receipt fixtures
 e2e/               Playwright end-to-end tests
+docs/              README images and the real-device test checklist
+scripts/           Fetches the pinned OCR models
+bench/             OCR benchmark page
+.github/           CI workflow and Dependabot
 public/
   *.svg            UI icons (CSS mask technique)
   fonts/           Inter and Fraunces (latin), served with the app
@@ -185,7 +194,7 @@ security-headers.json  Content-Security-Policy and other headers
 
 ## Privacy
 
-All data is stored locally on your device using IndexedDB and localStorage. Nothing is sent to any server. OCR runs entirely in the browser: the PaddleOCR model files are downloaded from this app's own server, and your receipt photo never leaves the device. See the in-app privacy note in Settings.
+All data is stored locally on your device using IndexedDB and localStorage, and nothing you enter is sent anywhere. OCR runs entirely in the browser, so your receipt photo never leaves the device. The PaddleOCR model files come from this app's own server. Browsers that can't run PaddleOCR fall back to Tesseract.js, which downloads its code and language data from public CDNs (jsDelivr and projectnaptha.com) the first time it's needed; the photo still stays on the device. See the in-app privacy note in Settings.
 
 ## License
 
