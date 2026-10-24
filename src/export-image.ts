@@ -1,6 +1,6 @@
 import { fmt, showToast, prefersCopy } from './helpers';
 import { state, getBillTotals, isPayer, tipLabel } from './state';
-import { calcOwes } from './summary';
+import { calcOwes } from './bill';
 import { billLabel } from './history';
 
 const PAD = 40;

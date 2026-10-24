@@ -1,6 +1,6 @@
 import { $, esc, fmt } from './helpers';
 import { state, getBillTotals } from './state';
-import { calcOwes } from './summary';
+import { calcOwes } from './bill';
 import { unassignedCount } from './assign';
 
 // Wide screens put a panel beside the screen: the split's running totals

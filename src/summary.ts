@@ -1,4 +1,5 @@
-import { $, COLORS, esc, fmt, pulse, tap } from './helpers';
+import { $, esc, fmt, pulse, tap } from './helpers';
+import { calcOwes } from './bill';
 import { state, getBillTotals, isPayer, receiptTip } from './state';
 import { renderTipRow } from './tip';
 import { renderPieChart } from './pie';
@@ -32,38 +33,6 @@ export function goToSummary(): void {
   renderPayerRow();
   updateSummary();
   goTo('screenSummary');
-}
-
-export function calcOwes(): Breakdown[] {
-  const { sub, tax, tip, total } = getBillTotals();
-
-  if (state.splitMode === 'even') {
-    let perPerson = total / state.people.length;
-    if (state.roundUp) perPerson = Math.ceil(perPerson);
-    return state.people.map((p, i) => ({
-      name: p.name,
-      amount: perPerson,
-      color: COLORS[i % 8],
-    }));
-  }
-
-  // By-item: calculate each person's share based on assigned items
-  const owes = Array(state.people.length).fill(0) as number[];
-  for (const item of state.items) {
-    const assigned = item.assignees || [];
-    if (assigned.length === 0) continue;
-    const share = (item.price || 0) / assigned.length;
-    assigned.forEach(personIdx => owes[personIdx] += share);
-  }
-  const itemTotal = owes.reduce((sum, val) => sum + val, 0);
-
-  return state.people.map((person, i) => {
-    const personTax = itemTotal > 0 ? (owes[i] / itemTotal) * tax : tax / state.people.length;
-    const personTip = itemTotal > 0 ? (owes[i] / itemTotal) * tip : tip / state.people.length;
-    let amount = owes[i] + personTax + personTip;
-    if (state.roundUp) amount = Math.ceil(amount);
-    return { name: person.name, amount, color: COLORS[i % 8] };
-  });
 }
 
 export function updateSummary(): void {

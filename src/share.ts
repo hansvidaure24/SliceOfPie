@@ -3,7 +3,7 @@ import { billLabel } from './history';
 import { $, esc } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill, tipLabel } from './state';
 import { getPaymentLines } from './payment';
-import { calcOwes } from './summary';
+import { calcOwes } from './bill';
 
 export async function doShare(mode: ShareMode = 'auto'): Promise<void> {
   const { sub, tax, tip, total: rawTotal } = getBillTotals();

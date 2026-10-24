@@ -1,6 +1,6 @@
 import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog, promptDialog } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill, effectiveTipPct } from './state';
-import { calcOwes } from './summary';
+import { calcOwes } from './bill';
 import { goTo } from './navigation';
 
 import { putBill, deleteBillFromDB } from './db';
