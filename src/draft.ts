@@ -1,4 +1,5 @@
 import { state } from './state';
+import { save, remove, loadJSON } from './storage';
 
 // The bill being split, kept so the app picks up where it left off after a
 // reload. iOS often drops a backgrounded PWA while you switch to Venmo.
@@ -23,24 +24,17 @@ export function saveDraft(screen?: string): void {
   if (screen) currentScreen = screen;
   const draft: Record<string, unknown> = { screen: currentScreen, savedAt: Date.now() };
   for (const key of FIELDS) draft[key] = state[key];
-  try {
-    localStorage.setItem(KEY, JSON.stringify(draft));
-  } catch { /* storage full or blocked; resuming is a convenience */ }
+  // Storage full or blocked: resuming is a convenience, so nothing more to do
+  save(KEY, JSON.stringify(draft));
 }
 
 export function clearDraft(): void {
-  localStorage.removeItem(KEY);
+  remove(KEY);
 }
 
 // Copies a recent draft into state and returns the screen it was on
 export function restoreDraft(): string | null {
-  let draft: Draft;
-  try {
-    draft = JSON.parse(localStorage.getItem(KEY) ?? 'null');
-  } catch {
-    clearDraft();
-    return null;
-  }
+  const draft = loadJSON<Draft | null>(KEY, null);
   if (!draft || Date.now() - draft.savedAt > MAX_AGE_MS || !Array.isArray(draft.people)) {
     clearDraft();
     return null;

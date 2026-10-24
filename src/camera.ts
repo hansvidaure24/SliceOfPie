@@ -1,5 +1,5 @@
 import { $, tap } from './helpers';
-import { goTo, onLeaveScreen } from './navigation';
+import { goTo, onLeaveScreen } from './router';
 import { scanPhoto, takePhotoNative } from './items';
 import { QUALITY_SIDE, toGray } from './scan/quality';
 import { frameStats, frameHint, hintText, type HintKind } from './scan/live-hints';

@@ -35,7 +35,7 @@ for (const colorScheme of ['dark', 'light'] as const) {
     await noViolations(page, 'home with unpaid bills');
     await page.click('[data-tab=screenHistory]');
     await noViolations(page, 'history');
-    await page.click('[data-bill] .history-open');
+    await page.click('.history-card .history-open');
     await noViolations(page, 'saved bill');
     // On a phone the saved bill has a back button instead of tabs
     if (!(await page.locator('[data-tab=screenSettings]').isVisible())) await page.goBack();

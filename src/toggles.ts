@@ -1,9 +1,10 @@
 import { $, setToggle, tap } from './helpers';
+import { updateQuickCta } from './flow';
+import { refreshSteps } from './router';
 import { state } from './state';
 import { insertPersonInItems, removePersonFromItems } from './bill';
 import { renderNames, updateCounterState } from './people';
 import { updateSummary } from './summary';
-import { updateQuickCta, refreshSteps } from './navigation';
 
 export function setSplitMode(mode: 'even' | 'item'): void {
   state.splitMode = mode;

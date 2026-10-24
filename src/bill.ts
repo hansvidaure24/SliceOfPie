@@ -1,4 +1,5 @@
-import { COLORS } from './helpers';
+import { personColor } from './colors';
+import { currencyDecimals, toUnits } from './money';
 import { state, getBillTotals } from './state';
 import type { Breakdown, Item } from './types';
 
@@ -10,20 +11,19 @@ function validAssignees(item: Item, peopleCount: number): number[] {
 }
 
 // What each person owes: an even share of the total, or the items they had
-// plus the same fraction of the tax and tip
+// plus the same fraction of the tax and tip. In whole cents that add up to
+// the bill, or whole units when rounding up.
 export function calcOwes(): Breakdown[] {
+  const exact = exactShares();
+  const amounts = state.roundUp ? exact.map(Math.ceil) : toCents(exact, payerIndex());
+  return state.people.map((person, i) => ({ name: person.name, amount: amounts[i], color: personColor(i) }));
+}
+
+function exactShares(): number[] {
   const { tax, tip, total } = getBillTotals();
   const count = state.people.length;
 
-  if (state.splitMode === 'even') {
-    let perPerson = total / count;
-    if (state.roundUp) perPerson = Math.ceil(perPerson);
-    return state.people.map((p, i) => ({
-      name: p.name,
-      amount: perPerson,
-      color: COLORS[i % 8],
-    }));
-  }
+  if (state.splitMode === 'even') return state.people.map(() => total / count);
 
   // By item: an item shared by several people is split equally between them
   const owes = Array(count).fill(0) as number[];
@@ -35,14 +35,49 @@ export function calcOwes(): Breakdown[] {
   }
   const itemTotal = owes.reduce((sum, val) => sum + val, 0);
 
-  return state.people.map((person, i) => {
+  return owes.map(owed => {
     // Nothing assigned yet: tax and tip are split evenly until there is
-    const personTax = itemTotal > 0 ? (owes[i] / itemTotal) * tax : tax / count;
-    const personTip = itemTotal > 0 ? (owes[i] / itemTotal) * tip : tip / count;
-    let amount = owes[i] + personTax + personTip;
-    if (state.roundUp) amount = Math.ceil(amount);
-    return { name: person.name, amount, color: COLORS[i % 8] };
+    const personTax = itemTotal > 0 ? (owed / itemTotal) * tax : tax / count;
+    const personTip = itemTotal > 0 ? (owed / itemTotal) * tip : tip / count;
+    return owed + personTax + personTip;
   });
+}
+
+function payerIndex(): number {
+  return state.payer === 'me' ? state.people.findIndex(p => p.isMe) : state.payer;
+}
+
+// $100 three ways is $33.33, $33.33 and $33.34: everyone else's share is
+// rounded to the nearest cent and whoever paid takes what's left over, so the
+// shares always add up to the bill. When the payer had nothing on it, the
+// spare cents go to the shares that were closest to rounding up.
+export function toCents(exact: number[], payer: number): number[] {
+  const scale = 10 ** currencyDecimals();
+  const scaled = exact.map(x => x * scale);
+  const target = toUnits(exact.reduce((s, x) => s + x, 0));
+  if (exact[payer] > 0) {
+    const units = exact.map(toUnits);
+    units[payer] = 0;
+    units[payer] = target - units.reduce((s, x) => s + x, 0);
+    return units.map(u => u / scale);
+  }
+  // 33.33 * 100 can come out as 3332.9999999
+  const units = scaled.map(x => Math.floor(x + 1e-6));
+  let left = target - units.reduce((s, x) => s + x, 0);
+  const byRemainder = scaled.map((_, i) => i).sort((a, b) => (scaled[b] - units[b]) - (scaled[a] - units[a]) || a - b);
+  for (const i of byRemainder) {
+    if (left <= 0) break;
+    units[i]++;
+    left--;
+  }
+  return units.map(u => u / scale);
+}
+
+// Items with a price that nobody is on yet, by position in the list. Includes a
+// negative "Discount" line, which also has to go to someone.
+export function unassignedIndexes(): number[] {
+  if (state.splitMode !== 'item') return [];
+  return state.items.flatMap((it, i) => (it.price || 0) !== 0 && !it.assignees?.length ? [i] : []);
 }
 
 // Person `removed` left: take them off every item and renumber everyone after them

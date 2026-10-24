@@ -1,9 +1,60 @@
-import { fmt, shareText, type ShareMode } from './helpers';
+import { fmt } from './money';
+import { showToast } from './notify';
 import { billLabel } from './history';
-import { $, esc } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill, tipLabel } from './state';
 import { getPaymentLines } from './payment';
 import { calcOwes } from './bill';
+
+// A computer pastes the bill into a chat, so its main button copies; a phone
+// opens the share sheet (which has Copy as well). 'alt' is the other one.
+export type ShareMode = 'auto' | 'alt';
+
+export function prefersCopy(): boolean {
+  return !navigator.share || matchMedia('(hover: hover) and (pointer: fine)').matches;
+}
+
+export function shouldCopy(mode: ShareMode): boolean {
+  return !navigator.share || (mode === 'auto') === prefersCopy();
+}
+
+export async function copyText(text: string): Promise<void> {
+  try {
+    await navigator.clipboard.writeText(text);
+    showToast('Copied. Paste it into any chat.');
+  } catch {
+    showToast('Could not copy');
+  }
+}
+
+export async function shareText(text: string, mode: ShareMode = 'auto'): Promise<void> {
+  if (shouldCopy(mode)) {
+    await copyText(text);
+    return;
+  }
+  try {
+    await navigator.share({ text });
+  } catch (err) {
+    // Closing the share sheet isn't a failure; anything else falls back to copying
+    if ((err as DOMException)?.name !== 'AbortError') await copyText(text);
+  }
+}
+
+// Labels the share buttons for this device: Copy first on a computer, Share first on a phone
+export function labelShareButtons(): void {
+  const copyFirst = prefersCopy();
+  const set = (id: string, icon: string, label: string) => {
+    const btn = document.getElementById(id);
+    if (btn) btn.innerHTML = `<span class="${icon}-icon"></span>${label}`;
+  };
+  for (const [main, alt] of [['shareBtn', 'shareAltBtn'], ['detailShareBtn', 'detailShareAltBtn']]) {
+    set(main, copyFirst ? 'copy' : 'share', copyFirst ? 'Copy' : 'Share');
+    set(alt, copyFirst ? 'share' : 'copy', copyFirst ? 'Share…' : 'Copy text');
+    // No share sheet in this browser: copying is the only way, so there's no second button
+    const altBtn = document.getElementById(alt);
+    if (altBtn) altBtn.hidden = !navigator.share;
+  }
+  set('imageBtn', 'gallery', copyFirst ? 'Copy as image' : 'Share as image');
+}
 
 export async function doShare(mode: ShareMode = 'auto'): Promise<void> {
   const { sub, tax, tip, total: rawTotal } = getBillTotals();

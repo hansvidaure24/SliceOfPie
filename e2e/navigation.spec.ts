@@ -65,11 +65,11 @@ test('Add again and Last group bring back people from saved bills', async ({ pag
 
   await page.click('[data-action=startSplit][data-arg=item]');
   // A fresh bill starts with Me and Person 1; "Add again" offers the saved names
-  await expect(page.locator('[data-recent]')).toHaveText(['Carmine', 'Jo']);
-  await page.click('[data-recent="Jo"]');
+  await expect(page.locator('[data-action="addRecentName"]')).toHaveText(['Carmine', 'Jo']);
+  await page.click('[data-action="addRecentName"][data-arg="Jo"]');
   await expect(page.locator('[data-person="1"]')).toHaveValue('Jo');
 
-  await page.click('[data-last-group]');
+  await page.click('[data-action="loadLastGroup"]');
   await expect(page.locator('#peopleCount')).toHaveText('3');
   await expect(page.locator('[data-person="1"]')).toHaveValue('Carmine');
   await expect(page.locator('[data-person="2"]')).toHaveValue('Jo');

@@ -1,4 +1,5 @@
-import { $, esc, inkOn } from './helpers';
+import { $, esc } from './helpers';
+import { inkOn } from './colors';
 import type { Breakdown } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';

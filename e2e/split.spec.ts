@@ -14,7 +14,7 @@ test('even split: the bill shows each share and what comes back to you', async (
   await expect(page.locator('#resultAmt')).toHaveText('$66.24');
   await expect(page.locator('#resultSub')).toHaveText('owed back to you by 2 people · $33.12 each');
 
-  await page.click('[data-tip="20"]');
+  await page.click('[data-action="setTip"][data-arg="20"]');
   await expect(page.locator('#resultLabel')).toHaveText('You paid $101.04');
 });
 
@@ -48,10 +48,10 @@ test('by item: unassigned items are caught, shares are right, the bill saves', a
   await expect(page.locator('#pieChartWrap')).toHaveAttribute('aria-label', 'Share of the bill: Me 63%, Carmine 17%, Jo 19%');
 
   // Someone else paid: the headline is your share
-  await page.click('[data-payer="1"]');
+  await page.click('[data-action="setPayer"][data-arg="1"]');
   await expect(page.locator('#resultLabel')).toHaveText('Carmine paid $49.82');
   await expect(page.locator('#resultAmt')).toHaveText('$31.62');
-  await page.click('[data-payer="me"]');
+  await page.click('[data-action="setPayer"][data-arg="me"]');
 
   await page.click('#saveBillBtn');
   await expectFocus(page, '#confirmInput');
@@ -69,8 +69,8 @@ test('by item: unassigned items are caught, shares are right, the bill saves', a
   await owed.click();
   await expect(screen(page)).toHaveId('screenDetail');
   await expect(page.locator('#detailTitle')).toContainText('Taco Tuesday');
-  await page.click('[data-toggle-paid$="-1"]');
-  await expect(page.locator('[data-toggle-paid$="-1"]')).toHaveAttribute('aria-pressed', 'true');
+  await page.click('[data-action="togglePaid"][data-arg="1"]');
+  await expect(page.locator('[data-action="togglePaid"][data-arg="1"]')).toHaveAttribute('aria-pressed', 'true');
 });
 
 test('a discount line comes off the shares it is assigned to', async ({ page }) => {
@@ -82,7 +82,7 @@ test('a discount line comes off the shares it is assigned to', async ({ page }) 
     { name: 'Discount', price: '-6', who: 'all' },
   ]);
   await page.click('#screenItems [data-action=itemsNext]');
-  await page.click('[data-tip="15"]');
+  await page.click('[data-action="setTip"][data-arg="15"]');
   // Items 17 / 7 of 24; 15% tip on 24 = 3.60
   await expect(page.locator('#resultLabel')).toHaveText('You paid $27.60');
   await expect(page.locator('#breakdownList .owe-row').nth(1)).toContainText('$8.05');
@@ -95,14 +95,14 @@ test('rounding up and the post-tax tip are applied to the bill', async ({ page }
   await page.click('#taxIncToggle');
   await page.fill('#quickTax', '10');
   await page.click('#screenQuick [data-action=quickNext]');
-  await page.click('[data-tip="20"]');
+  await page.click('[data-action="setTip"][data-arg="20"]');
   await page.locator('.more-options summary').click();
   await page.click('#tipPostTax');
   // 100 + 10 tax + 20% of 110 = 132, a third each = 44
   await expect(page.locator('#resultSub')).toContainText('$44.00 each');
   await page.click('#roundToggle');
   await expect(page.locator('#resultSub')).toContainText('$44.00 each');
-  await page.click('[data-tip="18"]');
+  await page.click('[data-action="setTip"][data-arg="18"]');
   // 100 + 10 + 19.80 = 129.80 → 43.27 → rounded up to 44
   await expect(page.locator('#resultSub')).toContainText('$44.00 each');
   await expect(page.locator('.more-options summary')).toContainText('Tip on post-tax · rounded up');
