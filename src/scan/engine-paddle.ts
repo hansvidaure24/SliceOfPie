@@ -60,6 +60,17 @@ async function allCached(urls: string[]): Promise<boolean> {
   }
 }
 
+// Deletes cache entries the current scanner doesn't use. The worker chunk and
+// the ONNX Runtime wasm have content-hashed names, so an app update that
+// changes them leaves the old ~10 MB files behind under their old names;
+// reinstalling the app doesn't help with that, only this does.
+export async function pruneCache(cache: Pick<Cache, 'keys' | 'delete'>, keep: string[], base: string): Promise<number> {
+  const wanted = new Set(keep.map(u => new URL(u, base).href));
+  const stale = (await cache.keys()).filter(req => !wanted.has(req.url));
+  await Promise.all(stale.map(req => cache.delete(req)));
+  return stale.length;
+}
+
 // Fetch everything once on the main thread so we can show byte progress.
 // Each response also goes into the OCR cache, which the service worker serves
 // the OCR worker's own fetches from. We store it here rather than relying on
@@ -90,7 +101,9 @@ async function download(files: { url: string; bytes: number }[], onPct: (pct: nu
 // (The SDK default runs detection at full resolution, which grows with megapixels.)
 const DETECTION_PARAMS = { textDetLimitType: 'max', textDetLimitSideLen: 1280 };
 
-export function createPaddleEngine(models: PaddleModels, opts: { params?: Record<string, unknown> } = {}): PaddleEngine {
+// `ownsCache`: this engine's files are the only ones the OCR cache should hold
+// (true for the app's engine; the benchmark's extra model sets must not prune it)
+export function createPaddleEngine(models: PaddleModels, opts: { params?: Record<string, unknown>; ownsCache?: boolean } = {}): PaddleEngine {
   const files = [
     { url: workerUrl, bytes: WORKER_BYTES_ESTIMATE },
     { url: ortWasmUrl, bytes: assets.ortWasmBytes },
@@ -102,6 +115,13 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
     rec: { name: models.rec.name, url: models.rec.url },
     params: { ...DETECTION_PARAMS, ...opts.params },
   };
+
+  function pruneOld(): void {
+    if (!opts.ownsCache || typeof caches === 'undefined') return;
+    caches.open(OCR_CACHE)
+      .then(cache => pruneCache(cache, files.map(f => f.url), location.href))
+      .catch(() => {});
+  }
 
   let worker: Worker | null = null;
   let ready: Promise<number> | null = null;
@@ -153,8 +173,11 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
         }
       };
       worker.onerror = e => failAll(new Error(e.message || 'OCR worker failed to load'));
-      const initMs = new Promise<number>((resolve, reject) => { initWaiter = { resolve, reject }; });
+      const started = new Promise<number>((resolve, reject) => { initWaiter = { resolve, reject }; });
       worker.postMessage({ type: 'init', config } satisfies WorkerRequest);
+      const initMs = await started;
+      // Only once the current files have proven they work
+      pruneOld();
       return initMs;
     })();
     // A failed start (offline before first download, out of memory) can be retried later
@@ -179,6 +202,7 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
     await download(files, pct => onProgress?.({ phase: 'download', pct }));
     // Cache writes can land just after the last byte is read
     for (let i = 0; i < 20 && !(await allCached(urls)); i++) await new Promise(r => setTimeout(r, 250));
+    if (await allCached(urls)) pruneOld();
   }
 
   async function forget(): Promise<void> {
@@ -201,4 +225,5 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
 
 export const paddleEngine = createPaddleEngine(
   modelsFromAssets(assets.app.det, assets.app.rec, `${import.meta.env.BASE_URL}ocr/models/`),
+  { ownsCache: true },
 );
