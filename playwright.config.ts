@@ -13,8 +13,8 @@ export default defineConfig({
   reporter: ci ? [['github'], ['html', { open: 'never' }]] : 'list',
   use: {
     baseURL: 'http://localhost:4173',
-    // Locally, the Edge that ships with Windows; CI installs Chromium
-    channel: ci ? undefined : 'msedge',
+    // Playwright's own Chromium, here and in CI (`npx playwright install chromium`).
+    // Headless it runs as the windowless shell, so no test windows show up in Alt+Tab.
     trace: 'retain-on-failure',
   },
   projects: [
