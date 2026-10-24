@@ -14,10 +14,19 @@ const SAFE_SCREENS = ['screenWelcome', 'screenHistory', 'screenSettings'];
 export function initUpdates(): void {
   let waiting = false;
 
+  // Tells the waiting service worker to take over, then reloads into the new
+  // version. The plugin reloads by itself only when the page was opened under a
+  // service worker; on a first visit the new one would otherwise take over
+  // silently, and the old page could ask for scanner files that are gone.
+  const apply = () => {
+    navigator.serviceWorker?.addEventListener('controllerchange', () => location.reload(), { once: true });
+    void updateSW(true);
+  };
+
   const updateSW = registerSW({
     onNeedRefresh() {
       if (SAFE_SCREENS.includes(currentScreen())) {
-        void updateSW(true);
+        apply();
       } else {
         waiting = true;
         $('updateToast').hidden = false;
@@ -36,9 +45,8 @@ export function initUpdates(): void {
     },
   });
 
-  // Tells the waiting service worker to take over; the page reloads once it has
-  $('updateReload').addEventListener('click', () => void updateSW(true));
+  $('updateReload').addEventListener('click', apply);
   for (const id of SAFE_SCREENS) {
-    onEnterScreen(id, () => { if (waiting) void updateSW(true); });
+    onEnterScreen(id, () => { if (waiting) apply(); });
   }
 }
