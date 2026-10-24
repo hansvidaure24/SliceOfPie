@@ -12,12 +12,16 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
     "bench": "node scripts/fetch-ocr-assets.mjs --bench && vite --open /bench/"
   },
   "engines": {
     "node": ">=18"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@playwright/test": "^1.64.0",
+    "playwright-core": "^1.64.0",
     "typescript": "^7.0.2",
     "vite": "^5.4.0",
     "vite-plugin-pwa": "^0.19.8",

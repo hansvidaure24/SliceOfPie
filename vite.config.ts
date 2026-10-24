@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import headers from './security-headers.json'
@@ -39,6 +40,8 @@ const securityHeaders = {
 }
 
 export default defineConfig({
+  // Unit tests only; the Playwright suite in e2e/ runs separately
+  test: { include: ['test/**/*.test.ts'] },
   resolve: {
     // PaddleOCR imports the default ONNX Runtime build, which pulls in the
     // WebGPU variant and its 25 MB wasm. The wasm-only build needs 12 MB.

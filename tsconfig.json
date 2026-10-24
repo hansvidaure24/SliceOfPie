@@ -10,6 +10,6 @@
     "resolveJsonModule": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*", "test/**/*", "bench/**/*"],
+  "include": ["src/**/*", "test/**/*", "bench/**/*", "e2e/**/*", "playwright.config.ts"],
   "exclude": ["src/sw.ts"]
 }

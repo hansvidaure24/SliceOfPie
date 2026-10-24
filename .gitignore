@@ -9,3 +9,5 @@ Thumbs.db
 test/fixtures/receipts/photos/
 public/ocr/
 bench/models/
+test-results/
+playwright-report/
