@@ -16,7 +16,7 @@
     "bench": "node scripts/fetch-ocr-assets.mjs --bench && vite --open /bench/"
   },
   "engines": {
-    "node": ">=22.12"
+    "node": ">=22.12 <25"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.14.0",
