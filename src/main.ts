@@ -5,7 +5,7 @@ import { restorePaymentFields, savePayment, togglePay } from './payment';
 import { renderPresets, addPreset, setTipBase } from './tip';
 import { changePeople } from './people';
 import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './toggles';
-import { updateItemsCta } from './assign';
+import { updateItemsCta, initAssign } from './assign';
 import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning, enterItemsScreen } from './items';
 import { takePhoto, closeCamera, shootPhoto, toggleTorch } from './camera';
 import { updateHistoryBadge, startSaveBill, deleteBill } from './history';
@@ -106,6 +106,8 @@ loadHistory().then(bills => {
   state.history = bills;
   updateHistoryBadge();
 }).catch(() => {});
+
+initAssign();
 
 // Photo input — preview and OCR
 ($('photoInput') as HTMLInputElement).addEventListener('change', (e) => {

@@ -102,7 +102,6 @@ export function setTip(pct: number): void {
   );
   localStorage.setItem('sp_tip', String(pct));
   updateSummary();
-  $('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 export function setCustomTip(): void {
