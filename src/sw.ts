@@ -37,8 +37,11 @@ registerRoute(
   'POST',
 );
 
-self.addEventListener('install', () => {
-  void self.skipWaiting();
+// A new version waits until the page says it's a good moment (src/update.ts),
+// so it never swaps in under a bill in progress. The very first install has
+// nothing to replace and activates right away.
+self.addEventListener('message', (event: ExtendableMessageEvent) => {
+  if (event.data?.type === 'SKIP_WAITING') void self.skipWaiting();
 });
 
 self.addEventListener('activate', (event: ExtendableEvent) => {
