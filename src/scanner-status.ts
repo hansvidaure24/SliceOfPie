@@ -21,7 +21,9 @@ export async function renderScannerStatus(): Promise<void> {
   $('scannerBtn').textContent = cached ? 'Remove' : 'Download';
   $('captureScannerNote').textContent = cached
     ? 'Scanner ready offline'
-    : `Your first scan downloads the scanner (about ${sizeMb()} MB)`;
+    : navigator.onLine
+      ? `Your first scan downloads the scanner (about ${sizeMb()} MB)`
+      : 'Scanning needs a connection the first time. You can enter items by hand.';
   $('captureScannerNote').classList.toggle('ok', cached);
 }
 
@@ -45,7 +47,10 @@ async function onScannerButton(): Promise<void> {
     await paddleEngine.prefetch(p => {
       if (p.phase === 'download') fill.style.width = p.pct + '%';
     });
-    showToast('Scanner ready offline');
+    // Say what actually happened: a private window or full storage can refuse to keep it
+    showToast(await paddleEngine.isCached()
+      ? 'Scanner ready offline'
+      : "Downloaded, but this browser didn't keep it for offline use");
   } catch {
     showToast("Couldn't download the scanner. Check your connection.");
   } finally {

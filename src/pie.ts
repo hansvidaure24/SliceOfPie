@@ -1,4 +1,4 @@
-import { $, esc } from './helpers';
+import { $, esc, inkOn } from './helpers';
 import type { Breakdown } from './types';
 
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -48,7 +48,7 @@ export function renderPieChart(breakdown: Breakdown[]): void {
     const lx = CX + labelRadius * Math.cos(midAngle);
     const ly = CY + labelRadius * Math.sin(midAngle);
     return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central"
-      fill="#fff" font-size="11" font-weight="700" style="pointer-events:none;opacity:0"
+      fill="${inkOn(slice.color)}" font-size="11" font-weight="700" style="pointer-events:none;opacity:0"
       class="pie-label">${Math.round(slice.frac * 100)}%</text>`;
   }).join('');
 

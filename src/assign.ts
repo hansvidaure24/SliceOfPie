@@ -1,4 +1,4 @@
-import { $, COLORS, esc, fmt, tap } from './helpers';
+import { $, COLORS, esc, fmt, tap, inkOn } from './helpers';
 import { state } from './state';
 import { renderLiveSummary } from './layout';
 
@@ -36,7 +36,7 @@ export function whoChips(itemIdx: number): string {
   const everyone = state.people.length > 1 && item.assignees.length === state.people.length;
   const chips = state.people.map((person, personIdx) => {
     const on = item.assignees!.includes(personIdx);
-    return `<button class="who-chip${on ? ' on' : ''}" style="--who:${COLORS[personIdx % 8]}"
+    return `<button class="who-chip${on ? ' on' : ''}" style="--who:${COLORS[personIdx % 8]};--who-ink:${inkOn(COLORS[personIdx % 8])}"
       data-assign="${itemIdx}-${personIdx}" aria-pressed="${on}" title="${esc(person.name)}">${esc(person.name)}</button>`;
   }).join('');
   const all = state.people.length > 1
@@ -65,15 +65,25 @@ export function renderAssign(): void {
   const cols = whoColumns();
   $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 52px)` : '0px');
   $('itemsList').querySelectorAll<HTMLElement>('[data-who]').forEach(group => {
-    group.innerHTML = whoChips(Number(group.dataset.who));
+    keepingFocus(group, () => { group.innerHTML = whoChips(Number(group.dataset.who)); });
   });
   updateItemsCta();
 }
 
 function renderChips(itemIdx: number): void {
   const group = $('itemsList').querySelector<HTMLElement>(`[data-who="${itemIdx}"]`);
-  if (group) group.innerHTML = whoChips(itemIdx);
+  if (group) keepingFocus(group, () => { group.innerHTML = whoChips(itemIdx); });
   updateItemsCta();
+}
+
+// Redrawing chips replaces the buttons; put keyboard focus back on the same one
+function keepingFocus(group: HTMLElement, redraw: () => void): void {
+  const focused = document.activeElement as HTMLElement | null;
+  const key = group.contains(focused) ? focused!.dataset.assign ?? 'all-' + focused!.dataset.assignAll : null;
+  redraw();
+  if (!key) return;
+  const sel = key.startsWith('all-') ? `[data-assign-all="${key.slice(4)}"]` : `[data-assign="${key}"]`;
+  group.querySelector<HTMLElement>(sel)?.focus();
 }
 
 function toggleAssign(itemIdx: number, personIdx: number): void {

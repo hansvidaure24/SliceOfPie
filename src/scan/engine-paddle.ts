@@ -61,14 +61,17 @@ async function allCached(urls: string[]): Promise<boolean> {
 }
 
 // Fetch everything once on the main thread so we can show byte progress.
-// The service worker caches each response, so the OCR worker's own fetches
-// hit the cache instead of the network.
+// Each response also goes into the OCR cache, which the service worker serves
+// the OCR worker's own fetches from. We store it here rather than relying on
+// the service worker, which may not control the page yet on a first visit.
 async function download(files: { url: string; bytes: number }[], onPct: (pct: number) => void): Promise<void> {
   const total = files.reduce((s, f) => s + f.bytes, 0);
   let loaded = 0;
+  const cache = typeof caches === 'undefined' ? null : await caches.open(OCR_CACHE).catch(() => null);
   await Promise.all(files.map(async f => {
     const res = await fetch(f.url);
     if (!res.ok || !res.body) throw new Error(`${f.url}: HTTP ${res.status}`);
+    const saved = cache?.put(f.url, res.clone()).catch(() => {});
     const reader = res.body.getReader();
     for (;;) {
       const { done, value } = await reader.read();
@@ -76,6 +79,7 @@ async function download(files: { url: string; bytes: number }[], onPct: (pct: nu
       loaded += value.length;
       onPct(Math.min(99, Math.round((loaded / total) * 100)));
     }
+    await saved;
   }));
   onPct(100);
 }
@@ -173,8 +177,8 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
     const urls = files.map(f => f.url);
     if (await allCached(urls)) return;
     await download(files, pct => onProgress?.({ phase: 'download', pct }));
-    // The service worker writes each response to the cache just after we finish reading it
-    for (let i = 0; i < 40 && !(await allCached(urls)); i++) await new Promise(r => setTimeout(r, 250));
+    // Cache writes can land just after the last byte is read
+    for (let i = 0; i < 20 && !(await allCached(urls)); i++) await new Promise(r => setTimeout(r, 250));
   }
 
   async function forget(): Promise<void> {
