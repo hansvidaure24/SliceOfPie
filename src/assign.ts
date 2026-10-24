@@ -1,12 +1,12 @@
-import { $, COLORS, esc, fmt, tap, inkOn } from './helpers';
+import { $, esc, tap } from './helpers';
+import { personColor, inkOn } from './colors';
+import { fmt } from './money';
 import { state } from './state';
 import { renderLiveSummary } from './layout';
+import { unassignedIndexes } from './bill';
+import { onEnterScreen } from './router';
 
-function unassignedIndexes(): number[] {
-  if (state.splitMode !== 'item') return [];
-  // Includes a negative "Discount" line, which also has to go to someone
-  return state.items.flatMap((it, i) => (it.price || 0) !== 0 && !it.assignees?.length ? [i] : []);
-}
+onEnterScreen('screenItems', renderAssign);
 
 export function unassignedCount(): number {
   return unassignedIndexes().length;
@@ -36,7 +36,7 @@ export function whoChips(itemIdx: number): string {
   const everyone = state.people.length > 1 && item.assignees.length === state.people.length;
   const chips = state.people.map((person, personIdx) => {
     const on = item.assignees!.includes(personIdx);
-    return `<button class="who-chip${on ? ' on' : ''}" style="--who:${COLORS[personIdx % 8]};--who-ink:${inkOn(COLORS[personIdx % 8])}"
+    return `<button class="who-chip${on ? ' on' : ''}" style="--who:${personColor(personIdx)};--who-ink:${inkOn(personColor(personIdx))}"
       data-assign="${itemIdx}-${personIdx}" aria-pressed="${on}" title="${esc(person.name)}">${esc(person.name)}</button>`;
   }).join('');
   const all = state.people.length > 1
@@ -49,7 +49,7 @@ export function whoChips(itemIdx: number): string {
 export function itemsHead(): string {
   if (state.splitMode !== 'item') return '';
   const names = state.people.map((p, i) =>
-    `<span class="head-person" style="--who:${COLORS[i % 8]}" title="${esc(p.name)}">${esc(p.name)}</span>`
+    `<span class="head-person" style="--who:${personColor(i)}" title="${esc(p.name)}">${esc(p.name)}</span>`
   ).join('');
   return `<div class="items-head" data-items-head aria-hidden="true"><span>Item</span><span class="head-price">Price</span>${names}${state.people.length > 1 ? '<span class="head-person">All</span>' : ''}</div>`;
 }

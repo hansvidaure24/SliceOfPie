@@ -1,7 +1,7 @@
-import { $, esc, fmt } from './helpers';
+import { $, esc } from './helpers';
+import { fmt } from './money';
 import { state, getBillTotals } from './state';
-import { calcOwes } from './bill';
-import { unassignedCount } from './assign';
+import { calcOwes, unassignedIndexes } from './bill';
 
 // Wide screens put a panel beside the screen: the split's running totals
 // while you build it, or the list of saved bills next to one you're viewing
@@ -48,7 +48,7 @@ export function renderLiveSummary(): void {
     <div class="sum-line"><span>${tipText}</span><span>${fmt(tip)}</span></div>
     <div class="sum-line total"><span>Total</span><span>${fmt(total)}</span></div>`;
 
-  const unassigned = unassignedCount();
+  const unassigned = unassignedIndexes().length;
   $('liveNote').textContent = sub <= 0
     ? (state.splitMode === 'even' ? 'Enter the total to see each share.' : 'Add items to see each share.')
     : unassigned
@@ -62,7 +62,7 @@ export function renderBillsPane(): void {
   $('billsPaneList').innerHTML = state.history.map(bill => {
     const unpaid = bill.people.filter(p => !p.paid).length;
     const date = new Date(bill.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    return `<button class="pane-bill${bill.id === state.viewingBillId ? ' current' : ''}" data-pane-bill="${bill.id}"
+    return `<button class="pane-bill${bill.id === state.viewingBillId ? ' current' : ''}" data-action="viewBill" data-arg="${bill.id}"
         ${bill.id === state.viewingBillId ? 'aria-current="true"' : ''}>
       <span class="pane-bill-top"><b>${esc(bill.label)}</b><span>${fmt(bill.total)}</span></span>
       <span class="pane-bill-bottom"><span>${date}</span><span class="${unpaid ? 'pane-owed' : 'pane-paid'}">${unpaid ? unpaid + ' unpaid' : 'All paid'}</span></span>

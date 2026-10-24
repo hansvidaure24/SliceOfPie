@@ -1,5 +1,6 @@
 import { $, setToggle } from './helpers';
 import { state } from './state';
+import { save } from './storage';
 
 const PAY_FIELDS: [keyof typeof state.payment, string][] = [
   ['name', 'payName'],
@@ -22,7 +23,7 @@ export function savePayment(): void {
   PAY_FIELDS.forEach(([key, id]) => data[key] = ($(id) as HTMLInputElement).value.trim());
   Object.entries(state.payToggles).forEach(([k, v]) => data['tog' + k] = v);
   state.payment = data as unknown as typeof state.payment;
-  localStorage.setItem('sp_payment', JSON.stringify(state.payment));
+  save('sp_payment', JSON.stringify(state.payment));
   const me = state.people.find(p => p.isMe);
   if (me && state.payment.name) me.name = state.payment.name;
 }

@@ -1,19 +1,22 @@
-import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, showToast, labelShareButtons } from './helpers';
-import type { ThemePref } from './helpers';
+import { $, setToggle } from './helpers';
+import { CURRENCIES, getCurrency, setCurrency } from './money';
+import { getThemePref, setThemePref, applyTheme, type ThemePref } from './theme';
+import { showToast } from './notify';
+import { goTo, goBack, screenForSlug, settleHomeLocation, currentScreen } from './router';
+import { quickNext, itemsNext, newBill, goToNextFromPeople, syncBillUI, startSplit, updateQuickCta, goToSummary } from './flow';
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
-import { renderPresets, addPreset, setTipBase } from './tip';
-import { changePeople } from './people';
+import { renderPresets, addPreset, removePreset, setTipBase, setTip, chooseReceiptTip, setCustomTip, initTipSettings } from './tip';
+import { changePeople, loadLastGroup, pickContacts, addRecentName, initPeople } from './people';
 import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './toggles';
 import { updateItemsCta, initAssign } from './assign';
 import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning, enterItemsScreen } from './items';
 // The live camera loads when it's first opened
 const camera = () => import('./camera');
-import { updateHistoryBadge, startSaveBill, deleteBill, viewBill } from './history';
-import { goTo, goBack, quickNext, itemsNext, newBill, goToNextFromPeople, screenForSlug, syncBillUI, settleHomeLocation, startSplit, updateQuickCta, currentScreen } from './navigation';
-import { goToSummary } from './summary';
+import { updateHistoryBadge, startSaveBill, deleteBill, viewBill, askDeleteBill, togglePaid, renameBill, initHistory } from './history';
+import { setPayer } from './summary';
 import { restoreDraft } from './draft';
-import { doShare, reshareDetail } from './share';
+import { doShare, reshareDetail, labelShareButtons } from './share';
 import { exportImage } from './export-image';
 import { loadHistory } from './db';
 import { initActions } from './actions';
@@ -36,7 +39,12 @@ initActions({
   setTipBase: base => setTipBase(base as 'pre' | 'post'),
   doShare: mode => doShare(mode as 'auto' | 'alt' | undefined), reshareDetail: mode => reshareDetail(mode as 'auto' | 'alt' | undefined),
   newBill, startSaveBill, deleteBill,
+  viewBill: id => viewBill(Number(id)), askDeleteBill: id => askDeleteBill(id!), renameBill,
+  togglePaid: person => togglePaid(Number(person)), setPayer: who => setPayer(who!),
+  loadLastGroup, pickContacts, addRecentName: name => addRecentName(name!),
+  setTip: pct => setTip(pct!), chooseReceiptTip, setCustomTip,
   savePayment, togglePay: method => togglePay(method as Parameters<typeof togglePay>[0]), addPreset,
+  removePreset: i => removePreset(i!),
   exportImage,
 });
 
@@ -128,16 +136,14 @@ loadHistory().then(bills => {
 }).catch(() => {});
 
 initAssign();
+initPeople();
+initHistory();
+initTipSettings();
 
 // A dropped or pasted receipt scans like a photo; the total screen hands off to the scan screen
 initReceiptDrop(file => {
   if (currentScreen() !== 'screenCapture') goTo('screenCapture');
   void scanPhoto(file);
-});
-
-$('billsPaneList').addEventListener('click', (e) => {
-  const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-pane-bill]');
-  if (btn) viewBill(Number(btn.dataset.paneBill));
 });
 
 // Photo input — preview and OCR

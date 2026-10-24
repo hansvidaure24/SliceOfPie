@@ -1,4 +1,5 @@
 import type { Bill } from './types';
+import { load, remove } from './storage';
 
 const DB_NAME = 'sliceofpie';
 const DB_VERSION = 1;
@@ -58,12 +59,12 @@ export async function deleteBillFromDB(id: number): Promise<void> {
 
 // One-time migration: move bills from localStorage to IndexedDB
 export async function migrateFromLocalStorage(): Promise<Bill[]> {
-  const raw = localStorage.getItem('sp_history');
+  const raw = load('sp_history');
   if (!raw) return [];
 
   let bills: Bill[];
   try { bills = JSON.parse(raw); }
-  catch { localStorage.removeItem('sp_history'); return []; }
+  catch { remove('sp_history'); return []; }
 
   if (!Array.isArray(bills) || !bills.length) return [];
 
@@ -74,13 +75,13 @@ export async function migrateFromLocalStorage(): Promise<Bill[]> {
     req.onerror = () => reject(req.error);
   })));
 
-  localStorage.removeItem('sp_history');
+  remove('sp_history');
   return bills;
 }
 
 export async function loadHistory(): Promise<Bill[]> {
   let bills = await getAllBills();
-  if (!bills.length && localStorage.getItem('sp_history')) {
+  if (!bills.length && load('sp_history')) {
     bills = await migrateFromLocalStorage();
   }
   return bills;

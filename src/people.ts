@@ -1,9 +1,17 @@
-import { $, COLORS, esc, showToast } from './helpers';
+import { $, esc } from './helpers';
+import { personColor } from './colors';
+import { showToast } from './notify';
 import { state } from './state';
 import { removePersonFromItems, pruneAssignees } from './bill';
 import { renderLiveSummary } from './layout';
+import { onEnterScreen } from './router';
 
-function loadLastGroup(): void {
+onEnterScreen('screenPeople', () => {
+  updateCounterState();
+  renderNames();
+});
+
+export function loadLastGroup(): void {
   const last = state.history[0];
   if (!last) return;
   state.people = last.people.map((p, i) => ({
@@ -46,7 +54,7 @@ function showPeople(): void {
   renderLiveSummary();
 }
 
-async function pickContacts(): Promise<void> {
+export async function pickContacts(): Promise<void> {
   let picked: { name?: string[] }[];
   try {
     picked = await contacts!.select(['name'], { multiple: true });
@@ -111,7 +119,7 @@ export function updateCounterState(): void {
 export function renderNames(): void {
   const rows = state.people.map((person, i) => `
     <div class="person-name-row">
-      <div class="person-icon" style="background:${COLORS[i % 8]}"></div>
+      <div class="person-icon" style="background:${personColor(i)}"></div>
       <input class="person-name-input" value="${esc(person.name)}"
              placeholder="${person.isMe ? 'Your name' : 'Name'}"
              maxlength="20"
@@ -131,37 +139,39 @@ export function renderNames(): void {
 
   const recent = recentNames();
   const contactsBtn = contacts
-    ? '<button class="btn btn-secondary contacts-btn" data-contacts><span class="person-icon"></span>Add from contacts</button>'
+    ? '<button class="btn btn-secondary contacts-btn" data-action="pickContacts"><span class="person-icon"></span>Add from contacts</button>'
     : '';
   const quickAdd = state.history.length > 0 ? `
     <div class="quick-add">
       <span class="section-label">Add again</span>
       <div class="quick-add-chips">
-        ${recent.map(name => `<button class="name-chip" data-recent="${esc(name)}"><span class="add-icon" aria-hidden="true"></span>${esc(name)}</button>`).join('')}
-        <button class="name-chip" data-last-group>Last group</button>
+        ${recent.map(name => `<button class="name-chip" data-action="addRecentName" data-arg="${esc(name)}"><span class="add-icon" aria-hidden="true"></span>${esc(name)}</button>`).join('')}
+        <button class="name-chip" data-action="loadLastGroup">Last group</button>
       </div>
     </div>` : '';
 
   $('namesList').innerHTML = rows + joinRow + contactsBtn + quickAdd;
+}
 
-  $('namesList').querySelector('[data-last-group]')?.addEventListener('click', loadLastGroup);
-  $('namesList').querySelector('[data-contacts]')?.addEventListener('click', () => void pickContacts());
-  $('namesList').querySelectorAll<HTMLButtonElement>('[data-recent]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (addPersonNamed(btn.dataset.recent!)) showPeople();
-      else showToast('Up to ' + MAX_OTHERS + ' people besides you');
-    });
+// A name from "Add again"
+export function addRecentName(name: string): void {
+  if (addPersonNamed(name)) showPeople();
+  else showToast('Up to ' + MAX_OTHERS + ' people besides you');
+}
+
+// The name fields, through one set of listeners since the list is redrawn
+export function initPeople(): void {
+  const nameField = (e: Event) => (e.target as HTMLElement).closest<HTMLInputElement>('[data-person]');
+  const fallback = (idx: number) => state.people[idx]?.isMe ? 'Me' : 'Person ' + (idx + 1);
+  $('namesList').addEventListener('input', (e) => {
+    const input = nameField(e);
+    const person = input && state.people[Number(input.dataset.person)];
+    if (!person) return;
+    person.name = input.value || fallback(Number(input.dataset.person));
+    renderLiveSummary();
   });
-
-  $('namesList').querySelectorAll<HTMLInputElement>('[data-person]').forEach(input => {
-    const idx = Number(input.dataset.person);
-    const fallback = state.people[idx].isMe ? 'Me' : 'Person ' + (idx + 1);
-    input.addEventListener('input', () => {
-      state.people[idx].name = input.value || fallback;
-      renderLiveSummary();
-    });
-    input.addEventListener('blur', () => {
-      if (!input.value.trim()) input.value = fallback;
-    });
+  $('namesList').addEventListener('focusout', (e) => {
+    const input = nameField(e);
+    if (input && !input.value.trim()) input.value = fallback(Number(input.dataset.person));
   });
 }

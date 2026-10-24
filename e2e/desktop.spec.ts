@@ -80,7 +80,7 @@ test('a saved bill opens with the list of bills beside it', async ({ page }) => 
     await page.click('#appNewBill');
   }
   await page.click('[data-tab=screenHistory]');
-  await page.locator('[data-bill] .history-open').first().click();
+  await page.locator('.history-card .history-open').first().click();
   await expect(page.locator('#billsPane')).toBeVisible();
   await expect(page.locator('.pane-bill')).toHaveCount(2);
   await expect(page.locator('.pane-bill.current')).toHaveAttribute('aria-current', 'true');

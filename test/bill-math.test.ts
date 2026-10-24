@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeAll, beforeEach } from 'vitest';
 
-// state.ts and helpers.ts read saved settings from localStorage when they load
+// state.ts and money.ts read saved settings from localStorage when they load
 const store = new Map<string, string>();
 vi.stubGlobal('localStorage', {
   getItem: (k: string) => store.get(k) ?? null,
@@ -10,11 +10,13 @@ vi.stubGlobal('localStorage', {
 
 let bill: typeof import('../src/bill');
 let st: typeof import('../src/state');
-let helpers: typeof import('../src/helpers');
+let money: typeof import('../src/money');
+let colors: typeof import('../src/colors');
 beforeAll(async () => {
   bill = await import('../src/bill');
   st = await import('../src/state');
-  helpers = await import('../src/helpers');
+  money = await import('../src/money');
+  colors = await import('../src/colors');
 });
 
 const amounts = () => bill.calcOwes().map(b => b.amount);
@@ -36,7 +38,7 @@ beforeEach(() => {
   state.useReceiptTip = false;
   state.payer = 'me';
   state.imPartOfBill = true;
-  helpers.setCurrency('$');
+  money.setCurrency('$');
 });
 
 describe('even split', () => {
@@ -82,7 +84,7 @@ describe('split by item', () => {
     expect(me + carmine).toBeCloseTo(76.8, 10);
   });
 
-  it('always adds up to the bill total when every item is on someone', () => {
+  it('always adds up to the bill total, in whole cents, when every item is on someone', () => {
     // A fixed pseudo-random sweep of prices, people and assignments
     let seed = 7;
     const rand = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
@@ -94,7 +96,10 @@ describe('split by item', () => {
         return { name: 'Item ' + i, price: Math.round(rand() * 5000) / 100, assignees: assignees.length ? assignees : [0] };
       });
       Object.assign(st.state, { taxAmt: Math.round(rand() * 900) / 100, tipPct: Math.round(rand() * 25), tipBase: rand() < 0.5 ? 'pre' : 'post' });
-      expect(sum(amounts())).toBeCloseTo(st.getBillTotals().total, 8);
+      const shares = amounts();
+      // The same as the Total line shows
+      expect(money.fmt(sum(shares))).toBe(money.fmt(st.getBillTotals().total));
+      for (const share of shares) expect(Math.abs(share * 100 - Math.round(share * 100))).toBeLessThan(1e-6);
     }
   });
 
@@ -141,7 +146,50 @@ describe('split by item', () => {
 
   it('colors each person by position, the same everywhere', () => {
     st.state.people.push({ name: 'Jo' });
-    expect(bill.calcOwes().map(b => b.color)).toEqual([helpers.COLORS[0], helpers.COLORS[1], helpers.COLORS[2]]);
+    expect(bill.calcOwes().map(b => b.color)).toEqual([colors.COLORS[0], colors.COLORS[1], colors.COLORS[2]]);
+  });
+});
+
+describe('whole cents', () => {
+  it('gives the leftover cent to whoever paid, so the others add up to what is owed back', () => {
+    Object.assign(st.state, { splitMode: 'even', quickTotalAmt: 100 });
+    st.state.people.push({ name: 'Jo' });
+    expect(amounts()).toEqual([33.34, 33.33, 33.33]);
+    st.state.payer = 2;
+    expect(amounts()).toEqual([33.33, 33.33, 33.34]);
+  });
+
+  it('rounds everyone but the payer to the nearest cent of their exact share', () => {
+    Object.assign(st.state, { taxAmt: 1, tipPct: 0 });
+    st.state.people.push({ name: 'Jo' });
+    st.state.payer = 1;
+    st.state.items = [{ name: 'Pizza', price: 10, assignees: [0, 1, 2] }, { name: 'Soda', price: 2.99, assignees: [0] }];
+    // Items 12.99 plus 1 tax = 13.99, shared in proportion to the items
+    const exact = [10 / 3 + 2.99, 10 / 3, 10 / 3].map(x => x * 13.99 / 12.99);
+    const [me, carmine, jo] = amounts();
+    expect(Math.abs(me - exact[0])).toBeLessThanOrEqual(0.005);
+    expect(Math.abs(jo - exact[2])).toBeLessThanOrEqual(0.005);
+    expect(Math.abs(carmine - exact[1])).toBeLessThan(0.02);
+    expect(me + carmine + jo).toBeCloseTo(13.99, 10);
+  });
+
+  it('gives the cent to the share closest to rounding up when the payer had nothing', () => {
+    st.state.people.push({ name: 'Jo' }, { name: 'Sam' });
+    st.state.items = [{ name: 'Wine', price: 10, assignees: [1, 2, 3] }];
+    expect(amounts()).toEqual([0, 3.34, 3.33, 3.33]);
+  });
+
+  it('works in whole units for currencies without cents', () => {
+    money.setCurrency('¥');
+    Object.assign(st.state, { splitMode: 'even', quickTotalAmt: 1000 });
+    st.state.people.push({ name: 'Jo' });
+    expect(amounts()).toEqual([334, 333, 333]);
+  });
+
+  it('keeps an even split exact when it already divides', () => {
+    Object.assign(st.state, { splitMode: 'even', quickTotalAmt: 84.2, quickTaxAmt: 0, tipPct: 18 });
+    st.state.people.push({ name: 'Jo' });
+    expect(amounts()).toEqual([33.12, 33.12, 33.12]);
   });
 });
 
@@ -191,15 +239,18 @@ describe('who paid', () => {
 
 describe('money formatting', () => {
   it('shows cents for most currencies', () => {
-    expect(helpers.fmt(12.5)).toBe('$12.50');
-    expect(helpers.fmt(-6)).toBe('-$6.00');
-    expect(helpers.fmt(-0.001)).toBe('$0.00');
+    expect(money.fmt(12.5)).toBe('$12.50');
+    expect(money.fmt(-6)).toBe('-$6.00');
+    expect(money.fmt(-0.001)).toBe('$0.00');
+    // 178.365 is stored as 178.36499999...; half a cent still rounds up
+    expect(money.fmt(178.365)).toBe('$178.37');
+    expect(money.fmt(-2.005)).toBe('-$2.01');
   });
 
   it('shows whole amounts for currencies without cents', () => {
-    helpers.setCurrency('¥');
-    expect(helpers.fmt(1234.4)).toBe('¥1234');
-    helpers.setCurrency('₩');
-    expect(helpers.fmt(5000)).toBe('₩5000');
+    money.setCurrency('¥');
+    expect(money.fmt(1234.4)).toBe('¥1234');
+    money.setCurrency('₩');
+    expect(money.fmt(5000)).toBe('₩5000');
   });
 });

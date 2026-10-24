@@ -1,4 +1,6 @@
-import { $, confirmDialog } from './helpers';
+import { $ } from './helpers';
+import { confirmDialog } from './dialog';
+import { load, save } from './storage';
 
 // Chrome, Edge and Android hand over their install prompt; iOS Safari has none,
 // so there the button explains Add to Home Screen instead
@@ -40,8 +42,8 @@ export async function install(): Promise<void> {
 
 // Once, after the first saved bill, when the app has just proved useful
 export async function maybeNudgeInstall(): Promise<void> {
-  if (!canInstall() || localStorage.getItem('sp_installNudged')) return;
-  localStorage.setItem('sp_installNudged', '1');
+  // Storage that can't remember asking means never asking, not asking every time
+  if (!canInstall() || load('sp_installNudged') || !save('sp_installNudged', '1')) return;
   if (await confirmDialog('Keep SliceOfPie on your home screen?', 'It opens instantly and works with no signal.', { yes: 'Install', no: 'Not now' })) {
     await install();
   }
