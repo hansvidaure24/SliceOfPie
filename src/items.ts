@@ -1,7 +1,7 @@
 import { $, COLORS, esc, fmt, receiptHints, confirmDialog, showToast, setToggle } from './helpers';
 import { state } from './state';
-import { goTo } from './navigation';
-import { renderAssign } from './assign';
+import { goTo, updateQuickCta } from './navigation';
+import { renderAssign, updateItemsCta } from './assign';
 import { processReceipt } from './scan/process';
 import { OcrUnavailableError } from './scan/engine';
 import { prepareImage } from './scan/image';
@@ -138,6 +138,7 @@ function fillQuickTotal(amount: number): void {
   $('quickTaxCard').classList.add('hidden');
   state.quickTaxAmt = 0;
   ($('quickTax') as HTMLInputElement).value = '';
+  updateQuickCta();
 }
 
 export function skipToManual(): void {
@@ -215,6 +216,7 @@ export function updateRunning(): void {
   const sub = state.items.reduce((sum, item) => sum + (item.price || 0), 0);
   const taxNote = state.taxAmt ? ' + ' + fmt(state.taxAmt) + ' tax' : '';
   $('runningSub').textContent = 'Subtotal: ' + fmt(sub) + taxNote;
+  updateItemsCta();
 
   // Compare against the scanned receipt's total, so a misread price stands out
   const check = $('receiptCheck');
