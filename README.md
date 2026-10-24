@@ -168,6 +168,7 @@ src/
   export-image.ts  Canvas-based PNG export
   payment.ts       Payment method settings
   install.ts       Install prompt, iOS instructions, the one-time nudge
+  app-info.ts      The version line in Settings, and the screen sizes behind it
   toggles.ts       Toggle switch handlers
   money.ts         Currencies, rounding and formatting amounts
   dialog.ts        The confirm / prompt sheet (native <dialog>)

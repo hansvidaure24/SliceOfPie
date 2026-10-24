@@ -518,6 +518,8 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 /* ── Privacy Note ── */
 .privacy-note{background:var(--bg);border:1px solid var(--surface-border);text-align:left;padding:var(--space-3) var(--space-4)}
 .privacy-note p{margin:0;font-size:var(--text-s);color:var(--muted)}
+/* Which build is running; tap for screen sizes (src/app-info.ts) */
+.app-version{display:block;margin:var(--space-2) auto 0;min-height:44px;padding:0 var(--space-4);background:none;border:none;color:var(--muted);font-size:var(--text-xs);cursor:pointer}
 
 /* ── Theme Toggle ── */
 .theme-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-2);padding:var(--space-1) 0}
@@ -667,7 +669,7 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 .sheet.warn .confirm-icon{display:flex}
 .confirm-sub[hidden]{display:none}
 .confirm-msg{margin:0 0 6px;font-size:var(--text-md);font-weight:700;color:var(--text)}
-.confirm-sub{margin:0 0 20px;font-size:var(--text-sm);color:var(--muted)}
+.confirm-sub{margin:0 0 20px;font-size:var(--text-sm);color:var(--muted);white-space:pre-line}
 .confirm-btns{display:flex;gap:10px}
 .confirm-btns .btn{flex:1}
 /* A message with nothing to choose (e.g. the iOS install tip) hides its second button */
@@ -919,7 +921,7 @@ kbd{font-family:ui-monospace,Consolas,monospace;font-size:var(--text-2xs);paddin
   #screenSettings.active{display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3) var(--space-4)}
   #screenSettings>.card{margin-bottom:0}
   #screenSettings>h1,#screenSettings>.subtitle{grid-column:1/-1}
-  #screenSettings>.card:nth-of-type(3),#screenSettings>.privacy-note{grid-column:1/-1}
+  #screenSettings>.card:nth-of-type(3),#screenSettings>.privacy-note,#screenSettings>.app-version{grid-column:1/-1}
 
   /* Summary: tip card + summary card side by side */
   #screenSummary.active{display:grid;grid-template-columns:1fr 1fr;gap:0 var(--space-4);align-items:start}

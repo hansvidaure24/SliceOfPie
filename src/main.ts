@@ -23,6 +23,7 @@ import { initActions } from './actions';
 import { exportBills, importBills, initBackup } from './backup';
 import { initReceiptDrop } from './layout';
 import { initInstall, lockZoomWhenInstalled } from './install';
+import { initAppInfo, showAppInfo } from './app-info';
 import { initScannerStatus } from './scanner-status';
 import { SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
 import { initUpdates } from './update';
@@ -46,7 +47,7 @@ initActions({
   setTip: pct => setTip(pct!), chooseReceiptTip, setCustomTip,
   savePayment, togglePay: method => togglePay(method as Parameters<typeof togglePay>[0]), addPreset,
   removePreset: i => removePreset(i!),
-  exportImage, exportBills, importBills,
+  exportImage, exportBills, importBills, showAppInfo,
 });
 
 function renderThemeToggle(): void {
@@ -90,6 +91,7 @@ function updateCurrencySymbols(): void {
 
 // Restore saved state
 lockZoomWhenInstalled();
+initAppInfo();
 applyTheme();
 renderThemeToggle();
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
