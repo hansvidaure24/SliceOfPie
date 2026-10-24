@@ -192,7 +192,7 @@ body.transitioning .btn{pointer-events:none}
 .join-row{gap:8px;padding:10px 0}
 .join-label{font-size:.8rem;color:var(--cream-dim)}
 /* ── Icons: SVG masks that take the text color ── */
-.person-icon,.bill-icon,.camera-icon,.gallery-icon,.add-icon,.chevron-icon,.arrow-up-icon,.check-icon,.list-icon,.pencil-icon,.share-icon,.trash-icon,.warning-icon,.xmark-icon{
+.person-icon,.bill-icon,.camera-icon,.gallery-icon,.add-icon,.chevron-icon,.arrow-up-icon,.check-icon,.list-icon,.pencil-icon,.share-icon,.copy-icon,.trash-icon,.warning-icon,.xmark-icon{
   display:inline-block;flex-shrink:0;width:var(--icon-size,16px);height:var(--icon-size,16px);vertical-align:middle;
   -webkit-mask:var(--icon) center/contain no-repeat;mask:var(--icon) center/contain no-repeat;
   background:currentColor;
@@ -208,6 +208,7 @@ body.transitioning .btn{pointer-events:none}
 .list-icon{--icon:url('/list.svg')}
 .pencil-icon{--icon:url('/pencil.svg')}
 .share-icon{--icon:url('/share-square.svg')}
+.copy-icon{--icon:url('/copy.svg')}
 .trash-icon{--icon:url('/trash-xmark.svg')}
 .warning-icon{--icon:url('/triangle-warning.svg')}
 .xmark-icon{--icon:url('/circle-xmark.svg')}
@@ -735,7 +736,8 @@ body[data-chrome="flow"] .app-bar,body[data-chrome="bar"] .app-bar{display:grid}
 .cta-total small{font-size:var(--text-xs);color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cta-total small.warn{color:var(--warn);font-weight:600}
 .cta-total b{font-size:var(--text-lg);font-variant-numeric:tabular-nums}
-.summary-extra{display:flex;justify-content:center;margin-top:var(--space-1)}
+.summary-extra{display:flex;flex-wrap:wrap;justify-content:center;gap:var(--space-2);margin-top:var(--space-1)}
+.summary-extra .btn[hidden]{display:none}
 .summary-extra .btn{font-size:var(--text-sm)}
 
 .tab-bar{

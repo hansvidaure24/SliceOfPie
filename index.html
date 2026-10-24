@@ -150,9 +150,12 @@
     <div class="section-label">Who owes what</div>
     <div id="detailPeople"></div>
   </div>
+  <div class="summary-extra">
+    <button class="btn btn-ghost btn-inline" id="detailShareAltBtn" onclick="reshareDetail('alt')"><span class="share-icon"></span>Share…</button>
+  </div>
   <button class="btn btn-ghost-danger" id="detailDelBtn" onclick="deleteBill()"><span class="trash-icon"></span>Delete Bill</button>
   <div class="cta-bar">
-    <button class="btn btn-primary" onclick="reshareDetail()"><span class="share-icon"></span>Share</button>
+    <button class="btn btn-primary" id="detailShareBtn" onclick="reshareDetail()"><span class="share-icon"></span>Share</button>
   </div>
 </div>
 
@@ -312,11 +315,12 @@
   </div>
 
   <div class="summary-extra">
-    <button class="btn btn-ghost btn-inline" onclick="exportImage()"><span class="gallery-icon"></span>Share as image</button>
+    <button class="btn btn-ghost btn-inline" id="shareAltBtn" onclick="doShare('alt')"><span class="share-icon"></span>Share…</button>
+    <button class="btn btn-ghost btn-inline" id="imageBtn" onclick="exportImage()"><span class="gallery-icon"></span>Share as image</button>
   </div>
   <div class="cta-bar">
     <button class="btn btn-secondary" id="saveBillBtn" onclick="startSaveBill()"><span class="bill-icon"></span>Save Bill</button>
-    <button class="btn btn-primary" onclick="doShare()"><span class="share-icon"></span>Share</button>
+    <button class="btn btn-primary" id="shareBtn" onclick="doShare()"><span class="share-icon"></span>Share</button>
   </div>
 </div>
 

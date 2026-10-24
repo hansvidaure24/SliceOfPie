@@ -1,4 +1,4 @@
-import { fmt, showToast } from './helpers';
+import { fmt, showToast, prefersCopy } from './helpers';
 import { state, getBillTotals, isPayer, tipLabel } from './state';
 import { calcOwes } from './summary';
 import { billLabel } from './history';
@@ -80,16 +80,18 @@ export async function exportImage(): Promise<void> {
 
   canvas.toBlob(async blob => {
     if (!blob) { showToast('Export failed'); return; }
-    try {
-      if (navigator.share) {
-        const file = new File([blob], 'bill.png', { type: 'image/png' });
-        await navigator.share({ files: [file] });
+    // Phones share the picture; computers copy it, like the text
+    if (navigator.share && !prefersCopy()) {
+      try {
+        await navigator.share({ files: [new File([blob], 'bill.png', { type: 'image/png' })] });
         return;
+      } catch (err) {
+        if ((err as DOMException)?.name === 'AbortError') return;
       }
-    } catch { /* share rejected (e.g. desktop Chrome) — fall through */ }
+    }
     try {
       await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-      showToast('Image copied to clipboard!');
+      showToast('Image copied. Paste it into any chat.');
     } catch {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
