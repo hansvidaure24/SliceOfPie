@@ -257,7 +257,7 @@
 <div id="screenItems" class="screen">
   <h1>Your <span class="accent">items</span></h1>
   <p class="subtitle" id="itemsSubtitle">Fix anything the scan missed</p>
-  <div class="card">
+  <div class="card items-card">
     <div id="itemsList"></div>
     <button class="add-btn" data-action="addItem"><span class="add-icon"></span>Add Item</button>
     <div class="tax-row">
@@ -271,7 +271,7 @@
   </div>
 
   <div class="cta-bar">
-    <div class="cta-total"><small id="itemsCtaNote">Subtotal</small><b id="itemsCtaTotal">$0.00</b></div>
+    <div class="cta-total"><small id="itemsCtaNote" aria-live="polite">Subtotal</small><b id="itemsCtaTotal">$0.00</b></div>
     <button class="btn btn-primary" data-action="itemsNext">Next: Tip</button>
   </div>
 </div>
@@ -281,9 +281,12 @@
   <h1>The <span class="accent">bill</span></h1>
 
   <div class="card card-accent result-card" id="resultCard">
-    <p class="result-label" id="resultLabel"></p>
-    <p class="result-amt" id="resultAmt" aria-live="polite">$0.00</p>
-    <p class="result-sub" id="resultSub"></p>
+    <!-- Read out as one sentence whenever the tip or payer changes it -->
+    <div class="result-head" aria-live="polite" aria-atomic="true">
+      <p class="result-label" id="resultLabel"></p>
+      <p class="result-amt" id="resultAmt">$0.00</p>
+      <p class="result-sub" id="resultSub"></p>
+    </div>
     <div class="pie-chart-wrap" id="pieChartWrap"></div>
     <div class="result-people" id="breakdownList"></div>
   </div>
@@ -324,9 +327,10 @@
   </div>
 </div>
 
-<div class="confirm-overlay" id="confirmOverlay">
-  <div class="confirm-box">
-    <div class="confirm-icon">!</div>
+<!-- Confirmations and short questions; a bottom sheet on phones -->
+<dialog class="sheet" id="confirmDialog" aria-labelledby="confirmMsg" aria-describedby="confirmSub">
+  <div class="sheet-body">
+    <div class="confirm-icon" aria-hidden="true">!</div>
     <p class="confirm-msg" id="confirmMsg"></p>
     <p class="confirm-sub" id="confirmSub"></p>
     <input class="save-label-input confirm-input" id="confirmInput" aria-labelledby="confirmMsg" hidden>
@@ -335,7 +339,7 @@
       <button class="btn btn-primary" id="confirmYes">Confirm</button>
     </div>
   </div>
-</div>
+</dialog>
 <!-- Beside the screen on wide layouts: running totals while splitting -->
 <aside class="side-pane live-summary" id="liveSummary" aria-label="Live summary">
   <div class="section-label">Live summary</div>
@@ -375,6 +379,7 @@
   <span>A new version is ready.</span>
   <button class="btn btn-primary btn-inline" id="updateReload">Reload</button>
 </div>
+<p class="sr-only" id="announcer" aria-live="polite"></p>
 <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
 </main><!-- /container -->
 
