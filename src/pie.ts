@@ -63,9 +63,6 @@ export function renderPieChart(breakdown: Breakdown[]): void {
   wrapEl.setAttribute('role', 'img');
   wrapEl.setAttribute('aria-label', 'Share of the bill: ' + slices.map(s => `${s.name} ${Math.round(s.frac * 100)}%`).join(', '));
 
-  const legendHtml = slices.map(slice =>
-    `<span class="pie-legend-item"><span class="pie-legend-dot" style="background:${slice.color}"></span>${esc(slice.name)}</span>`
-  ).join('');
 
   // Single-person: no animation needed, just a circle
   if (slices.length === 1) {
@@ -73,8 +70,7 @@ export function renderPieChart(breakdown: Breakdown[]): void {
       <svg width="${SIZE}" height="${SIZE}" viewBox="0 0 ${SIZE} ${SIZE}">
         <circle cx="${CX}" cy="${CY}" r="${RADIUS}" fill="${slices[0].color}" class="pie-slice-circle"/>
         ${labelsSvg}
-      </svg>
-      <div class="pie-legend">${legendHtml}</div>`;
+      </svg>`;
     setTimeout(() => {
       $('pieChartWrap').querySelectorAll<SVGTextElement>('.pie-label').forEach(el => el.style.opacity = '1');
     }, DURATION);
@@ -106,10 +102,6 @@ export function renderPieChart(breakdown: Breakdown[]): void {
   wrap.innerHTML = '';
   wrap.appendChild(svg);
 
-  const legendDiv = document.createElement('div');
-  legendDiv.className = 'pie-legend';
-  legendDiv.innerHTML = legendHtml;
-  wrap.appendChild(legendDiv);
 
   const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (prefersReduced) {
