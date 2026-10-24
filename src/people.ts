@@ -118,14 +118,14 @@ export function renderNames(): void {
              data-person="${i}"
              aria-label="${person.isMe ? 'Your name' : 'Person ' + (i + 1) + ' name'}"
              ${person.isMe ? 'data-me' : ''}>
-      ${person.isMe ? '<div class="me-toggle-row"><span class="me-label">I\'m splitting</span><button class="toggle on" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="true" aria-label="I\'m part of this bill"></button></div>' : ''}
+      ${person.isMe ? '<div class="me-toggle-row"><span class="me-label">I\'m splitting</span><button class="toggle on" data-toggle="partOfBill" data-action="togglePartOfBill" role="switch" aria-checked="true" aria-label="I\'m part of this bill"></button></div>' : ''}
     </div>
   `).join('');
 
   const joinRow = !state.imPartOfBill ? `
     <div class="person-name-row join-row">
       <span class="join-label">Not splitting?</span>
-      <button class="toggle" data-toggle="partOfBill" onclick="togglePartOfBill()" role="switch" aria-checked="false" aria-label="Join this bill"></button>
+      <button class="toggle" data-toggle="partOfBill" data-action="togglePartOfBill" role="switch" aria-checked="false" aria-label="Join this bill"></button>
     </div>
   ` : '';
 

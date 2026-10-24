@@ -29,10 +29,10 @@
 
 <!-- App bar: back, progress through the split, and a screen action -->
 <header class="app-bar" id="appBar">
-  <button class="app-back" id="appBack" onclick="goBack()" aria-label="Back"><span class="chevron-icon"></span></button>
+  <button class="app-back" id="appBack" data-action="goBack" aria-label="Back"><span class="chevron-icon"></span></button>
   <ol class="steps" id="appSteps" aria-label="Progress"></ol>
   <p class="app-bar-title" id="appTitle"></p>
-  <button class="app-action" id="appNewBill" onclick="newBill()">New bill</button>
+  <button class="app-action" id="appNewBill" data-action="newBill">New bill</button>
 </header>
 
 <!-- SCREEN 0: Home -->
@@ -46,17 +46,17 @@
     <p class="subtitle">Everybody gets their slice</p>
   </div>
   <div class="start-choices">
-    <button class="start-choice start-primary" onclick="startSplit('item')">
+    <button class="start-choice start-primary" data-action="startSplit" data-arg="item">
       <span class="camera-icon"></span><span class="start-label">Scan a receipt</span><span class="start-sub">Split by item</span>
     </button>
-    <button class="start-choice" onclick="startSplit('even')">
+    <button class="start-choice" data-action="startSplit" data-arg="even">
       <span class="pencil-icon"></span><span class="start-label">Enter the total</span><span class="start-sub">Split evenly</span>
     </button>
   </div>
   <section class="owed" id="owedSection" hidden>
     <div class="section-label">Still unpaid</div>
     <div id="owedList"></div>
-    <button class="link-btn" onclick="goTo('screenHistory')">All bills <span class="chevron-icon"></span></button>
+    <button class="link-btn" data-action="goTo" data-arg="screenHistory">All bills <span class="chevron-icon"></span></button>
   </section>
 </div>
 
@@ -67,7 +67,7 @@
   <div class="card">
     <div class="section-label">Your Name</div>
     <input class="pay-input full" id="payName" placeholder="Your name" aria-label="Your name"
-           oninput="savePayment()">
+           data-action="savePayment">
   </div>
   <div class="card">
     <div class="section-label">Appearance</div>
@@ -84,25 +84,25 @@
     <div class="section-label">Payment Methods</div>
     <div class="pay-row">
       <span class="pay-icon">Venmo</span>
-      <input class="pay-input" id="payVenmo" placeholder="@username" aria-label="Venmo username" oninput="savePayment()">
-      <button class="toggle pay-toggle" id="togVenmo" onclick="togglePay('Venmo')" role="switch" aria-checked="false" aria-label="Include Venmo"></button>
+      <input class="pay-input" id="payVenmo" placeholder="@username" aria-label="Venmo username" data-action="savePayment">
+      <button class="toggle pay-toggle" id="togVenmo" data-action="togglePay" data-arg="Venmo" role="switch" aria-checked="false" aria-label="Include Venmo"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Zelle</span>
-      <input class="pay-input" id="payZelle" placeholder="email or phone" aria-label="Zelle email or phone" oninput="savePayment()">
-      <button class="toggle pay-toggle" id="togZelle" onclick="togglePay('Zelle')" role="switch" aria-checked="false" aria-label="Include Zelle"></button>
+      <input class="pay-input" id="payZelle" placeholder="email or phone" aria-label="Zelle email or phone" data-action="savePayment">
+      <button class="toggle pay-toggle" id="togZelle" data-action="togglePay" data-arg="Zelle" role="switch" aria-checked="false" aria-label="Include Zelle"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Cash App</span>
-      <input class="pay-input" id="payCashApp" placeholder="$cashtag" aria-label="Cash App cashtag" oninput="savePayment()">
-      <button class="toggle pay-toggle" id="togCashApp" onclick="togglePay('CashApp')" role="switch" aria-checked="false" aria-label="Include Cash App"></button>
+      <input class="pay-input" id="payCashApp" placeholder="$cashtag" aria-label="Cash App cashtag" data-action="savePayment">
+      <button class="toggle pay-toggle" id="togCashApp" data-action="togglePay" data-arg="CashApp" role="switch" aria-checked="false" aria-label="Include Cash App"></button>
     </div>
     <div class="pay-row">
       <div class="pay-other">
-        <input class="pay-input" id="payOtherLabel" placeholder="Other" aria-label="Other payment method name" oninput="savePayment()">
-        <input class="pay-input" id="payOtherValue" placeholder="username or email" aria-label="Other payment method username" oninput="savePayment()">
+        <input class="pay-input" id="payOtherLabel" placeholder="Other" aria-label="Other payment method name" data-action="savePayment">
+        <input class="pay-input" id="payOtherValue" placeholder="username or email" aria-label="Other payment method username" data-action="savePayment">
       </div>
-      <button class="toggle pay-toggle" id="togOther" onclick="togglePay('Other')" role="switch" aria-checked="false" aria-label="Include other method"></button>
+      <button class="toggle pay-toggle" id="togOther" data-action="togglePay" data-arg="Other" role="switch" aria-checked="false" aria-label="Include other method"></button>
     </div>
   </div>
   <div class="card">
@@ -112,7 +112,7 @@
   <div class="card">
     <div class="section-label">Tip Presets</div>
     <div id="presetsList"></div>
-    <button class="preset-add" id="presetAddBtn" onclick="addPreset()"><span class="add-icon" aria-hidden="true"></span>Add Preset</button>
+    <button class="preset-add" id="presetAddBtn" data-action="addPreset"><span class="add-icon" aria-hidden="true"></span>Add Preset</button>
   </div>
   <div class="card" id="scannerCard">
     <div class="section-label">Receipt scanner</div>
@@ -151,11 +151,11 @@
     <div id="detailPeople"></div>
   </div>
   <div class="summary-extra">
-    <button class="btn btn-ghost btn-inline" id="detailShareAltBtn" onclick="reshareDetail('alt')"><span class="share-icon"></span>Share…</button>
+    <button class="btn btn-ghost btn-inline" id="detailShareAltBtn" data-action="reshareDetail" data-arg="alt"><span class="share-icon"></span>Share…</button>
   </div>
-  <button class="btn btn-ghost-danger" id="detailDelBtn" onclick="deleteBill()"><span class="trash-icon"></span>Delete Bill</button>
+  <button class="btn btn-ghost-danger" id="detailDelBtn" data-action="deleteBill"><span class="trash-icon"></span>Delete Bill</button>
   <div class="cta-bar">
-    <button class="btn btn-primary" id="detailShareBtn" onclick="reshareDetail()"><span class="share-icon"></span>Share</button>
+    <button class="btn btn-primary" id="detailShareBtn" data-action="reshareDetail"><span class="share-icon"></span>Share</button>
   </div>
 </div>
 
@@ -165,21 +165,21 @@
   <p class="subtitle" id="peopleSubtitle">How many people at the table?</p>
   <div class="card">
     <div class="people-counter">
-      <button class="counter-btn" id="btnMinus" onclick="changePeople(-1)" aria-label="Remove person">−</button>
+      <button class="counter-btn" id="btnMinus" data-action="changePeople" data-arg="-1" aria-label="Remove person">−</button>
       <span class="counter-val" id="peopleCount" aria-live="polite" aria-label="Number of people">2</span>
-      <button class="counter-btn" id="btnPlus" onclick="changePeople(1)" aria-label="Add person">+</button>
+      <button class="counter-btn" id="btnPlus" data-action="changePeople" data-arg="1" aria-label="Add person">+</button>
     </div>
     <div id="namesList"></div>
   </div>
   <div class="card">
     <div class="section-label">Split Method</div>
     <div class="mode-toggle">
-      <button class="mode-btn active" id="modeEven" onclick="setSplitMode('even')">Even Split</button>
-      <button class="mode-btn" id="modeItem" onclick="setSplitMode('item')"><span class="list-icon"></span>By Item</button>
+      <button class="mode-btn active" id="modeEven" data-action="setSplitMode" data-arg="even">Even Split</button>
+      <button class="mode-btn" id="modeItem" data-action="setSplitMode" data-arg="item"><span class="list-icon"></span>By Item</button>
     </div>
   </div>
   <div class="cta-bar">
-    <button class="btn btn-primary" onclick="goToNextFromPeople()">Next</button>
+    <button class="btn btn-primary" data-action="goToNextFromPeople">Next</button>
   </div>
 </div>
 
@@ -187,7 +187,7 @@
 <div id="screenQuick" class="screen">
   <h1>The <span class="accent">total</span></h1>
   <p class="subtitle">Enter the bottom-line number from the receipt</p>
-  <button class="btn btn-secondary scan-total-btn" onclick="goTo('screenCapture')"><span class="camera-icon"></span>Scan receipt</button>
+  <button class="btn btn-secondary scan-total-btn" data-action="goTo" data-arg="screenCapture"><span class="camera-icon"></span>Scan receipt</button>
   <div class="card">
     <div class="section-label">Receipt Total</div>
     <div class="currency-row">
@@ -197,7 +197,7 @@
     </div>
     <div class="tax-toggle-row">
       <span class="round-label">Tax is included</span>
-      <button class="toggle on" id="taxIncToggle" onclick="toggleTaxInc()" role="switch" aria-checked="true" aria-label="Tax included"></button>
+      <button class="toggle on" id="taxIncToggle" data-action="toggleTaxInc" role="switch" aria-checked="true" aria-label="Tax included"></button>
     </div>
   </div>
   <div class="card hidden" id="quickTaxCard">
@@ -210,7 +210,7 @@
   </div>
   <div class="cta-bar">
     <div class="cta-total"><small>Bill total</small><b id="quickCtaTotal">$0.00</b></div>
-    <button class="btn btn-primary" onclick="quickNext()">Next: Tip</button>
+    <button class="btn btn-primary" data-action="quickNext">Next: Tip</button>
   </div>
 </div>
 
@@ -219,9 +219,9 @@
   <h1>Scan the <span class="accent">receipt</span></h1>
   <p class="subtitle">Take a photo or enter items manually</p>
   <div class="capture-btns">
-    <button class="btn btn-primary camera-btn" onclick="takePhoto()"><span class="camera-icon"></span>Take Photo</button>
-    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon"></span>Upload Photo</button>
-    <button class="btn btn-ghost" onclick="skipToManual()"><span class="pencil-icon"></span>Enter Manually</button>
+    <button class="btn btn-primary camera-btn" data-action="takePhoto"><span class="camera-icon"></span>Take Photo</button>
+    <button class="btn btn-secondary" data-action="uploadPhoto"><span class="gallery-icon"></span>Upload Photo</button>
+    <button class="btn btn-ghost" data-action="skipToManual"><span class="pencil-icon"></span>Enter Manually</button>
   </div>
   <p class="scanner-note" id="captureScannerNote"></p>
   <p class="drop-hint">You can also drop a photo here, or paste one with Ctrl+V.</p>
@@ -241,13 +241,13 @@
   <p id="cameraHint" class="camera-hint" aria-live="polite">Starting camera…</p>
   <div id="cameraBlocked" class="camera-blocked" hidden>
     <p id="cameraBlockedMsg"></p>
-    <button class="btn btn-primary" onclick="takePhotoNative()"><span class="camera-icon"></span>Use camera app</button>
-    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon"></span>Upload Photo</button>
+    <button class="btn btn-primary" data-action="takePhotoNative"><span class="camera-icon"></span>Use camera app</button>
+    <button class="btn btn-secondary" data-action="uploadPhoto"><span class="gallery-icon"></span>Upload Photo</button>
   </div>
   <div class="camera-controls">
-    <button class="camera-round" onclick="closeCamera()" aria-label="Close camera"><span class="xmark-icon"></span></button>
-    <button id="cameraShutter" class="camera-shutter" onclick="shootPhoto()" aria-label="Take photo" disabled></button>
-    <button id="cameraTorch" class="camera-round" onclick="toggleTorch()" aria-label="Turn on light" aria-pressed="false" hidden>
+    <button class="camera-round" data-action="closeCamera" aria-label="Close camera"><span class="xmark-icon"></span></button>
+    <button id="cameraShutter" class="camera-shutter" data-action="shootPhoto" aria-label="Take photo" disabled></button>
+    <button id="cameraTorch" class="camera-round" data-action="toggleTorch" aria-label="Turn on light" aria-pressed="false" hidden>
       <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg>
     </button>
   </div>
@@ -259,7 +259,7 @@
   <p class="subtitle" id="itemsSubtitle">Fix anything the scan missed</p>
   <div class="card">
     <div id="itemsList"></div>
-    <button class="add-btn" onclick="addItem()"><span class="add-icon"></span>Add Item</button>
+    <button class="add-btn" data-action="addItem"><span class="add-icon"></span>Add Item</button>
     <div class="tax-row">
       <span class="tax-label">Tax</span>
       <span id="taxSymbol" class="unit-label">$</span>
@@ -272,7 +272,7 @@
 
   <div class="cta-bar">
     <div class="cta-total"><small id="itemsCtaNote">Subtotal</small><b id="itemsCtaTotal">$0.00</b></div>
-    <button class="btn btn-primary" onclick="itemsNext()">Next: Tip</button>
+    <button class="btn btn-primary" data-action="itemsNext">Next: Tip</button>
   </div>
 </div>
 
@@ -294,12 +294,12 @@
     <details class="more-options">
       <summary><span id="tipMoreLabel">On pre-tax</span><span class="chevron-icon" aria-hidden="true"></span></summary>
       <div class="tip-base-row" id="tipBaseRow">
-        <button class="tip-base-btn active" id="tipPreTax" onclick="setTipBase('pre')">On pre-tax</button>
-        <button class="tip-base-btn" id="tipPostTax" onclick="setTipBase('post')">On post-tax</button>
+        <button class="tip-base-btn active" id="tipPreTax" data-action="setTipBase" data-arg="pre">On pre-tax</button>
+        <button class="tip-base-btn" id="tipPostTax" data-action="setTipBase" data-arg="post">On post-tax</button>
       </div>
       <div class="round-row">
         <span class="round-label"><span class="arrow-up-icon" aria-hidden="true"></span>Round up to nearest dollar</span>
-        <button class="toggle" id="roundToggle" onclick="toggleRound()" role="switch" aria-checked="false" aria-label="Round up"></button>
+        <button class="toggle" id="roundToggle" data-action="toggleRound" role="switch" aria-checked="false" aria-label="Round up"></button>
       </div>
     </details>
     <div class="card-divider"></div>
@@ -315,12 +315,12 @@
   </div>
 
   <div class="summary-extra">
-    <button class="btn btn-ghost btn-inline" id="shareAltBtn" onclick="doShare('alt')"><span class="share-icon"></span>Share…</button>
-    <button class="btn btn-ghost btn-inline" id="imageBtn" onclick="exportImage()"><span class="gallery-icon"></span>Share as image</button>
+    <button class="btn btn-ghost btn-inline" id="shareAltBtn" data-action="doShare" data-arg="alt"><span class="share-icon"></span>Share…</button>
+    <button class="btn btn-ghost btn-inline" id="imageBtn" data-action="exportImage"><span class="gallery-icon"></span>Share as image</button>
   </div>
   <div class="cta-bar">
-    <button class="btn btn-secondary" id="saveBillBtn" onclick="startSaveBill()"><span class="bill-icon"></span>Save Bill</button>
-    <button class="btn btn-primary" id="shareBtn" onclick="doShare()"><span class="share-icon"></span>Share</button>
+    <button class="btn btn-secondary" id="saveBillBtn" data-action="startSaveBill"><span class="bill-icon"></span>Save Bill</button>
+    <button class="btn btn-primary" id="shareBtn" data-action="doShare"><span class="share-icon"></span>Share</button>
   </div>
 </div>
 
@@ -355,15 +355,15 @@
 
 <nav class="tab-bar" id="tabBar" aria-label="Main">
   <div class="rail-logo" aria-hidden="true"><img src="/logo-pie.png" alt="" width="34" height="34" loading="lazy"><span>SliceOf<span class="pie">Pie</span></span></div>
-  <button class="tab" data-tab="screenWelcome" onclick="goTo('screenWelcome')">
+  <button class="tab" data-tab="screenWelcome" data-action="goTo" data-arg="screenWelcome">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 2.05A10 10 0 1 0 21.95 13H11z"/><path fill="currentColor" d="M13 2.05V11h8.95A10 10 0 0 0 13 2.05z" opacity=".55"/></svg>
     <span>Split</span>
   </button>
-  <button class="tab" data-tab="screenHistory" onclick="goTo('screenHistory')">
+  <button class="tab" data-tab="screenHistory" data-action="goTo" data-arg="screenHistory">
     <span class="tab-icon"><span class="bill-icon"></span><span class="badge" id="histBadge" style="display:none">0</span></span>
     <span>History</span>
   </button>
-  <button class="tab" data-tab="screenSettings" onclick="goTo('screenSettings')">
+  <button class="tab" data-tab="screenSettings" data-action="goTo" data-arg="screenSettings">
     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.43 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.43a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
     </svg>
