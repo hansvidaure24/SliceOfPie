@@ -652,6 +652,8 @@ body.transitioning .btn{pointer-events:none}
 .confirm-sub{margin:0 0 20px;font-size:.85rem;color:var(--muted)}
 .confirm-btns{display:flex;gap:10px}
 .confirm-btns .btn{flex:1}
+/* A message with nothing to choose (e.g. the iOS install tip) hides its second button */
+.confirm-btns .btn[hidden]{display:none}
 
 /* ── Card stagger entrance ── */
 .card{animation:cardIn .3s cubic-bezier(.4,0,.2,1) both}

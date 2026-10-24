@@ -103,6 +103,12 @@ export function currentScreen(): string {
   return document.querySelector('.screen.active')?.id ?? HOME;
 }
 
+// Redraw the top bar without changing screens, e.g. after the split mode
+// changes the steps from People/Total/Bill to People/Scan/Items/Bill
+export function refreshSteps(): void {
+  renderChrome(currentScreen());
+}
+
 export async function goBack(): Promise<void> {
   await BACK[currentScreen()]?.();
 }
