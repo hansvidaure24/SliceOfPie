@@ -24,7 +24,7 @@ import { initReceiptDrop } from './layout';
 import { initInstall } from './install';
 import { initScannerStatus } from './scanner-status';
 import { SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
-import { registerSW } from 'virtual:pwa-register';
+import { initUpdates } from './update';
 
 // What each data-action in the page does
 initActions({
@@ -214,9 +214,4 @@ async function openSharedReceipt(): Promise<void> {
 }
 
 // A new version doesn't interrupt; a bill in progress survives the reload as a draft
-registerSW({
-  onNeedRefresh() {
-    $('updateToast').hidden = false;
-  },
-});
-$('updateReload').addEventListener('click', () => location.reload());
+initUpdates();

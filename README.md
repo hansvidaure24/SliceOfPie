@@ -29,13 +29,13 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 
 - **Even or by-item split** — tap people's names under each item (or tick their column on a computer); items nobody is on are flagged before you move on
 - **The answer first** — the bill screen opens with what's owed back to you (or your share, if someone else paid), then each person's amount and a pie of the shares
-- **OCR receipt scanning** — snap a photo with the in-app camera (guide frame, light and hold-still hints), upload one, drop or paste one on a computer, or share one from your gallery (Android, desktop Chrome). PaddleOCR reads it on-device in a Web Worker
+- **OCR receipt scanning** — snap a photo with the in-app camera (guide frame, light and hold-still hints), upload one, drop or paste one on a computer, or share one from your gallery (Android, desktop Chrome). PaddleOCR reads it on-device in a Web Worker and picks out the items (including names that wrap onto a second line and "2 x" quantities), discounts, subtotal, tax, tip, total, merchant and date. A live line shows whether the items match the receipt's total, and a photo that can't be read or doesn't add up offers a retake. In an even split, a scan fills in the total
 - **Offline scanner, on your terms** — the scanner (~36 MB) downloads once, after you say yes; Settings shows whether it's ready offline and can download or remove it
 - **Tip & tax** — preset tip buttons, custom %, pre-tax or post-tax, round-up toggle; a tip already printed on a scanned receipt is used as-is instead of adding another
 - **Bill history** — saved to IndexedDB under a name you choose, track who's paid with one tap; Home lists the bills still unpaid
 - **Share or copy** — on a computer the bill copies to the clipboard in one click; on a phone it opens the share sheet. Either way your payment details (Venmo, Zelle, Cash App, or your own) are included, and there's a PNG version too
 - **Picks up where you left off** — a reload, or the phone dropping the app while you open Venmo, brings you back to the same screen with the bill intact
-- **Works like an app** — installable, with home-screen shortcuts (scan, enter a total, who owes me), the system back gesture, and a quiet "new version ready" notice
+- **Works like an app** — installable, with home-screen shortcuts (scan, enter a total, who owes me), the system back gesture, and updates that apply themselves (held back with a "new version ready" notice while you're in the middle of a bill)
 - **Phone, tablet and desktop layouts** — tabs and a sticky action bar on phones, a live summary beside the steps on tablets, a side rail and a column per person on computers
 - **Accessible** — axe finds no WCAG 2.2 AA issues on any screen in either theme; screen-reader announcements, native dialogs, a color-blind-safe person palette, and layouts that hold at 200% text
 - **Dark/light theme and currencies** — follows your system or set manually; USD, EUR, GBP, JPY and more
@@ -170,6 +170,7 @@ src/
   helpers.ts       Small DOM helpers
   types.ts         TypeScript interfaces
   sw.ts            Service worker: precache, OCR cache, share target
+  update.ts        When a new version of the app takes over
 test/              Vitest unit tests and receipt fixtures
 e2e/               Playwright end-to-end tests
 public/
