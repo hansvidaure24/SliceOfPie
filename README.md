@@ -43,7 +43,7 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 
 ## Tech Stack
 
-- **Vite 5** + **TypeScript** (strict mode), no framework
+- **Vite 8** (Rolldown) + **TypeScript 7** (strict mode), no framework
 - **vite-plugin-pwa** with `injectManifest` strategy and **Workbox** for precaching, the OCR cache and the share target
 - **PaddleOCR.js** (PP-OCRv5 mobile detection + Latin recognition) on **ONNX Runtime Web** (wasm) for client-side OCR, with Tesseract.js 5 as a fallback for browsers that can't run it
 - **IndexedDB** for bill history (auto-migrates from localStorage)
@@ -94,6 +94,8 @@ npm run test:e2e    # Playwright: phone (Pixel 7) and desktop, against the built
 Locally the end-to-end suite uses the Edge that ships with Windows; on other systems run `npx playwright install chromium` and set `CI=1`.
 
 ## Getting Started
+
+Needs Node 22.12 or newer.
 
 ```bash
 npm install

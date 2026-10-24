@@ -14,16 +14,16 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
 
       # The OCR models (~13 MB) are pinned by hash, so they only download when that list changes
       - name: Cache OCR models
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: public/ocr
           key: ocr-${{ hashFiles('src/scan/ocr-assets.json', 'scripts/fetch-ocr-assets.mjs') }}
@@ -51,7 +51,7 @@ jobs:
 
       - name: Keep reports when something fails
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: reports
           path: |

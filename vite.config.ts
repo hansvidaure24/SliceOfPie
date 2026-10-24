@@ -1,7 +1,7 @@
 /// <reference types="vitest/config" />
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
-import headers from './security-headers.json'
+import headers from './security-headers.json' with { type: 'json' }
 
 // `vite preview` sends the same security headers as vercel.json, so the
 // production build is tested under the policy it ships with
