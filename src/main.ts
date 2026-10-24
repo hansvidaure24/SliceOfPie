@@ -1,29 +1,36 @@
-import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, confirmDialog } from './helpers';
+import { $, setToggle, CURRENCIES, getCurrency, setCurrency, getThemePref, setThemePref, applyTheme, showToast } from './helpers';
 import type { ThemePref } from './helpers';
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
-import { renderPresets, addPreset, renderTipRow, setTipBase } from './tip';
-import { changePeople, renderNames } from './people';
+import { renderPresets, addPreset, setTipBase } from './tip';
+import { changePeople } from './people';
 import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './toggles';
-import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning } from './items';
+import { updateItemsCta, initAssign } from './assign';
+import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning, enterItemsScreen } from './items';
 import { takePhoto, closeCamera, shootPhoto, toggleTorch } from './camera';
-import { updateHistoryBadge, startSaveBill, confirmSave, deleteBill } from './history';
-import { goTo, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary, captureBack } from './navigation';
+import { updateHistoryBadge, startSaveBill, deleteBill, viewBill } from './history';
+import { goTo, goBack, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary, captureBack, screenForSlug, syncBillUI, settleHomeLocation, startSplit, updateQuickCta, currentScreen } from './navigation';
+import { goToSummary } from './summary';
+import { restoreDraft } from './draft';
 import { doShare, reshareDetail } from './share';
 import { exportImage } from './export-image';
 import { loadHistory } from './db';
+import { initReceiptDrop } from './layout';
+import { initInstall } from './install';
+import { initScannerStatus } from './scanner-status';
+import { SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
 import { registerSW } from 'virtual:pwa-register';
 
 // Vite bundles as ESM — expose handlers for inline onclick attributes
 Object.assign(window, {
-  goTo, goToNextFromPeople, goBackFromSummary, captureBack,
+  goTo, goBack, goToNextFromPeople, goBackFromSummary, captureBack,
   changePeople, setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill,
   takePhoto, takePhotoNative, uploadPhoto, skipToManual, addItem,
   closeCamera, shootPhoto, toggleTorch,
   quickNext, itemsNext,
   setTipBase,
   doShare, reshareDetail, newBill,
-  startSaveBill, confirmSave, deleteBill,
+  startSaveBill, deleteBill, startSplit,
   savePayment, togglePay, addPreset,
   exportImage,
 });
@@ -63,6 +70,8 @@ function updateCurrencySymbols(): void {
     const el = document.getElementById(id);
     if (el) el.textContent = sym;
   });
+  updateQuickCta();
+  updateItemsCta();
 }
 
 // Restore saved state
@@ -75,13 +84,55 @@ renderCurrencySelect();
 restorePaymentFields();
 Object.entries(state.payToggles).forEach(([key, on]) => setToggle('tog' + key, on));
 renderPresets();
-renderTipRow();
-renderNames();
+
+// Pick up a bill in progress, or open the screen named in the address bar
+const draftScreen = restoreDraft();
+syncBillUI();
+initInstall();
+initScannerStatus();
+
+// App shortcuts (long-press the icon) and photos shared from other apps arrive as query params
+const launch = new URLSearchParams(location.search);
+history.replaceState(history.state, '', location.pathname + location.hash);
+const RESUME: Record<string, () => void> = {
+  screenPeople: () => goTo('screenPeople'),
+  screenQuick: () => goTo('screenQuick'),
+  screenCapture: () => goTo('screenCapture'),
+  screenCamera: () => goTo('screenCapture'),
+  screenItems: () => enterItemsScreen(),
+  screenSummary: () => goToSummary(),
+};
+const linked = screenForSlug(location.hash.slice(1));
+if (launch.get('shared') === 'receipt') {
+  void openSharedReceipt();
+} else if (launch.get('start') === 'scan' || launch.get('start') === 'total') {
+  startSplit(launch.get('start') === 'scan' ? 'item' : 'even');
+} else if (draftScreen && RESUME[draftScreen]) {
+  RESUME[draftScreen]();
+  showToast('Picked up where you left off');
+} else if (linked === 'screenHistory' || linked === 'screenSettings') {
+  goTo(linked);
+} else {
+  settleHomeLocation();
+}
 
 loadHistory().then(bills => {
   state.history = bills;
   updateHistoryBadge();
 }).catch(() => {});
+
+initAssign();
+
+// A dropped or pasted receipt scans like a photo; the total screen hands off to the scan screen
+initReceiptDrop(file => {
+  if (currentScreen() !== 'screenCapture') goTo('screenCapture');
+  void scanPhoto(file);
+});
+
+$('billsPaneList').addEventListener('click', (e) => {
+  const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-pane-bill]');
+  if (btn) viewBill(Number(btn.dataset.paneBill));
+});
 
 // Photo input — preview and OCR
 ($('photoInput') as HTMLInputElement).addEventListener('change', (e) => {
@@ -92,9 +143,11 @@ loadHistory().then(bills => {
 // Bind numeric inputs to state
 ($('quickTotal') as HTMLInputElement).addEventListener('input', (e) => {
   state.quickTotalAmt = parseFloat((e.target as HTMLInputElement).value) || 0;
+  updateQuickCta();
 });
 ($('quickTax') as HTMLInputElement).addEventListener('input', (e) => {
   state.quickTaxAmt = parseFloat((e.target as HTMLInputElement).value) || 0;
+  updateQuickCta();
 });
 ($('taxInput') as HTMLInputElement).addEventListener('input', (e) => {
   state.taxAmt = parseFloat((e.target as HTMLInputElement).value) || 0;
@@ -121,17 +174,6 @@ document.addEventListener('keydown', (e) => {
   else if (id === 'screenPeople') goToNextFromPeople();
 });
 
-const ESC_BACK: Record<string, () => void> = {
-  screenSettings: () => goTo('screenWelcome'),
-  screenHistory: () => goTo('screenWelcome'),
-  screenDetail: () => goTo('screenHistory'),
-  screenPeople: () => goTo('screenWelcome'),
-  screenQuick: () => goTo('screenPeople'),
-  screenCapture: () => captureBack(),
-  screenCamera: () => goTo('screenCapture'),
-  screenItems: () => goTo('screenCapture'),
-  screenSummary: () => goBackFromSummary(),
-};
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   const overlay = document.getElementById('confirmOverlay');
@@ -143,12 +185,29 @@ document.addEventListener('keydown', (e) => {
     document.activeElement.blur();
     return;
   }
-  const active = document.querySelector('.screen.active') as HTMLElement | null;
-  if (active && ESC_BACK[active.id]) ESC_BACK[active.id]();
+  void goBack();
 });
 
+// A photo shared to SliceOfPie: the service worker parked it in a cache
+async function openSharedReceipt(): Promise<void> {
+  try {
+    const cache = await caches.open(SHARE_CACHE);
+    const res = await cache.match(SHARED_RECEIPT_URL);
+    await cache.delete(SHARED_RECEIPT_URL);
+    if (!res) { settleHomeLocation(); return; }
+    startSplit('item');
+    goTo('screenCapture');
+    showToast('Scanning the shared photo');
+    void scanPhoto(await res.blob());
+  } catch {
+    settleHomeLocation();
+  }
+}
+
+// A new version doesn't interrupt; a bill in progress survives the reload as a draft
 registerSW({
-  async onNeedRefresh() {
-    if (await confirmDialog('New version available. Update now?')) location.reload();
+  onNeedRefresh() {
+    $('updateToast').hidden = false;
   },
 });
+$('updateReload').addEventListener('click', () => location.reload());

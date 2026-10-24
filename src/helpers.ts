@@ -3,6 +3,17 @@ export const COLORS = [
   '#8E44AD', '#16A085', '#D35400', '#2C3E50',
 ] as const;
 
+// Black or white, whichever reads better on a person's color
+export function inkOn(hex: string): string {
+  const lum = (h: string) => {
+    const [r, g, b] = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255)
+      .map(c => c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  };
+  const l = lum(hex);
+  return (1.05 / (l + 0.05)) >= ((l + 0.05) / (lum('#1A0E08') + 0.05)) ? '#fff' : '#1A0E08';
+}
+
 export function $(id: string): HTMLElement {
   return document.getElementById(id)!;
 }
@@ -99,39 +110,68 @@ export function pulse(el: HTMLElement): void {
 }
 
 export function confirmDialog(msg: string, sub = '', labels: { yes?: string; no?: string } = {}): Promise<boolean> {
+  return openDialog(msg, sub, labels, null).then(result => result !== null);
+}
+
+// The same sheet with a text field; resolves to the text, or null when cancelled
+export function promptDialog(msg: string, value: string, labels: { yes?: string; no?: string } = {}): Promise<string | null> {
+  return openDialog(msg, '', labels, value);
+}
+
+function openDialog(msg: string, sub: string, labels: { yes?: string; no?: string }, value: string | null): Promise<string | null> {
   return new Promise(resolve => {
     const overlay = $('confirmOverlay');
     const box = overlay.querySelector('.confirm-box') as HTMLElement;
     const yesBtn = $('confirmYes');
     const noBtn = $('confirmNo');
+    const input = $('confirmInput') as HTMLInputElement;
     yesBtn.textContent = labels.yes ?? 'Confirm';
     noBtn.textContent = labels.no ?? 'Cancel';
+    // An empty label means there's nothing to choose, just a message to close
+    noBtn.hidden = labels.no === '';
     $('confirmMsg').textContent = msg;
     $('confirmSub').textContent = sub;
     $('confirmSub').style.display = sub ? '' : 'none';
-    box.setAttribute('role', 'alertdialog');
+    input.hidden = value === null;
+    input.value = value ?? '';
+    overlay.classList.toggle('prompt', value !== null);
+    box.setAttribute('role', value === null ? 'alertdialog' : 'dialog');
     box.setAttribute('aria-modal', 'true');
     box.setAttribute('aria-labelledby', 'confirmMsg');
     box.setAttribute('aria-describedby', 'confirmSub');
     overlay.classList.add('show');
-    noBtn.focus();
-    const trapFocus = (e: KeyboardEvent) => {
+    if (value === null) {
+      (noBtn.hidden ? yesBtn : noBtn).focus();
+    } else {
+      input.focus();
+      input.select();
+    }
+    const focusable = [value === null ? null : input, noBtn.hidden ? null : noBtn, yesBtn].filter(Boolean) as HTMLElement[];
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && e.target === input) {
+        e.preventDefault();
+        cleanup(input.value);
+        return;
+      }
       if (e.key !== 'Tab') return;
-      const els = [noBtn, yesBtn];
-      const idx = els.indexOf(document.activeElement as HTMLElement);
+      const idx = focusable.indexOf(document.activeElement as HTMLElement);
       e.preventDefault();
-      els[(idx + (e.shiftKey ? -1 : 1) + els.length) % els.length].focus();
+      focusable[(idx + (e.shiftKey ? -1 : 1) + focusable.length) % focusable.length].focus();
     };
-    overlay.addEventListener('keydown', trapFocus);
-    const cleanup = (result: boolean) => {
+    overlay.addEventListener('keydown', onKey);
+    // Tapping the dimmed area outside the sheet cancels
+    const onScrim = (e: MouseEvent) => { if (e.target === overlay) cleanup(null); };
+    overlay.addEventListener('click', onScrim);
+    const cleanup = (result: string | null) => {
       overlay.classList.remove('show');
-      overlay.removeEventListener('keydown', trapFocus);
+      overlay.removeEventListener('keydown', onKey);
+      overlay.removeEventListener('click', onScrim);
       yesBtn.onclick = null;
       noBtn.onclick = null;
       resolve(result);
     };
-    yesBtn.onclick = () => cleanup(true);
-    noBtn.onclick = () => cleanup(false);
+    yesBtn.onclick = () => cleanup(input.value);
+    noBtn.onclick = () => cleanup(null);
   });
 }
 

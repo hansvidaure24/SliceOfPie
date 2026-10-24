@@ -2,7 +2,7 @@
 <html lang="en" dir="ltr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="theme-color" content="#3A2418">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -20,35 +20,44 @@
   <meta name="twitter:title" content="SliceOfPie">
   <meta name="twitter:description" content="Split bills without the awkward math — offline, on-device, no sign-up.">
   <meta name="twitter:image" content="https://slice-of-pie-xi.vercel.app/icon-512.png">
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js" defer></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/fraunces-800-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <main class="container">
 
-<!-- SCREEN 0: Welcome -->
+<!-- App bar: back, progress through the split, and a screen action -->
+<header class="app-bar" id="appBar">
+  <button class="app-back" id="appBack" onclick="goBack()" aria-label="Back"><span class="chevron-icon"></span></button>
+  <ol class="steps" id="appSteps" aria-label="Progress"></ol>
+  <p class="app-bar-title" id="appTitle"></p>
+  <button class="app-action" id="appNewBill" onclick="newBill()">New bill</button>
+</header>
+
+<!-- SCREEN 0: Home -->
 <div id="screenWelcome" class="screen screen-welcome active">
-  <button class="settings-gear" onclick="goTo('screenSettings')" aria-label="Settings">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.43 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.43a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
-    </svg>
-  </button>
-  <div class="logo-wrap">
-    <img src="/logo-pie.png" alt="" class="logo-pie">
-    <img src="/logo-slice.png" alt="" class="logo-slice">
-  </div>
-  <h1 class="app-title">SliceOf<span class="pie">Pie</span></h1>
-  <p class="subtitle">Everybody gets their slice</p>
-  <div class="welcome-actions">
-    <button class="btn btn-primary" onclick="goTo('screenPeople')">Get Started</button>
-    <div class="history-btn-wrap">
-      <button class="btn btn-secondary" onclick="goTo('screenHistory')"><span class="bill-icon" style="margin-right:6px"></span>History</button>
-      <span class="badge" id="histBadge" style="display:none">0</span>
+  <div class="home-hero">
+    <div class="logo-wrap">
+      <img src="/logo-pie.png" alt="" class="logo-pie" width="96" height="96" fetchpriority="high">
+      <img src="/logo-slice.png" alt="" class="logo-slice" width="96" height="96">
     </div>
+    <h1 class="app-title">SliceOf<span class="pie">Pie</span></h1>
+    <p class="subtitle">Everybody gets their slice</p>
   </div>
+  <div class="start-choices">
+    <button class="start-choice start-primary" onclick="startSplit('item')">
+      <span class="camera-icon"></span><span class="start-label">Scan a receipt</span><span class="start-sub">Split by item</span>
+    </button>
+    <button class="start-choice" onclick="startSplit('even')">
+      <span class="pencil-icon"></span><span class="start-label">Enter the total</span><span class="start-sub">Split evenly</span>
+    </button>
+  </div>
+  <section class="owed" id="owedSection" hidden>
+    <div class="section-label">Still unpaid</div>
+    <div id="owedList"></div>
+    <button class="link-btn" onclick="goTo('screenHistory')">All bills <span class="chevron-icon"></span></button>
+  </section>
 </div>
 
 <!-- SCREEN: Settings -->
@@ -57,7 +66,7 @@
   <p class="subtitle">Personalize your experience</p>
   <div class="card">
     <div class="section-label">Your Name</div>
-    <input class="pay-input" id="payName" placeholder="Your name" aria-label="Your name" style="width:100%"
+    <input class="pay-input full" id="payName" placeholder="Your name" aria-label="Your name"
            oninput="savePayment()">
   </div>
   <div class="card">
@@ -89,9 +98,9 @@
       <button class="toggle pay-toggle" id="togCashApp" onclick="togglePay('CashApp')" role="switch" aria-checked="false" aria-label="Include Cash App"></button>
     </div>
     <div class="pay-row">
-      <div style="flex:1;display:flex;flex-wrap:wrap;gap:8px;min-width:0">
-        <input class="pay-input" id="payOtherLabel" placeholder="Other" aria-label="Other payment method name" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
-        <input class="pay-input" id="payOtherValue" placeholder="username or email" aria-label="Other payment method username" style="flex:1 1 40%;min-width:0" oninput="savePayment()">
+      <div class="pay-other">
+        <input class="pay-input" id="payOtherLabel" placeholder="Other" aria-label="Other payment method name" oninput="savePayment()">
+        <input class="pay-input" id="payOtherValue" placeholder="username or email" aria-label="Other payment method username" oninput="savePayment()">
       </div>
       <button class="toggle pay-toggle" id="togOther" onclick="togglePay('Other')" role="switch" aria-checked="false" aria-label="Include other method"></button>
     </div>
@@ -103,13 +112,25 @@
   <div class="card">
     <div class="section-label">Tip Presets</div>
     <div id="presetsList"></div>
-    <button class="preset-add" id="presetAddBtn" onclick="addPreset()"><span class="add-icon" aria-hidden="true" style="margin-right:4px"></span>Add Preset</button>
+    <button class="preset-add" id="presetAddBtn" onclick="addPreset()"><span class="add-icon" aria-hidden="true"></span>Add Preset</button>
+  </div>
+  <div class="card" id="scannerCard">
+    <div class="section-label">Receipt scanner</div>
+    <div class="status-row">
+      <div class="status-text"><b id="scannerState">Not downloaded yet</b><small id="scannerDetail"></small></div>
+      <button class="btn btn-secondary btn-inline" id="scannerBtn">Download</button>
+    </div>
+    <div class="progress-bar" id="scannerProgress" hidden><div class="progress-fill"></div></div>
+  </div>
+  <div class="card" id="installCard" hidden>
+    <div class="section-label">App</div>
+    <div class="status-row">
+      <div class="status-text"><b>Install SliceOfPie</b><small>Opens from your home screen and works with no signal.</small></div>
+      <button class="btn btn-primary btn-inline" id="installBtn">Install</button>
+    </div>
   </div>
   <div class="card privacy-note">
     <p>Your data is saved locally on this device only. Nothing is sent to a server.</p>
-  </div>
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenWelcome')">Back</button>
   </div>
 </div>
 
@@ -118,9 +139,6 @@
   <h1>Bill <span class="accent">History</span></h1>
   <p class="subtitle">Past splits and who still owes</p>
   <div id="historyList" role="list" aria-label="Saved bills"></div>
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenWelcome')">Back</button>
-  </div>
 </div>
 
 <!-- SCREEN: Bill Detail -->
@@ -132,16 +150,14 @@
     <div class="section-label">Who owes what</div>
     <div id="detailPeople"></div>
   </div>
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenHistory')">Back to History</button>
-    <button class="btn btn-primary" onclick="reshareDetail()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
+  <button class="btn btn-ghost-danger" id="detailDelBtn" onclick="deleteBill()"><span class="trash-icon"></span>Delete Bill</button>
+  <div class="cta-bar">
+    <button class="btn btn-primary" onclick="reshareDetail()"><span class="share-icon"></span>Share</button>
   </div>
-  <button class="btn btn-ghost-danger" id="detailDelBtn" onclick="deleteBill()"><span class="trash-icon" style="margin-right:6px"></span>Delete Bill</button>
 </div>
 
 <!-- SCREEN 1: People Setup -->
 <div id="screenPeople" class="screen">
-  <div class="progress-dots"><span class="progress-dot active"></span><span class="progress-dot"></span><span class="progress-dot"></span></div>
   <h1>Who's <span class="accent">splitting?</span></h1>
   <p class="subtitle" id="peopleSubtitle">How many people at the table?</p>
   <div class="card">
@@ -156,21 +172,19 @@
     <div class="section-label">Split Method</div>
     <div class="mode-toggle">
       <button class="mode-btn active" id="modeEven" onclick="setSplitMode('even')">Even Split</button>
-      <button class="mode-btn" id="modeItem" onclick="setSplitMode('item')"><span class="list-icon" style="margin-right:4px"></span>By Item</button>
+      <button class="mode-btn" id="modeItem" onclick="setSplitMode('item')"><span class="list-icon"></span>By Item</button>
     </div>
   </div>
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenWelcome')">Back</button>
+  <div class="cta-bar">
     <button class="btn btn-primary" onclick="goToNextFromPeople()">Next</button>
   </div>
 </div>
 
 <!-- SCREEN 2a: Quick Entry (Even Split) -->
 <div id="screenQuick" class="screen">
-  <div class="progress-dots"><span class="progress-dot done"></span><span class="progress-dot active"></span><span class="progress-dot"></span></div>
   <h1>The <span class="accent">total</span></h1>
   <p class="subtitle">Enter the bottom-line number from the receipt</p>
-  <button class="btn btn-secondary scan-total-btn" onclick="goTo('screenCapture')"><span class="camera-icon" style="margin-right:6px"></span>Scan receipt</button>
+  <button class="btn btn-secondary scan-total-btn" onclick="goTo('screenCapture')"><span class="camera-icon"></span>Scan receipt</button>
   <div class="card">
     <div class="section-label">Receipt Total</div>
     <div class="currency-row">
@@ -191,30 +205,28 @@
              placeholder="0.00" aria-label="Tax amount">
     </div>
   </div>
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenPeople')">Back</button>
-    <button class="btn btn-primary" onclick="quickNext()">Next</button>
+  <div class="cta-bar">
+    <div class="cta-total"><small>Bill total</small><b id="quickCtaTotal">$0.00</b></div>
+    <button class="btn btn-primary" onclick="quickNext()">Next: Tip</button>
   </div>
 </div>
 
 <!-- SCREEN 2b: Capture (By Item) -->
 <div id="screenCapture" class="screen">
-  <div class="progress-dots"><span class="progress-dot done"></span><span class="progress-dot active"></span><span class="progress-dot"></span></div>
   <h1>Scan the <span class="accent">receipt</span></h1>
   <p class="subtitle">Take a photo or enter items manually</p>
   <div class="capture-btns">
-    <button class="btn btn-primary camera-btn" onclick="takePhoto()"><span class="camera-icon" style="margin-right:6px"></span>Take Photo</button>
-    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon" style="margin-right:6px"></span>Upload Photo</button>
-    <button class="btn btn-ghost" onclick="skipToManual()"><span class="pencil-icon" style="margin-right:6px"></span>Enter Manually</button>
+    <button class="btn btn-primary camera-btn" onclick="takePhoto()"><span class="camera-icon"></span>Take Photo</button>
+    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon"></span>Upload Photo</button>
+    <button class="btn btn-ghost" onclick="skipToManual()"><span class="pencil-icon"></span>Enter Manually</button>
   </div>
+  <p class="scanner-note" id="captureScannerNote"></p>
+  <p class="drop-hint">You can also drop a photo here, or paste one with Ctrl+V.</p>
   <input type="file" id="photoInput" accept="image/*" aria-label="Upload receipt photo">
   <img id="previewImg" class="preview-img" alt="Receipt preview" style="display:none" aria-hidden="true">
   <div id="progressWrap" class="progress-wrap" style="display:none">
     <p class="progress-text" id="progressText" aria-live="polite">Scanning receipt...</p>
     <div class="progress-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"><div class="progress-fill" id="progressFill"></div></div>
-  </div>
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="captureBack()">Back</button>
   </div>
 </div>
 
@@ -226,8 +238,8 @@
   <p id="cameraHint" class="camera-hint" aria-live="polite">Starting camera…</p>
   <div id="cameraBlocked" class="camera-blocked" hidden>
     <p id="cameraBlockedMsg"></p>
-    <button class="btn btn-primary" onclick="takePhotoNative()"><span class="camera-icon" style="margin-right:6px"></span>Use camera app</button>
-    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon" style="margin-right:6px"></span>Upload Photo</button>
+    <button class="btn btn-primary" onclick="takePhotoNative()"><span class="camera-icon"></span>Use camera app</button>
+    <button class="btn btn-secondary" onclick="uploadPhoto()"><span class="gallery-icon"></span>Upload Photo</button>
   </div>
   <div class="camera-controls">
     <button class="camera-round" onclick="closeCamera()" aria-label="Close camera"><span class="xmark-icon"></span></button>
@@ -240,90 +252,71 @@
 
 <!-- SCREEN 3: Edit Items -->
 <div id="screenItems" class="screen">
-  <div class="progress-dots" id="dotItems"><span class="progress-dot done"></span><span class="progress-dot active"></span><span class="progress-dot"></span></div>
   <h1>Your <span class="accent">items</span></h1>
   <p class="subtitle" id="itemsSubtitle">Fix anything the scan missed</p>
   <div class="card">
     <div id="itemsList"></div>
-    <button class="add-btn" onclick="addItem()"><span class="add-icon" style="margin-right:4px"></span>Add Item</button>
+    <button class="add-btn" onclick="addItem()"><span class="add-icon"></span>Add Item</button>
     <div class="tax-row">
       <span class="tax-label">Tax</span>
-      <span id="taxSymbol" style="color:var(--muted);font-size:.85rem">$</span>
+      <span id="taxSymbol" class="unit-label">$</span>
       <input class="tax-input" id="taxInput" type="number" inputmode="decimal" step="0.01" value="0" placeholder="0.00" aria-label="Tax amount">
     </div>
     <div class="running-sub" id="runningSub">Subtotal: $0.00</div>
+    <p class="kbd-hint"><kbd>Enter</kbd> next field or new item · <kbd>Alt</kbd>+<kbd>1</kbd>–<kbd>9</kbd> toggle a person on the item you're in</p>
     <p class="receipt-check" id="receiptCheck" aria-live="polite"></p>
   </div>
 
-  <div id="assignSection" style="display:none">
-    <div class="warn-banner" id="unassignedWarn"><span class="warning-icon" style="margin-right:6px;background:#D4A017"></span>Some items aren't assigned to anyone — they won't be included in the split.</div>
-    <div class="card">
-      <div class="section-label">Assign items to people</div>
-      <div id="assignList"></div>
-    </div>
-  </div>
-
-  <div class="nav-row">
-    <button class="btn btn-ghost" onclick="goTo('screenCapture')">Back</button>
-    <button class="btn btn-primary" onclick="itemsNext()">Next</button>
+  <div class="cta-bar">
+    <div class="cta-total"><small id="itemsCtaNote">Subtotal</small><b id="itemsCtaTotal">$0.00</b></div>
+    <button class="btn btn-primary" onclick="itemsNext()">Next: Tip</button>
   </div>
 </div>
 
 <!-- SCREEN 4: Tip & Summary -->
 <div id="screenSummary" class="screen">
-  <div class="progress-dots"><span class="progress-dot done"></span><span class="progress-dot done"></span><span class="progress-dot active"></span></div>
   <h1>The <span class="accent">bill</span></h1>
 
-  <div class="card">
+  <div class="card card-accent result-card" id="resultCard">
+    <p class="result-label" id="resultLabel"></p>
+    <p class="result-amt" id="resultAmt" aria-live="polite">$0.00</p>
+    <p class="result-sub" id="resultSub"></p>
+    <div class="pie-chart-wrap" id="pieChartWrap"></div>
+    <div class="result-people" id="breakdownList"></div>
+  </div>
+
+  <div class="card tip-card">
     <div class="section-label">Tip</div>
     <div class="tip-row" id="tipRow"></div>
-    <div class="tip-base-row" id="tipBaseRow">
-      <button class="tip-base-btn active" id="tipPreTax" onclick="setTipBase('pre')">On pre-tax</button>
-      <button class="tip-base-btn" id="tipPostTax" onclick="setTipBase('post')">On post-tax</button>
-    </div>
-    <div class="card-divider"></div>
-    <div class="round-row">
-      <span class="round-label"><span class="arrow-up-icon" aria-hidden="true" style="margin-right:4px"></span>Round up to nearest dollar</span>
-      <button class="toggle" id="roundToggle" onclick="toggleRound()" role="switch" aria-checked="false" aria-label="Round up"></button>
-    </div>
+    <details class="more-options">
+      <summary><span id="tipMoreLabel">On pre-tax</span><span class="chevron-icon" aria-hidden="true"></span></summary>
+      <div class="tip-base-row" id="tipBaseRow">
+        <button class="tip-base-btn active" id="tipPreTax" onclick="setTipBase('pre')">On pre-tax</button>
+        <button class="tip-base-btn" id="tipPostTax" onclick="setTipBase('post')">On post-tax</button>
+      </div>
+      <div class="round-row">
+        <span class="round-label"><span class="arrow-up-icon" aria-hidden="true"></span>Round up to nearest dollar</span>
+        <button class="toggle" id="roundToggle" onclick="toggleRound()" role="switch" aria-checked="false" aria-label="Round up"></button>
+      </div>
+    </details>
     <div class="card-divider"></div>
     <div class="section-label">Who paid?</div>
     <div class="payer-row" id="payerRow"></div>
   </div>
 
-  <div class="card card-accent" id="summaryCard">
+  <div class="card sum-card" id="summaryCard">
     <div class="sum-line"><span id="sumSubLabel">Subtotal</span><span id="sumSub">$0.00</span></div>
     <div class="sum-line" id="sumTaxLine"><span>Tax</span><span id="sumTax">$0.00</span></div>
     <div class="sum-line"><span id="sumTipLabel">Tip (18%)</span><span id="sumTipAmt">$0.00</span></div>
-    <div class="sum-line total"><span>Total</span><span id="sumTotal" aria-live="polite">$0.00</span></div>
-
-    <div id="evenResult">
-      <div class="per-person-label">Per Person</div>
-      <div class="per-person-val" id="perPerson">$0.00</div>
-      <div id="evenBreakdown"></div>
-    </div>
-
-    <div id="itemResult" class="hidden">
-      <div class="pie-chart-wrap" id="pieChartWrap"></div>
-      <div class="section-label" style="margin-top:14px">Each person owes</div>
-      <div id="breakdownList"></div>
-    </div>
+    <div class="sum-line total"><span>Total</span><span id="sumTotal">$0.00</span></div>
   </div>
 
-  <div class="summary-actions">
-    <div class="nav-row">
-      <button class="btn btn-ghost" onclick="goBackFromSummary()">Back</button>
-      <button class="btn btn-secondary" onclick="exportImage()"><span class="gallery-icon" style="margin-right:4px"></span>Image</button>
-      <button class="btn btn-primary" onclick="doShare()"><span class="share-icon" style="margin-right:6px"></span>Share</button>
-    </div>
-    <div class="save-label-wrap" id="saveLabelWrap">
-      <input class="save-label-input" id="saveLabelInput" placeholder="Label this bill..." aria-label="Bill label">
-      <button class="btn btn-primary btn-inline" onclick="confirmSave()">Save</button>
-    </div>
-    <div class="nav-row">
-      <button class="btn btn-secondary" id="saveBillBtn" onclick="startSaveBill()"><span class="bill-icon" style="margin-right:6px"></span>Save Bill</button>
-      <button class="btn btn-ghost" onclick="newBill()">New Bill</button>
-    </div>
+  <div class="summary-extra">
+    <button class="btn btn-ghost btn-inline" onclick="exportImage()"><span class="gallery-icon"></span>Share as image</button>
+  </div>
+  <div class="cta-bar">
+    <button class="btn btn-secondary" id="saveBillBtn" onclick="startSaveBill()"><span class="bill-icon"></span>Save Bill</button>
+    <button class="btn btn-primary" onclick="doShare()"><span class="share-icon"></span>Share</button>
   </div>
 </div>
 
@@ -332,11 +325,51 @@
     <div class="confirm-icon">!</div>
     <p class="confirm-msg" id="confirmMsg"></p>
     <p class="confirm-sub" id="confirmSub"></p>
+    <input class="save-label-input confirm-input" id="confirmInput" aria-labelledby="confirmMsg" hidden>
     <div class="confirm-btns">
       <button class="btn btn-ghost" id="confirmNo">Cancel</button>
       <button class="btn btn-primary" id="confirmYes">Confirm</button>
     </div>
   </div>
+</div>
+<!-- Beside the screen on wide layouts: running totals while splitting -->
+<aside class="side-pane live-summary" id="liveSummary" aria-label="Live summary">
+  <div class="section-label">Live summary</div>
+  <div class="live-pie" id="livePie" aria-hidden="true"></div>
+  <div id="livePeople"></div>
+  <div class="live-totals" id="liveTotals"></div>
+  <p class="live-note" id="liveNote" aria-live="polite"></p>
+</aside>
+
+<!-- Beside a saved bill on wide layouts: every bill, to switch between them -->
+<aside class="side-pane bills-pane" id="billsPane" aria-label="Saved bills">
+  <div class="section-label">Bills</div>
+  <div id="billsPaneList"></div>
+</aside>
+
+<div class="drop-overlay" id="dropOverlay" aria-hidden="true"><p><span class="gallery-icon"></span>Drop the receipt photo to scan it</p></div>
+
+<nav class="tab-bar" id="tabBar" aria-label="Main">
+  <div class="rail-logo" aria-hidden="true"><img src="/logo-pie.png" alt="" width="34" height="34" loading="lazy"><span>SliceOf<span class="pie">Pie</span></span></div>
+  <button class="tab" data-tab="screenWelcome" onclick="goTo('screenWelcome')">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 2.05A10 10 0 1 0 21.95 13H11z"/><path fill="currentColor" d="M13 2.05V11h8.95A10 10 0 0 0 13 2.05z" opacity=".55"/></svg>
+    <span>Split</span>
+  </button>
+  <button class="tab" data-tab="screenHistory" onclick="goTo('screenHistory')">
+    <span class="tab-icon"><span class="bill-icon"></span><span class="badge" id="histBadge" style="display:none">0</span></span>
+    <span>History</span>
+  </button>
+  <button class="tab" data-tab="screenSettings" onclick="goTo('screenSettings')">
+    <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 008.43 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 8.43a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>
+    </svg>
+    <span>Settings</span>
+  </button>
+  <button class="rail-install" id="railInstall" hidden><b>Install app</b><small>Opens from your dock, works offline.</small></button>
+</nav>
+<div class="update-toast" id="updateToast" role="status" hidden>
+  <span>A new version is ready.</span>
+  <button class="btn btn-primary btn-inline" id="updateReload">Reload</button>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite">Copied to clipboard!</div>
 </main><!-- /container -->

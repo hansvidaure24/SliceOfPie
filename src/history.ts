@@ -1,21 +1,28 @@
-import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog } from './helpers';
+import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog, promptDialog } from './helpers';
 import { state, getBillTotals, getPayerName, isPayer, findBill, effectiveTipPct } from './state';
 import { calcOwes } from './summary';
 import { goTo } from './navigation';
 
 import { putBill, deleteBillFromDB } from './db';
+import { maybeNudgeInstall } from './install';
 import type { Bill } from './types';
 
-const DELETE_ICON = '<span class="trash-icon" style="margin-right:6px"></span>';
+const DELETE_ICON = '<span class="trash-icon"></span>';
 let swipeHintShown = false;
 
-export function startSaveBill(): void {
+export async function startSaveBill(): Promise<void> {
   const { total } = getBillTotals();
   if (total <= 0) { showToast('Nothing to save'); return; }
   if (state.billSavedThisSession) { showToast('Already saved'); return; }
-  ($('saveLabelInput') as HTMLInputElement).value = state.receipt?.merchant ? displayName(state.receipt.merchant) : defaultLabel();
-  $('saveLabelWrap').classList.add('show');
-  ($('saveLabelInput') as HTMLInputElement).focus();
+  const label = await promptDialog('Name this bill', billLabel(), { yes: 'Save' });
+  if (label === null) return;
+  saveBill(label.trim() || billLabel());
+}
+
+// What the current bill is called: its saved name, else the merchant or the date
+export function billLabel(): string {
+  if (state.billLabel) return state.billLabel;
+  return state.receipt?.merchant ? displayName(state.receipt.merchant) : defaultLabel();
 }
 
 // Receipts often print the merchant in capitals; "AROMA CAFE" reads better as "Aroma Cafe"
@@ -24,8 +31,7 @@ function displayName(merchant: string): string {
   return merchant.toLowerCase().replace(/(^|[\s\-/&])(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase());
 }
 
-export function confirmSave(): void {
-  const label = ($('saveLabelInput') as HTMLInputElement).value.trim() || defaultLabel();
+function saveBill(label: string): void {
   const breakdown = calcOwes();
   const { total: rawTotal } = getBillTotals();
   const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
@@ -56,11 +62,19 @@ export function confirmSave(): void {
   putBill(bill).catch(() => showToast('Could not save — storage full?'));
 
   state.billSavedThisSession = true;
-  $('saveLabelWrap').classList.remove('show');
-  $('saveBillBtn').innerHTML = '<span class="check-icon" style="margin-right:6px"></span>Saved!';
-  ($('saveBillBtn') as HTMLElement).style.opacity = '.5';
+  state.billLabel = label;
+  renderSaveButton();
   updateHistoryBadge();
   showToast('Bill saved!');
+  setTimeout(() => void maybeNudgeInstall(), 1200);
+}
+
+export function renderSaveButton(): void {
+  const btn = $('saveBillBtn');
+  btn.innerHTML = state.billSavedThisSession
+    ? '<span class="check-icon"></span>Saved!'
+    : '<span class="bill-icon"></span>Save Bill';
+  btn.style.opacity = state.billSavedThisSession ? '.5' : '1';
 }
 
 export function renderHistory(): void {
@@ -68,7 +82,7 @@ export function renderHistory(): void {
     $('historyList').innerHTML = `
       <div class="empty-state">
         No saved bills yet.<br>
-        <span style="color:var(--muted)">Split a bill and tap Save!</span>
+        <span class="empty-hint">Split a bill and tap Save!</span>
       </div>`;
     return;
   }
@@ -86,15 +100,16 @@ export function renderHistory(): void {
 
     return `<div class="swipe-wrap" role="listitem" data-swipe="${bill.id}">
       <div class="swipe-behind"><span class="trash-icon"></span> Delete</div>
-      <div class="history-card" data-bill="${bill.id}" tabindex="0" role="button">
-        <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete bill">&times;</button>
+      <div class="history-card" data-bill="${bill.id}">
+        <button class="history-open" aria-label="${esc(bill.label)}, ${fmt(bill.total)}, ${statusText}"></button>
+        <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete ${esc(bill.label)}">&times;</button>
         <div class="history-top">
           <span class="history-label">${esc(bill.label)}</span>
           <span class="history-date">${dateStr}</span>
         </div>
         <div class="history-bottom">
           <span class="history-total">${fmt(bill.total)}</span>
-          <span style="display:flex;align-items:center;gap:8px">
+          <span class="history-meta">
             <span class="history-status ${statusClass}">${statusText}</span>
             <span class="chevron-icon"></span>
           </span>
@@ -104,9 +119,8 @@ export function renderHistory(): void {
   }).join('');
 
   $('historyList').querySelectorAll<HTMLElement>('[data-bill]').forEach(card => {
-    const open = () => viewBill(Number(card.dataset.bill));
-    card.addEventListener('click', open);
-    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    // The card's own button covers it, so clicks and the keyboard both land there
+    card.addEventListener('click', () => viewBill(Number(card.dataset.bill)));
   });
 
   $('historyList').querySelectorAll<HTMLButtonElement>('[data-hist-del]').forEach(btn => {
@@ -134,13 +148,7 @@ export function viewBill(id: number): void {
   state.deleteArmed = false;
   $('detailDelBtn').innerHTML = DELETE_ICON + 'Delete Bill';
   $('detailDelBtn').classList.remove('del-confirm');
-  const titleEl = $('detailTitle');
-  titleEl.innerHTML = esc(bill.label) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle" aria-hidden="true"></span>';
-  titleEl.setAttribute('role', 'button');
-  titleEl.setAttribute('tabindex', '0');
-  titleEl.setAttribute('aria-label', 'Edit bill label');
-  titleEl.onclick = () => editBillLabel(bill);
-  titleEl.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
+  renderDetailTitle(bill);
 
   // The date printed on the receipt (when scanned) is when the meal happened
   const [y, m, d] = (bill.receiptDate ?? '').split('-').map(Number);
@@ -164,16 +172,16 @@ export function viewBill(id: number): void {
 function renderDetailPeople(bill: Bill): void {
   $('detailPeople').innerHTML = bill.people.map((person, i) => `
     <div class="detail-person">
-      <div style="display:flex;align-items:center;gap:10px">
+      <div class="detail-who">
         <div class="person-icon" style="background:${person.color}"></div>
         <div>
-          <div class="detail-name" style="color:${person.color}">${esc(person.name)}</div>
+          <div class="detail-name">${esc(person.name)}</div>
           <div class="detail-amount${person.paid ? ' paid-text' : ''}">${person.paid ? 'Paid' : 'Owes ' + fmt(person.amount)}</div>
         </div>
       </div>
       <button class="paid-btn ${person.paid ? 'paid' : ''}" data-toggle-paid="${bill.id}-${i}"
               aria-label="${esc(person.name)}: mark as ${person.paid ? 'unpaid' : 'paid'}" aria-pressed="${person.paid}">
-        ${person.paid ? '<span class="check-icon" style="margin-right:4px"></span>Paid' : 'Not yet'}
+        ${person.paid ? '<span class="check-icon"></span>Paid' : 'Not yet'}
       </button>
     </div>
   `).join('');
@@ -206,29 +214,20 @@ function togglePaid(billId: number, personIdx: number): void {
   }
 }
 
-function editBillLabel(bill: Bill): void {
+// The heading holds a button, so it stays a heading for screen readers
+function renderDetailTitle(bill: Bill): void {
   const titleEl = $('detailTitle');
-  const input = document.createElement('input');
-  input.className = 'save-label-input';
-  input.value = bill.label;
-  input.style.cssText = 'font-size:1.2rem;text-align:center;width:100%';
-  titleEl.innerHTML = '';
-  titleEl.appendChild(input);
-  input.focus();
-  input.select();
+  titleEl.innerHTML = `<button class="title-edit" aria-label="Rename ${esc(bill.label)}">${esc(bill.label)} <span class="pencil-icon" aria-hidden="true"></span></button>`;
+  titleEl.querySelector('button')!.addEventListener('click', () => void editBillLabel(bill));
+}
 
-  const save = () => {
-    const newLabel = input.value.trim() || bill.label;
-    bill.label = newLabel;
-    putBill(bill).catch(() => {});
-    titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle" aria-hidden="true"></span>';
-    titleEl.onclick = () => editBillLabel(bill);
-    titleEl.onkeydown = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
-    showToast('Label updated');
-  };
-
-  input.addEventListener('blur', save, { once: true });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+async function editBillLabel(bill: Bill): Promise<void> {
+  const label = await promptDialog('Rename this bill', bill.label, { yes: 'Rename' });
+  if (label === null || !label.trim() || label.trim() === bill.label) return;
+  bill.label = label.trim();
+  putBill(bill).catch(() => {});
+  renderDetailTitle(bill);
+  showToast('Renamed');
 }
 
 export function deleteBill(): void {
@@ -326,4 +325,23 @@ export function updateHistoryBadge(): void {
   } else {
     badge.style.display = 'none';
   }
+  renderOwed();
+}
+
+// Home lists the most recent bills that someone hasn't paid back yet
+function renderOwed(): void {
+  const owed = state.history.filter(b => b.people.some(p => !p.paid)).slice(0, 3);
+  $('owedSection').hidden = owed.length === 0;
+  $('owedList').innerHTML = owed.map(bill => {
+    const unpaid = bill.people.filter(p => !p.paid);
+    const paidCount = bill.people.length - unpaid.length;
+    const who = unpaid.length === 1 ? unpaid[0].name : unpaid.length + ' people';
+    return `<button class="owed-card" data-owed="${bill.id}">
+      <span class="owed-top"><b>${esc(bill.label)}</b><b class="owed-amt">${fmt(unpaid.reduce((s, p) => s + p.amount, 0))}</b></span>
+      <span class="owed-bottom"><span>${esc(who)}</span><span class="history-status ${paidCount ? 'status-partial' : 'status-none'}">${paidCount} of ${bill.people.length} paid</span></span>
+    </button>`;
+  }).join('');
+  $('owedList').querySelectorAll<HTMLButtonElement>('[data-owed]').forEach(btn => {
+    btn.addEventListener('click', () => viewBill(Number(btn.dataset.owed)));
+  });
 }

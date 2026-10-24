@@ -1,6 +1,7 @@
 import { fmt, showToast } from './helpers';
 import { state, getBillTotals, isPayer, tipLabel } from './state';
 import { calcOwes } from './summary';
+import { billLabel } from './history';
 
 const PAD = 40;
 
@@ -18,7 +19,7 @@ export async function exportImage(): Promise<void> {
   const { sub, tax, tip, total: rawTotal } = getBillTotals();
   const breakdown = calcOwes();
   const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
-  const label = (document.getElementById('saveLabelInput') as HTMLInputElement)?.value || 'Bill';
+  const label = billLabel();
 
   const lines: Line[] = [];
   let y = PAD + 10;

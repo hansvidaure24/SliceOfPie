@@ -12,9 +12,9 @@ export function renderPresets(): void {
     <div class="preset-row">
       <input class="preset-input" type="number" inputmode="decimal" value="${pct}" min="0" max="100"
              data-preset="${i}" aria-label="Tip preset ${i + 1}">
-      <span style="color:var(--muted);font-size:.85rem">%</span>
+      <span class="unit-label">%</span>
       ${state.tipPresets.length > 2
-        ? `<button class="preset-del" data-preset-del="${i}"><span class="trash-icon"></span></button>`
+        ? `<button class="preset-del" data-preset-del="${i}" aria-label="Remove ${pct}% preset"><span class="trash-icon"></span></button>`
         : ''}
     </div>
   `).join('');
@@ -102,7 +102,6 @@ export function setTip(pct: number): void {
   );
   localStorage.setItem('sp_tip', String(pct));
   updateSummary();
-  $('summaryCard').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 export function setCustomTip(): void {

@@ -1,11 +1,12 @@
 import { $, COLORS, esc, fmt, receiptHints, confirmDialog, showToast, setToggle } from './helpers';
 import { state } from './state';
-import { goTo } from './navigation';
-import { renderAssign } from './assign';
+import { goTo, updateQuickCta } from './navigation';
+import { updateItemsCta, whoChips, itemsHead, whoColumns } from './assign';
 import { processReceipt } from './scan/process';
 import { OcrUnavailableError } from './scan/engine';
 import { prepareImage } from './scan/image';
 import { assessQuality } from './scan/quality';
+import { okToDownloadScanner } from './scanner-status';
 
 // The phone's own camera app via the file input (the live camera is in camera.ts)
 export function takePhotoNative(): void {
@@ -47,6 +48,10 @@ export async function scanPhoto(photo: Blob): Promise<void> {
 }
 
 export async function runOCR(file: Blob): Promise<void> {
+  if (!(await okToDownloadScanner())) {
+    skipToManual();
+    return;
+  }
   let image = file;
   try {
     const prepared = await prepareImage(file);
@@ -141,6 +146,7 @@ function fillQuickTotal(amount: number): void {
   $('quickTaxCard').classList.add('hidden');
   state.quickTaxAmt = 0;
   ($('quickTax') as HTMLInputElement).value = '';
+  updateQuickCta();
 }
 
 export function skipToManual(): void {
@@ -163,18 +169,22 @@ export function skipToManual(): void {
 export function enterItemsScreen(): void {
   renderItems();
   updateRunning();
-  if (state.splitMode === 'item') renderAssign();
-  $('assignSection').style.display = state.splitMode === 'item' ? 'block' : 'none';
   goTo('screenItems');
 }
 
 export function renderItems(): void {
-  $('itemsList').innerHTML = state.items.map((item, i) => `
-    <div class="item-row">
-      <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name">
-      <input class="item-price" type="number" inputmode="decimal" step="0.01"
-             value="${item.price || ''}" placeholder="0.00" data-item-price="${i}" aria-label="Item ${i + 1} price">
-      <button class="item-del" data-item-del="${i}" aria-label="Remove item"${state.items.length <= 1 ? ' disabled style="visibility:hidden"' : ''}><span class="trash-icon"></span></button>
+  const byItem = state.splitMode === 'item';
+  const cols = whoColumns();
+  $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 52px)` : '0px');
+  $('itemsList').innerHTML = itemsHead() + state.items.map((item, i) => `
+    <div class="item-row" data-row="${i}">
+      <div class="item-main">
+        <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name">
+        <input class="item-price" type="number" inputmode="decimal" step="0.01"
+               value="${item.price || ''}" placeholder="0.00" data-item-price="${i}" aria-label="Item ${i + 1} price">
+        <button class="item-del" data-item-del="${i}" aria-label="Remove item"${state.items.length <= 1 ? ' disabled hidden' : ''}><span class="trash-icon"></span></button>
+      </div>
+      ${byItem ? `<div class="item-who" data-who="${i}" role="group" aria-label="Who had item ${i + 1}">${whoChips(i)}</div>` : ''}
     </div>
   `).join('');
 
@@ -193,6 +203,22 @@ export function renderItems(): void {
     });
   });
 
+  // Enter moves name → price → next item, adding one at the end
+  list.querySelectorAll<HTMLInputElement>('.item-name, .item-price').forEach(input => {
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.isComposing) return;
+      e.preventDefault();
+      const i = Number(input.dataset.itemName ?? input.dataset.itemPrice);
+      if (input.dataset.itemName !== undefined) {
+        list.querySelector<HTMLInputElement>(`[data-item-price="${i}"]`)?.focus();
+      } else if (i < state.items.length - 1) {
+        list.querySelector<HTMLInputElement>(`[data-item-name="${i + 1}"]`)?.focus();
+      } else {
+        addItem();
+      }
+    });
+  });
+
   list.querySelectorAll<HTMLButtonElement>('[data-item-del]').forEach(btn => {
     btn.addEventListener('click', () => removeItem(Number(btn.dataset.itemDel)));
   });
@@ -201,7 +227,7 @@ export function renderItems(): void {
 export function addItem(): void {
   state.items.push({ name: '', price: 0 });
   renderItems();
-  if (state.splitMode === 'item') renderAssign();
+  updateItemsCta();
   const inputs = $('itemsList').querySelectorAll<HTMLInputElement>('.item-name');
   if (inputs.length) inputs[inputs.length - 1].focus();
 }
@@ -211,13 +237,13 @@ export function removeItem(index: number): void {
   state.items.splice(index, 1);
   renderItems();
   updateRunning();
-  if (state.splitMode === 'item') renderAssign();
 }
 
 export function updateRunning(): void {
   const sub = state.items.reduce((sum, item) => sum + (item.price || 0), 0);
   const taxNote = state.taxAmt ? ' + ' + fmt(state.taxAmt) + ' tax' : '';
   $('runningSub').textContent = 'Subtotal: ' + fmt(sub) + taxNote;
+  updateItemsCta();
 
   // Compare against the scanned receipt's total, so a misread price stands out
   const check = $('receiptCheck');

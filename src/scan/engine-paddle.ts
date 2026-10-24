@@ -35,6 +35,14 @@ export interface PaddleScan {
 }
 
 export interface PaddleEngine extends OcrEngine {
+  // Roughly how much the first scan downloads
+  downloadBytes: number;
+  // Whether everything is in the offline cache already
+  isCached(): Promise<boolean>;
+  // Downloads into the cache without starting the worker
+  prefetch(onProgress?: (p: OcrProgress) => void): Promise<void>;
+  // Drops the cached files; the next scan downloads them again
+  forget(): Promise<void>;
   // Downloads (if needed) and starts the worker; resolves to init time in ms
   warm(onProgress?: (p: OcrProgress) => void): Promise<number>;
   recognizeDetailed(image: Blob, onProgress?: (p: OcrProgress) => void): Promise<PaddleScan>;
@@ -53,14 +61,17 @@ async function allCached(urls: string[]): Promise<boolean> {
 }
 
 // Fetch everything once on the main thread so we can show byte progress.
-// The service worker caches each response, so the OCR worker's own fetches
-// hit the cache instead of the network.
+// Each response also goes into the OCR cache, which the service worker serves
+// the OCR worker's own fetches from. We store it here rather than relying on
+// the service worker, which may not control the page yet on a first visit.
 async function download(files: { url: string; bytes: number }[], onPct: (pct: number) => void): Promise<void> {
   const total = files.reduce((s, f) => s + f.bytes, 0);
   let loaded = 0;
+  const cache = typeof caches === 'undefined' ? null : await caches.open(OCR_CACHE).catch(() => null);
   await Promise.all(files.map(async f => {
     const res = await fetch(f.url);
     if (!res.ok || !res.body) throw new Error(`${f.url}: HTTP ${res.status}`);
+    const saved = cache?.put(f.url, res.clone()).catch(() => {});
     const reader = res.body.getReader();
     for (;;) {
       const { done, value } = await reader.read();
@@ -68,6 +79,7 @@ async function download(files: { url: string; bytes: number }[], onPct: (pct: nu
       loaded += value.length;
       onPct(Math.min(99, Math.round((loaded / total) * 100)));
     }
+    await saved;
   }));
   onPct(100);
 }
@@ -161,8 +173,25 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
     return { lines: mergeRows(res.segments), segments: res.segments, detMs: res.detMs, recMs: res.recMs, totalMs: res.totalMs };
   }
 
+  async function prefetch(onProgress?: (p: OcrProgress) => void): Promise<void> {
+    const urls = files.map(f => f.url);
+    if (await allCached(urls)) return;
+    await download(files, pct => onProgress?.({ phase: 'download', pct }));
+    // Cache writes can land just after the last byte is read
+    for (let i = 0; i < 20 && !(await allCached(urls)); i++) await new Promise(r => setTimeout(r, 250));
+  }
+
+  async function forget(): Promise<void> {
+    dispose();
+    await caches.delete(OCR_CACHE);
+  }
+
   return {
     isAvailable: () => typeof Worker === 'function' && typeof WebAssembly === 'object',
+    downloadBytes: files.reduce((s, f) => s + f.bytes, 0),
+    isCached: () => allCached(files.map(f => f.url)),
+    prefetch,
+    forget,
     warm,
     recognizeDetailed,
     recognize: async (image, onProgress) => (await recognizeDetailed(image, onProgress)).lines,
