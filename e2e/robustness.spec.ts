@@ -119,3 +119,22 @@ test('text fields are at least 16px on a touch screen, so iOS does not zoom into
   expect(sizes.length).toBeGreaterThan(5);
   expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
 });
+
+test('an iPhone Home Screen app that opens one status bar short gets its bottom bars moved down', async ({ browser }) => {
+  // The launch state: the screen is 59px taller than where position:fixed puts the bottom
+  const context = await browser.newContext({ viewport: { width: 393, height: 793 }, screen: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
+  const page = await context.newPage();
+  await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { get: () => true }));
+  await open(page);
+  const gap = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--launch-gap').trim());
+  await expect.poll(gap).toBe('59px');
+  expect(await page.locator('#tabBar').evaluate(el => getComputedStyle(el).bottom)).toBe('-59px');
+
+  // In a browser tab nothing moves
+  const tab = await browser.newContext({ viewport: { width: 393, height: 793 }, screen: { width: 393, height: 852 } });
+  const tabPage = await tab.newPage();
+  await open(tabPage);
+  expect(await tabPage.locator('#tabBar').evaluate(el => getComputedStyle(el).bottom)).toBe('0px');
+  await context.close();
+  await tab.close();
+});
