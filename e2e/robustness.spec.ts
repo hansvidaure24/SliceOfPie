@@ -120,21 +120,18 @@ test('text fields are at least 16px on a touch screen, so iOS does not zoom into
   expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
 });
 
-test('an iPhone Home Screen app that opens one status bar short gets its bottom bars moved down', async ({ browser }) => {
-  // The launch state: the screen is 59px taller than where position:fixed puts the bottom
-  const context = await browser.newContext({ viewport: { width: 393, height: 793 }, screen: { width: 393, height: 852 }, hasTouch: true, isMobile: true });
-  const page = await context.newPage();
-  await page.addInitScript(() => Object.defineProperty(navigator, 'standalone', { get: () => true }));
+test('the tabs end at the bottom of the screen, and the total and tax fields fit their card', async ({ page }) => {
   await open(page);
-  const gap = () => page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--launch-gap').trim());
-  await expect.poll(gap).toBe('59px');
-  expect(await page.locator('#tabBar').evaluate(el => getComputedStyle(el).bottom)).toBe('-59px');
+  const tabs = await page.locator('#tabBar').boundingBox();
+  const viewport = page.viewportSize()!;
+  // The phone's bottom tabs; on a computer it's the side rail, full height
+  expect(Math.round(tabs!.y + tabs!.height)).toBe(viewport.height);
 
-  // In a browser tab nothing moves
-  const tab = await browser.newContext({ viewport: { width: 393, height: 793 }, screen: { width: 393, height: 852 } });
-  const tabPage = await tab.newPage();
-  await open(tabPage);
-  expect(await tabPage.locator('#tabBar').evaluate(el => getComputedStyle(el).bottom)).toBe('0px');
-  await context.close();
-  await tab.close();
+  await people(page, 'even', ['Carmine']);
+  await page.click('#taxIncToggle');
+  for (const id of ['#quickTotal', '#quickTax']) {
+    const field = await page.locator(id).boundingBox();
+    const card = await page.locator(id).locator('xpath=ancestor::div[contains(@class,"card")][1]').boundingBox();
+    expect(field!.x + field!.width).toBeLessThanOrEqual(card!.x + card!.width - 8);
+  }
 });

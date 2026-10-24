@@ -161,7 +161,6 @@ src/
   export-image.ts  Canvas-based PNG export
   payment.ts       Payment method settings
   install.ts       Install prompt, iOS instructions, the one-time nudge
-  ios-viewport.ts  Keeps bottom bars at the bottom when an iPhone Home Screen app opens
   toggles.ts       Toggle switch handlers
   money.ts         Currencies, rounding and formatting amounts
   dialog.ts        The confirm / prompt sheet (native <dialog>)
