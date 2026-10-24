@@ -1,0 +1,15 @@
+{
+  "ortVersion": "1.24.3",
+  "ortWasmBytes": 12361745,
+  "modelBaseUrl": "https://paddle-model-ecology.bj.bcebos.com/paddlex/official_inference_model/paddle3.0.0/",
+  "models": {
+    "PP-OCRv5_mobile_det": { "bytes": 4843520, "sha256": "781056046c9ed77a15c94681605db6a0f62317c2e9cce6931c71da2478d4bc30" },
+    "latin_PP-OCRv5_mobile_rec": { "bytes": 8069120, "sha256": "0fd8634124d871d25492311da077517ba3b4277ea67a0dec9e46ce537978c7cb" },
+    "PP-OCRv6_tiny_det": { "bytes": 1792000, "sha256": "ff6ab415b0a6e0c488550f2fb5d5046f1719848df220b2dc21b56402a65bc05d" },
+    "PP-OCRv6_tiny_rec": { "bytes": 4526080, "sha256": "1e13b22717b1edd89d4cde4fda272b6c17d5b505c97c2baea99da1a3a2d54b29" }
+  },
+  "app": { "det": "PP-OCRv5_mobile_det", "rec": "latin_PP-OCRv5_mobile_rec" },
+  "bench": [
+    { "det": "PP-OCRv6_tiny_det", "rec": "PP-OCRv6_tiny_rec" }
+  ]
+}

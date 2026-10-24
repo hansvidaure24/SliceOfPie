@@ -16,6 +16,7 @@ export function goTo(id: string): void {
     $('progressWrap').style.display = 'none';
     ($('progressFill') as HTMLElement).style.width = '0%';
     $('progressFill').parentElement!.setAttribute('aria-valuenow', '0');
+    $('progressFill').parentElement!.classList.remove('indeterminate');
     ($('photoInput') as HTMLInputElement).value = '';
   }
 
@@ -120,6 +121,7 @@ function resetUI(): void {
   $('progressWrap').style.display = 'none';
   ($('progressFill') as HTMLElement).style.width = '0%';
   $('progressFill').parentElement!.setAttribute('aria-valuenow', '0');
+  $('progressFill').parentElement!.classList.remove('indeterminate');
   ($('photoInput') as HTMLInputElement).value = '';
   $('saveBillBtn').innerHTML = '<span class="bill-icon" style="margin-right:6px"></span>Save Bill';
   ($('saveBillBtn') as HTMLElement).style.opacity = '1';

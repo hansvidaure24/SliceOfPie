@@ -20,7 +20,7 @@ export const tesseractEngine: OcrEngine = {
   async recognize(image, onProgress) {
     const { data } = await Tesseract.recognize(image, 'eng', {
       logger: m => {
-        if (m.status === 'recognizing text') onProgress?.(Math.round(m.progress * 100));
+        if (m.status === 'recognizing text') onProgress?.({ phase: 'recognize', pct: Math.round(m.progress * 100) });
       }
     });
     return textToLines(data.text);

@@ -20,10 +20,20 @@ export function uploadPhoto(): void {
 export async function runOCR(file: File): Promise<void> {
   try {
     const parsed = await processReceipt(file, {
-      onProgress: pct => {
-        ($('progressFill') as HTMLElement).style.width = pct + '%';
-        $('progressFill').parentElement!.setAttribute('aria-valuenow', String(pct));
-        $('progressText').textContent = 'Scanning... ' + pct + '%';
+      onProgress: p => {
+        const bar = $('progressFill').parentElement!;
+        // PaddleOCR can't report recognition progress, so show an indeterminate bar
+        bar.classList.toggle('indeterminate', p.pct === undefined);
+        if (p.pct === undefined) {
+          bar.removeAttribute('aria-valuenow');
+          $('progressText').textContent = 'Reading receipt...';
+          return;
+        }
+        ($('progressFill') as HTMLElement).style.width = p.pct + '%';
+        bar.setAttribute('aria-valuenow', String(p.pct));
+        $('progressText').textContent = p.phase === 'download'
+          ? 'Downloading scanner (first time only)... ' + p.pct + '%'
+          : 'Scanning... ' + p.pct + '%';
       }
     });
     state.items = parsed.items.length ? parsed.items : [{ name: '', price: 0 }];

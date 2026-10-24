@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { tesseractEngine, textToLines } from '../src/scan/engine-tesseract';
 import { processReceipt } from '../src/scan/process';
-import { OcrUnavailableError, type OcrEngine } from '../src/scan/engine';
+import { OcrUnavailableError, type OcrEngine, type OcrProgress } from '../src/scan/engine';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -31,12 +31,12 @@ describe('tesseractEngine', () => {
     vi.stubGlobal('Tesseract', { recognize });
 
     const img = new Blob(['x']);
-    const progress: number[] = [];
-    const lines = await tesseractEngine.recognize(img, pct => progress.push(pct));
+    const progress: OcrProgress[] = [];
+    const lines = await tesseractEngine.recognize(img, p => progress.push(p));
 
     expect(tesseractEngine.isAvailable()).toBe(true);
     expect(recognize).toHaveBeenCalledWith(img, 'eng', expect.any(Object));
-    expect(progress).toEqual([26, 100]);
+    expect(progress).toEqual([{ phase: 'recognize', pct: 26 }, { phase: 'recognize', pct: 100 }]);
     expect(lines).toEqual([{ text: 'Burger 12.50' }, { text: 'Fries 4.00' }]);
   });
 });
@@ -55,7 +55,7 @@ describe('processReceipt', () => {
     expect(recognize).not.toHaveBeenCalled();
   });
 
-  it('defaults to Tesseract, which is unavailable outside the browser', async () => {
+  it('throws OcrUnavailableError by default outside the browser (no Worker, no Tesseract)', async () => {
     await expect(processReceipt(new Blob())).rejects.toBeInstanceOf(OcrUnavailableError);
   });
 
@@ -68,9 +68,31 @@ describe('processReceipt', () => {
 
   it('passes progress through to the engine', async () => {
     const onProgress = vi.fn();
-    const recognize = vi.fn(async (_img: Blob, cb?: (pct: number) => void) => { cb?.(50); return []; });
+    const recognize = vi.fn(async (_img: Blob, cb?: (p: OcrProgress) => void) => { cb?.({ phase: 'download', pct: 50 }); return []; });
     await processReceipt(new Blob(), { engine: fakeEngine({ recognize }), onProgress });
-    expect(onProgress).toHaveBeenCalledWith(50);
+    expect(onProgress).toHaveBeenCalledWith({ phase: 'download', pct: 50 });
+  });
+
+  it('falls back to the next engine when one fails', async () => {
+    const failing = fakeEngine({ recognize: async () => { throw new Error('out of memory'); } });
+    const ok = fakeEngine();
+    const result = await processReceipt(new Blob(), { engines: [failing, ok] });
+    expect(result.items).toEqual([{ name: 'Burger', price: 10 }]);
+  });
+
+  it('skips unavailable engines', async () => {
+    const recognize = vi.fn();
+    const result = await processReceipt(new Blob(), { engines: [fakeEngine({ isAvailable: () => false, recognize }), fakeEngine()] });
+    expect(recognize).not.toHaveBeenCalled();
+    expect(result.tax).toBe(0.8);
+  });
+
+  it('rethrows the last error when every engine fails', async () => {
+    const err = new Error('second');
+    await expect(processReceipt(new Blob(), { engines: [
+      fakeEngine({ recognize: async () => { throw new Error('first'); } }),
+      fakeEngine({ recognize: async () => { throw err; } }),
+    ] })).rejects.toBe(err);
   });
 
   it('lets engine errors propagate (shown as "Scan failed")', async () => {

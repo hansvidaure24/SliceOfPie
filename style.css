@@ -271,6 +271,8 @@ body.transitioning .btn{pointer-events:none}
 .progress-wrap{margin:20px 0;text-align:center}
 .progress-bar{width:100%;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:10px}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--cherry),var(--crust));width:0%;transition:width .3s}
+.progress-bar.indeterminate .progress-fill{width:40% !important;transition:none;animation:progress-slide 1.2s ease-in-out infinite}
+@keyframes progress-slide{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
 .progress-text{color:var(--muted);font-size:.85rem}
 
 /* ── Items List ── */
@@ -671,4 +673,5 @@ body.transitioning .btn{pointer-events:none}
   .screen{animation:none}
   .screen.leaving{animation:none;display:none}
   .logo-slice{animation:none;transform:translate(4px,-4px)}
+  .progress-bar.indeterminate .progress-fill{animation:none;width:100% !important;opacity:.5}
 }
