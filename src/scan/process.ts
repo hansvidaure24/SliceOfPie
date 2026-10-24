@@ -1,7 +1,7 @@
 import { OcrUnavailableError, type OcrEngine, type OcrLine, type OcrProgress } from './engine';
 import { tesseractEngine } from './engine-tesseract';
 import { paddleEngine } from './engine-paddle';
-import { linesToText, parseReceipt, type ParsedReceipt } from './parse';
+import { parseReceipt, type ParsedReceipt, type ParseOptions } from './parse';
 
 export interface ScanResult extends ParsedReceipt {
   lines: OcrLine[];
@@ -12,6 +12,7 @@ export interface ProcessOptions {
   engine?: OcrEngine;
   // Tried in order; defaults to PaddleOCR then Tesseract
   engines?: OcrEngine[];
+  parse?: ParseOptions;
 }
 
 // PaddleOCR first, Tesseract as a fallback for browsers that can't run it.
@@ -33,7 +34,7 @@ export async function processReceipt(image: Blob, opts: ProcessOptions = {}): Pr
   for (const engine of engines) {
     try {
       const lines = await engine.recognize(image, opts.onProgress);
-      return { ...parseReceipt(linesToText(lines)), lines };
+      return { ...parseReceipt(lines, opts.parse), lines };
     } catch (err) {
       lastError = err;
     }

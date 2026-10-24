@@ -1,29 +1,18 @@
 {
+  "merchant": "CAFÉ LUMIÈRE",
+  "date": null,
   "items": [
-    {
-      "name": "Cappuccino",
-      "price": 3.5
-    },
-    {
-      "name": "Croissant",
-      "price": 2.4
-    },
-    {
-      "name": "Croissant",
-      "price": 2.4
-    },
-    {
-      "name": "Jus d'orange",
-      "price": 4.2
-    },
-    {
-      "name": "Tarte Tatin",
-      "price": 6.9
-    },
-    {
-      "name": "CARTE BANCAIRE",
-      "price": 19.4
-    }
+    { "name": "Cappuccino", "price": 3.5 },
+    { "name": "Croissant", "price": 2.4 },
+    { "name": "Croissant", "price": 2.4 },
+    { "name": "Jus d'orange", "price": 4.2 },
+    { "name": "Tarte Tatin", "price": 6.9 }
   ],
-  "tax": 1.76
+  "subtotal": 19.4,
+  "discount": 0,
+  "tax": 1.76,
+  "taxIncluded": true,
+  "tip": null,
+  "total": 19.4,
+  "confidence": "high"
 }

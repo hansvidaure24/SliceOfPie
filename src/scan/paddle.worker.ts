@@ -69,6 +69,8 @@ ctx.onmessage = async (e) => {
         type: 'result',
         id: msg.id,
         segments: result.items.map(i => ({ poly: i.poly, text: i.text, score: i.score })),
+        detMs: result.metrics.detMs,
+        recMs: result.metrics.recMs,
         totalMs: result.metrics.totalMs,
       });
     }

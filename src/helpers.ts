@@ -65,6 +65,14 @@ export function getCurrency(): string {
 
 const ZERO_DECIMAL = new Set(['¥', '₩', '₫', 'CL$', 'Ft', 'Rp']);
 
+// Currencies whose receipts usually print dates month-first (03/04 = March 4)
+const MONTH_FIRST = new Set(['$', '₱']);
+
+// Hints for reading a scanned receipt in the user's currency
+export function receiptHints(): { zeroDecimal: boolean; monthFirst: boolean } {
+  return { zeroDecimal: ZERO_DECIMAL.has(currencySymbol), monthFirst: MONTH_FIRST.has(currencySymbol) };
+}
+
 export function fmt(n: number): string {
   return currencySymbol + n.toFixed(ZERO_DECIMAL.has(currencySymbol) ? 0 : 2);
 }
@@ -90,12 +98,14 @@ export function pulse(el: HTMLElement): void {
   el.classList.add('pulse');
 }
 
-export function confirmDialog(msg: string, sub = ''): Promise<boolean> {
+export function confirmDialog(msg: string, sub = '', labels: { yes?: string; no?: string } = {}): Promise<boolean> {
   return new Promise(resolve => {
     const overlay = $('confirmOverlay');
     const box = overlay.querySelector('.confirm-box') as HTMLElement;
     const yesBtn = $('confirmYes');
     const noBtn = $('confirmNo');
+    yesBtn.textContent = labels.yes ?? 'Confirm';
+    noBtn.textContent = labels.no ?? 'Cancel';
     $('confirmMsg').textContent = msg;
     $('confirmSub').textContent = sub;
     $('confirmSub').style.display = sub ? '' : 'none';

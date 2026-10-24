@@ -22,8 +22,8 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 ## Features
 
 - **Even or by-item split** — assign items to specific people or split the total evenly
-- **OCR receipt scanning** — snap a photo or upload an image, PaddleOCR reads it on-device in a Web Worker. The scanner downloads once (~36 MB) on the first scan, then works offline
-- **Tip & tax** — preset tip buttons, custom %, pre-tax or post-tax, round-up toggle
+- **OCR receipt scanning** — snap a photo with the in-app camera (guide frame, light and hold-still hints) or upload an image, PaddleOCR reads it on-device in a Web Worker. The scanner downloads once (~36 MB) on the first scan, then works offline
+- **Tip & tax** — preset tip buttons, custom %, pre-tax or post-tax, round-up toggle; a tip already printed on a scanned receipt is used as-is instead of adding another
 - **Bill history** — saved to IndexedDB, track who's paid with one tap, swipe to delete
 - **Export as image** — generate a shareable PNG of the bill breakdown
 - **Dark/light theme** — auto-detects OS preference, or set manually
@@ -96,14 +96,18 @@ src/
   db.ts            IndexedDB wrapper
   people.ts        People counter & name inputs
   items.ts         Capture buttons & item list
+  camera.ts        Live camera screen (phones and tablets)
   scan/
     process.ts     processReceipt(): image → parsed items
+    image.ts       Upright decode and size cap before OCR
+    quality.ts     Blur/brightness check (retake prompt)
+    live-hints.ts  Camera hints: too dark, hold still, ready
     engine.ts      OcrEngine interface
     engine-paddle.ts     PaddleOCR engine: first-download progress, worker client
     paddle.worker.ts     Runs PaddleOCR off the main thread
     engine-tesseract.ts  Tesseract.js fallback engine (CDN)
     rows.ts        Merge OCR text boxes into receipt lines (tilt-aware)
-    parse.ts       Receipt text → items & tax
+    parse.ts       OCR lines → items, subtotal, tax, tip, total, merchant, date
     ocr-assets.json      Pinned model files, sizes and hashes
   assign.ts        Item-to-person assignment
   summary.ts       Bill calculation & breakdown

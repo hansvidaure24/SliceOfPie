@@ -1,4 +1,5 @@
-import type { OcrEngine, OcrLine } from './engine';
+import type { OcrEngine } from './engine';
+import { textToLines } from './parse';
 
 // Loaded from CDN via <script> in index.html, so it's undefined when offline
 declare const Tesseract: {
@@ -6,13 +7,6 @@ declare const Tesseract: {
     logger: (m: { status: string; progress: number }) => void;
   }): Promise<{ data: { text: string } }>;
 };
-
-export function textToLines(text: string): OcrLine[] {
-  return text.replace(/\r/g, '').split('\n')
-    .map(l => l.trim())
-    .filter(Boolean)
-    .map(text => ({ text }));
-}
 
 export const tesseractEngine: OcrEngine = {
   isAvailable: () => typeof Tesseract !== 'undefined',

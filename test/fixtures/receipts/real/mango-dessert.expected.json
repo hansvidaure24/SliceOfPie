@@ -1,0 +1,14 @@
+{
+  "merchant": "Mango Mango Dessert",
+  "date": "2026-10-16",
+  "items": [
+    { "name": "A2 Coconut Mango Juice Sago & Pomelo w. Mango Ice Cream", "price": 9.75 },
+    { "name": "Add-Rice Ball", "price": 1.00 },
+    { "name": "A3 Strawberry Mango Juice Sago & Lychee Jelly w. Mango Ice Cream", "price": 9.75 },
+    { "name": "A2 Coconut Mango Juice Sago & Pomelo w. Mango Ice Cream", "price": 9.75 }
+  ],
+  "subtotal": 30.25,
+  "tax": 2.69,
+  "tip": 5.44,
+  "total": 38.38
+}
