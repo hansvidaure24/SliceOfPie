@@ -14,7 +14,7 @@ export function renderPresets(): void {
              data-preset="${i}" aria-label="Tip preset ${i + 1}">
       <span class="unit-label">%</span>
       ${state.tipPresets.length > 2
-        ? `<button class="preset-del" data-preset-del="${i}"><span class="trash-icon"></span></button>`
+        ? `<button class="preset-del" data-preset-del="${i}" aria-label="Remove ${pct}% preset"><span class="trash-icon"></span></button>`
         : ''}
     </div>
   `).join('');

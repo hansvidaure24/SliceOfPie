@@ -100,8 +100,9 @@ export function renderHistory(): void {
 
     return `<div class="swipe-wrap" role="listitem" data-swipe="${bill.id}">
       <div class="swipe-behind"><span class="trash-icon"></span> Delete</div>
-      <div class="history-card" data-bill="${bill.id}" tabindex="0" role="button">
-        <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete bill">&times;</button>
+      <div class="history-card" data-bill="${bill.id}">
+        <button class="history-open" aria-label="${esc(bill.label)}, ${fmt(bill.total)}, ${statusText}"></button>
+        <button class="history-del" data-hist-del="${bill.id}" aria-label="Delete ${esc(bill.label)}">&times;</button>
         <div class="history-top">
           <span class="history-label">${esc(bill.label)}</span>
           <span class="history-date">${dateStr}</span>
@@ -118,9 +119,8 @@ export function renderHistory(): void {
   }).join('');
 
   $('historyList').querySelectorAll<HTMLElement>('[data-bill]').forEach(card => {
-    const open = () => viewBill(Number(card.dataset.bill));
-    card.addEventListener('click', open);
-    card.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(); } });
+    // The card's own button covers it, so clicks and the keyboard both land there
+    card.addEventListener('click', () => viewBill(Number(card.dataset.bill)));
   });
 
   $('historyList').querySelectorAll<HTMLButtonElement>('[data-hist-del]').forEach(btn => {
@@ -148,13 +148,7 @@ export function viewBill(id: number): void {
   state.deleteArmed = false;
   $('detailDelBtn').innerHTML = DELETE_ICON + 'Delete Bill';
   $('detailDelBtn').classList.remove('del-confirm');
-  const titleEl = $('detailTitle');
-  titleEl.innerHTML = esc(bill.label) + ' <span class="pencil-icon" aria-hidden="true"></span>';
-  titleEl.setAttribute('role', 'button');
-  titleEl.setAttribute('tabindex', '0');
-  titleEl.setAttribute('aria-label', 'Edit bill label');
-  titleEl.onclick = () => editBillLabel(bill);
-  titleEl.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
+  renderDetailTitle(bill);
 
   // The date printed on the receipt (when scanned) is when the meal happened
   const [y, m, d] = (bill.receiptDate ?? '').split('-').map(Number);
@@ -181,7 +175,7 @@ function renderDetailPeople(bill: Bill): void {
       <div class="detail-who">
         <div class="person-icon" style="background:${person.color}"></div>
         <div>
-          <div class="detail-name" style="color:${person.color}">${esc(person.name)}</div>
+          <div class="detail-name">${esc(person.name)}</div>
           <div class="detail-amount${person.paid ? ' paid-text' : ''}">${person.paid ? 'Paid' : 'Owes ' + fmt(person.amount)}</div>
         </div>
       </div>
@@ -220,29 +214,20 @@ function togglePaid(billId: number, personIdx: number): void {
   }
 }
 
-function editBillLabel(bill: Bill): void {
+// The heading holds a button, so it stays a heading for screen readers
+function renderDetailTitle(bill: Bill): void {
   const titleEl = $('detailTitle');
-  const input = document.createElement('input');
-  input.className = 'save-label-input';
-  input.value = bill.label;
-  input.style.cssText = 'font-size:1.2rem;text-align:center;width:100%';
-  titleEl.innerHTML = '';
-  titleEl.appendChild(input);
-  input.focus();
-  input.select();
+  titleEl.innerHTML = `<button class="title-edit" aria-label="Rename ${esc(bill.label)}">${esc(bill.label)} <span class="pencil-icon" aria-hidden="true"></span></button>`;
+  titleEl.querySelector('button')!.addEventListener('click', () => void editBillLabel(bill));
+}
 
-  const save = () => {
-    const newLabel = input.value.trim() || bill.label;
-    bill.label = newLabel;
-    putBill(bill).catch(() => {});
-    titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" aria-hidden="true"></span>';
-    titleEl.onclick = () => editBillLabel(bill);
-    titleEl.onkeydown = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
-    showToast('Label updated');
-  };
-
-  input.addEventListener('blur', save, { once: true });
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+async function editBillLabel(bill: Bill): Promise<void> {
+  const label = await promptDialog('Rename this bill', bill.label, { yes: 'Rename' });
+  if (label === null || !label.trim() || label.trim() === bill.label) return;
+  bill.label = label.trim();
+  putBill(bill).catch(() => {});
+  renderDetailTitle(bill);
+  showToast('Renamed');
 }
 
 export function deleteBill(): void {

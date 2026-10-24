@@ -39,8 +39,8 @@
 <div id="screenWelcome" class="screen screen-welcome active">
   <div class="home-hero">
     <div class="logo-wrap">
-      <img src="/logo-pie.png" alt="" class="logo-pie">
-      <img src="/logo-slice.png" alt="" class="logo-slice">
+      <img src="/logo-pie.png" alt="" class="logo-pie" width="96" height="96" fetchpriority="high">
+      <img src="/logo-slice.png" alt="" class="logo-slice" width="96" height="96">
     </div>
     <h1 class="app-title">SliceOf<span class="pie">Pie</span></h1>
     <p class="subtitle">Everybody gets their slice</p>
@@ -350,7 +350,7 @@
 <div class="drop-overlay" id="dropOverlay" aria-hidden="true"><p><span class="gallery-icon"></span>Drop the receipt photo to scan it</p></div>
 
 <nav class="tab-bar" id="tabBar" aria-label="Main">
-  <div class="rail-logo" aria-hidden="true"><img src="/logo-pie.png" alt=""><span>SliceOf<span class="pie">Pie</span></span></div>
+  <div class="rail-logo" aria-hidden="true"><img src="/logo-pie.png" alt="" width="34" height="34" loading="lazy"><span>SliceOf<span class="pie">Pie</span></span></div>
   <button class="tab" data-tab="screenWelcome" onclick="goTo('screenWelcome')">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11 2.05A10 10 0 1 0 21.95 13H11z"/><path fill="currentColor" d="M13 2.05V11h8.95A10 10 0 0 0 13 2.05z" opacity=".55"/></svg>
     <span>Split</span>
