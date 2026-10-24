@@ -1,7 +1,7 @@
 import { $, COLORS, esc, fmt, receiptHints, confirmDialog, showToast, setToggle } from './helpers';
 import { state } from './state';
 import { goTo, updateQuickCta } from './navigation';
-import { renderAssign, updateItemsCta } from './assign';
+import { updateItemsCta, whoChips } from './assign';
 import { processReceipt } from './scan/process';
 import { OcrUnavailableError } from './scan/engine';
 import { prepareImage } from './scan/image';
@@ -161,18 +161,20 @@ export function skipToManual(): void {
 export function enterItemsScreen(): void {
   renderItems();
   updateRunning();
-  if (state.splitMode === 'item') renderAssign();
-  $('assignSection').style.display = state.splitMode === 'item' ? 'block' : 'none';
   goTo('screenItems');
 }
 
 export function renderItems(): void {
+  const byItem = state.splitMode === 'item';
   $('itemsList').innerHTML = state.items.map((item, i) => `
-    <div class="item-row">
-      <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name">
-      <input class="item-price" type="number" inputmode="decimal" step="0.01"
-             value="${item.price || ''}" placeholder="0.00" data-item-price="${i}" aria-label="Item ${i + 1} price">
-      <button class="item-del" data-item-del="${i}" aria-label="Remove item"${state.items.length <= 1 ? ' disabled style="visibility:hidden"' : ''}><span class="trash-icon"></span></button>
+    <div class="item-row" data-row="${i}">
+      <div class="item-main">
+        <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name">
+        <input class="item-price" type="number" inputmode="decimal" step="0.01"
+               value="${item.price || ''}" placeholder="0.00" data-item-price="${i}" aria-label="Item ${i + 1} price">
+        <button class="item-del" data-item-del="${i}" aria-label="Remove item"${state.items.length <= 1 ? ' disabled hidden' : ''}><span class="trash-icon"></span></button>
+      </div>
+      ${byItem ? `<div class="item-who" data-who="${i}" role="group" aria-label="Who had item ${i + 1}">${whoChips(i)}</div>` : ''}
     </div>
   `).join('');
 
@@ -199,7 +201,7 @@ export function renderItems(): void {
 export function addItem(): void {
   state.items.push({ name: '', price: 0 });
   renderItems();
-  if (state.splitMode === 'item') renderAssign();
+  updateItemsCta();
   const inputs = $('itemsList').querySelectorAll<HTMLInputElement>('.item-name');
   if (inputs.length) inputs[inputs.length - 1].focus();
 }
@@ -209,7 +211,6 @@ export function removeItem(index: number): void {
   state.items.splice(index, 1);
   renderItems();
   updateRunning();
-  if (state.splitMode === 'item') renderAssign();
 }
 
 export function updateRunning(): void {

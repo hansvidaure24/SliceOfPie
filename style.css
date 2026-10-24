@@ -168,7 +168,18 @@ body.transitioning .btn{pointer-events:none}
 .counter-val{font-size:2.2rem;font-weight:800;min-width:40px;text-align:center}
 .person-name-row{display:flex;align-items:center;gap:10px;padding:8px 0;flex-wrap:wrap}
 .me-toggle-row{display:flex;align-items:center;gap:8px;width:100%;padding-top:4px}
-.btn.last-group-btn{margin-top:14px;display:block;margin-left:auto;margin-right:auto;padding:8px;font-size:.75rem}
+.contacts-btn{margin-top:var(--space-3);font-size:var(--text-sm);min-height:44px;padding:10px 16px}
+.contacts-btn .person-icon{--icon-size:18px;background:currentColor}
+.quick-add{margin-top:var(--space-4)}
+.quick-add .section-label{display:block;margin-bottom:var(--space-2)}
+.quick-add-chips{display:flex;flex-wrap:wrap;gap:6px}
+.name-chip{
+  display:inline-flex;align-items:center;gap:4px;min-height:36px;padding:0 12px;border-radius:50px;
+  border:1.5px dashed var(--surface-border);background:none;color:var(--cream-dim);
+  font-size:.8rem;font-weight:600;cursor:pointer;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.name-chip .add-icon{--icon-size:14px;color:var(--crust)}
+.name-chip:active{border-color:var(--crust);color:var(--crust)}
 .person-name-input[data-me]{border-bottom-color:var(--crust)}
 .me-label{font-size:.75rem;color:var(--muted)}
 .join-row{gap:8px;padding:10px 0}
@@ -228,10 +239,8 @@ body.transitioning .btn{pointer-events:none}
 .progress-text{color:var(--muted);font-size:.85rem}
 
 /* ── Items List ── */
-.item-row{
-  display:flex;align-items:center;gap:8px;padding:12px 0;
-  border-bottom:1px solid var(--border-subtle);
-}
+.item-row{padding:12px 0;border-bottom:1px solid var(--border-subtle);border-radius:4px}
+.item-main{display:flex;align-items:center;gap:8px}
 .item-row:last-child{border-bottom:none}
 .item-name{
   flex:1;background:var(--surface2);border:1px solid transparent;color:var(--text);
@@ -248,6 +257,7 @@ body.transitioning .btn{pointer-events:none}
 .currency-row{display:flex;align-items:center;gap:6px}
 .quick-entry-input.item-price{width:100%;font-size:1.1rem;padding:10px 8px}
 .item-del{background:none;border:none;color:var(--cherry);font-size:1.2rem;cursor:pointer;padding:8px 10px;min-width:40px;min-height:40px;border-radius:50%;transition:background .12s}
+.item-del[hidden]{display:block;visibility:hidden}
 .item-del:focus-visible{background:var(--cherry-glow);outline:none}
 .item-del:active{background:var(--cherry-glow)}
 .add-btn{
@@ -256,24 +266,26 @@ body.transitioning .btn{pointer-events:none}
 }
 .add-btn:active{border-color:var(--crust);color:var(--crust)}
 
-/* ── Assign Badges ── */
-.assign-wrap{padding:10px 0;border-bottom:1px solid var(--border-subtle)}
-.assign-wrap:last-child{border-bottom:none}
-.assign-item-label{font-size:.85rem;color:var(--cream-dim);margin-bottom:6px;font-weight:500}
-.assign-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.person-badge{
-  padding:6px 12px;border-radius:50px;font-size:.75rem;font-weight:600;
-  cursor:pointer;border:2px solid var(--surface2);background:none;color:var(--muted);
-  transition:all .12s;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+/* ── Who had each item ── */
+.item-who{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.who-chip{
+  --who:var(--crust);
+  display:inline-flex;align-items:center;gap:6px;max-width:150px;min-height:36px;padding:0 12px 0 10px;
+  border-radius:50px;border:1.5px solid var(--surface-border);background:none;color:var(--cream-dim);
+  font-size:.8rem;font-weight:600;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  transition:background .12s,border-color .12s,color .12s,transform .1s;
 }
-.person-badge:active{transform:scale(.93)}
-.person-badge.on{color:#fff}
-.assign-action{
-  padding:8px 12px;border-radius:50px;font-size:.65rem;font-weight:700;min-height:44px;
-  cursor:pointer;border:1.5px solid var(--surface-border);background:none;color:var(--muted);
-  text-transform:uppercase;letter-spacing:.5px;transition:all .12s;
-}
-.assign-action:active{border-color:var(--crust);color:var(--crust)}
+.who-chip::before{content:'';flex-shrink:0;width:8px;height:8px;border-radius:50%;background:var(--who)}
+.who-chip.on{background:var(--who);border-color:var(--who);color:#fff}
+.who-chip.on::before{background:#fff}
+.who-chip:active{transform:scale(.95)}
+.who-all{--who:var(--crust)}
+.who-all::before{display:none}
+.who-all.on{color:var(--brown)}
+/* Rows nobody is on yet, so they're easy to find */
+.item-row.unassigned{box-shadow:inset 3px 0 0 var(--warn);padding-left:10px;margin-left:-10px}
+.item-row.flash{animation:rowFlash 1s ease-out}
+@keyframes rowFlash{0%,40%{background:color-mix(in srgb,var(--warn) 22%,transparent)}100%{background:transparent}}
 
 /* ── Tax Field ── */
 .tax-row{display:flex;align-items:center;gap:8px;margin-top:10px}
@@ -371,12 +383,42 @@ body.transitioning .btn{pointer-events:none}
   font-size:1.25rem;font-weight:700;color:var(--cream);
   border-top:2px solid var(--crust);padding-top:12px;margin-top:8px;
 }
-.per-person-label{text-align:center;color:var(--muted);font-size:.8rem;margin-top:14px;text-transform:uppercase;letter-spacing:1px}
-.per-person-val{
-  text-align:center;font-size:2.5rem;font-weight:800;color:var(--cherry);
-  margin:6px 0 10px;transition:transform .15s;
+.sum-card .sum-line{font-size:var(--text-sm)}
+.sum-card .sum-line.total{font-size:var(--text-md)}
+
+/* ── The answer: who paid and what comes back ── */
+.result-card{text-align:center}
+.result-label{font-size:var(--text-xs);text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:700}
+.result-amt{
+  font-family:var(--font-display);font-weight:800;font-size:var(--text-2xl);line-height:1.1;
+  color:var(--cherry);margin:6px 0 4px;font-variant-numeric:tabular-nums;
 }
-.per-person-val.pulse,.sum-line.total .pulse{animation:numPulse .2s ease-out}
+.result-amt.pulse{animation:numPulse .2s ease-out}
+.result-sub{font-size:var(--text-sm);color:var(--cream-dim);text-wrap:balance}
+.result-sub:empty{display:none}
+.result-card .pie-chart-wrap{margin:16px 0 4px}
+.result-card .pie-chart-wrap[hidden]{display:none}
+/* The rows below name each color, so the pie needs no legend here */
+.result-card .pie-legend{display:none}
+.result-people{margin-top:var(--space-3);text-align:left}
+.owe-row{
+  display:flex;align-items:center;gap:var(--space-2);padding:9px 0;font-size:var(--text-sm);
+  border-top:1px solid var(--border-subtle);
+}
+.owe-row::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--who);flex-shrink:0}
+.owe-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.owe-amt{font-weight:700;font-variant-numeric:tabular-nums}
+.owe-row.is-payer .owe-amt{font-weight:500;font-style:italic;color:var(--muted)}
+
+/* Settings that rarely change, folded under one line that says how they're set */
+.more-options summary{
+  display:flex;align-items:center;justify-content:space-between;gap:var(--space-2);
+  list-style:none;cursor:pointer;min-height:44px;font-size:var(--text-sm);color:var(--cream-dim);
+}
+.more-options summary::-webkit-details-marker{display:none}
+.more-options summary .chevron-icon{transform:rotate(90deg);transition:transform .15s}
+.more-options[open] summary .chevron-icon{transform:rotate(-90deg)}
+.more-options .tip-base-row{margin-top:2px}
 @keyframes numPulse{0%{transform:scale(1)}50%{transform:scale(1.06)}100%{transform:scale(1)}}
 
 /* ── Pie Chart ── */
@@ -385,11 +427,6 @@ body.transitioning .btn{pointer-events:none}
 .pie-label{transition:opacity .2s ease-in}
 .pie-slice-circle{animation:circleGrow .5s cubic-bezier(.4,0,.2,1) both}
 @keyframes circleGrow{from{r:0}to{}}
-
-/* ── Breakdown ── */
-.breakdown-line{display:flex;justify-content:space-between;padding:8px 0;font-size:.9rem;border-bottom:1px solid var(--border-subtle)}
-.breakdown-line:last-child{border-bottom:none}
-.breakdown-name{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
 
 /* ── Toggle Switch ── */
 .round-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0}
@@ -410,14 +447,6 @@ body.transitioning .btn{pointer-events:none}
 .toggle::after{transition:transform .3s cubic-bezier(.68,-.30,.27,1.35)}
 
 /* ── Navigation ── */
-
-/* ── Warning Banner ── */
-.warn-banner{
-  background:color-mix(in srgb,var(--warn) 12%,transparent);border:1.5px solid var(--warn);border-radius:var(--radius-sm);
-  padding:10px 14px;font-size:.8rem;color:var(--warn);margin-bottom:12px;
-  display:none;
-}
-.warn-banner.show{display:block}
 
 /* ── Tip Base Toggle ── */
 .tip-base-row{display:flex;gap:8px;margin-top:10px}
@@ -781,6 +810,7 @@ body[data-chrome="tabs"] .tab-bar{display:flex}
   /* Summary: tip card + summary card side by side */
   #screenSummary.active{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
   #screenSummary>h1,#screenSummary>.summary-extra,#screenSummary>.cta-bar{grid-column:1/-1}
+  #screenSummary>.result-card{grid-row:span 2}
 
   /* Detail: summary + people side by side */
   #screenDetail.active{display:grid;grid-template-columns:1fr 1fr;gap:0 16px;align-items:start}
