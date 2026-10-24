@@ -1,5 +1,6 @@
 import { $, COLORS, esc, showToast } from './helpers';
 import { state } from './state';
+import { renderLiveSummary } from './layout';
 
 function loadLastGroup(): void {
   const last = state.history[0];
@@ -41,6 +42,7 @@ function showPeople(): void {
   ctr.setAttribute('aria-label', state.people.length + ' people splitting');
   updateCounterState();
   renderNames();
+  renderLiveSummary();
 }
 
 async function pickContacts(): Promise<void> {
@@ -158,6 +160,7 @@ export function renderNames(): void {
     const fallback = state.people[idx].isMe ? 'Me' : 'Person ' + (idx + 1);
     input.addEventListener('input', () => {
       state.people[idx].name = input.value || fallback;
+      renderLiveSummary();
     });
     input.addEventListener('blur', () => {
       if (!input.value.trim()) input.value = fallback;
