@@ -21,7 +21,7 @@ import { exportImage } from './export-image';
 import { loadHistory } from './db';
 import { initActions } from './actions';
 import { initReceiptDrop } from './layout';
-import { initInstall } from './install';
+import { initInstall, lockZoomWhenInstalled } from './install';
 import { initScannerStatus } from './scanner-status';
 import { SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
 import { initUpdates } from './update';
@@ -88,6 +88,7 @@ function updateCurrencySymbols(): void {
 }
 
 // Restore saved state
+lockZoomWhenInstalled();
 applyTheme();
 renderThemeToggle();
 window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {

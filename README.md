@@ -89,8 +89,8 @@ npm run build
 npm run test:e2e    # Playwright: phone (Pixel 7) and desktop, against the built app
 ```
 
-- **Unit tests** (`test/`): the money math and its rounding to the cent, starting up with storage blocked, draft resume and its 3-hour expiry, the receipt parser with saved OCR output from real receipts, image quality checks, and the security headers.
-- **End-to-end tests** (`e2e/`): even and by-item splits with known answers, back navigation and resume, offline use, scanning a drawn receipt online then offline, the share target, axe on every screen in both themes, 200% text, the desktop grid and live summary, drop-to-scan, copy to clipboard, and the Content-Security-Policy. Real receipt photos are gitignored; when they're present in `test/fixtures/receipts/photos/`, a test scans one too.
+- **Unit tests** (`test/`): the money math and its rounding to the cent, starting up with storage blocked, draft resume and its 3-hour expiry, the receipt parser with saved OCR output from real receipts, image quality checks, when a new version is applied, clearing old scanner files from the offline cache, and the security headers.
+- **End-to-end tests** (`e2e/`): even and by-item splits with known answers, back navigation and resume, offline use, scanning a drawn receipt online then offline, the share target, axe on every screen in both themes, 200% text, the desktop grid and live summary, drop-to-scan, copy to clipboard, the Content-Security-Policy, a real app update (applied at once on a first visit, held for Reload mid-bill), blocked storage, failed saves, swipe to delete, 16px text fields on touch screens, and pinch zoom off only when installed. Real receipt photos are gitignored; when they're present in `test/fixtures/receipts/photos/`, a test scans one too.
 - **CI** (`.github/workflows/ci.yml`): every push and pull request runs the type check, both suites and Lighthouse; the build fails if performance drops below 90 or accessibility below 100.
 - **Before a release**, [docs/device-test-checklist.md](docs/device-test-checklist.md) lists what needs a real phone.
 

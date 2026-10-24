@@ -86,3 +86,36 @@ test('swiping a saved bill left offers to delete it', async ({ page }) => {
   await expect(page.locator('.history-card')).toHaveCount(0);
   await expect(page.locator('#toast')).toHaveText('Deleted');
 });
+
+test('pinch zoom stays on in a browser tab and is off once installed', async ({ page }) => {
+  const viewport = () => page.locator('meta[name=viewport]').getAttribute('content');
+  await open(page);
+  expect(await viewport()).not.toContain('maximum-scale');
+
+  // Launched from the home screen
+  await page.addInitScript(() => {
+    const real = window.matchMedia.bind(window);
+    window.matchMedia = (q: string) => {
+      const list = real(q);
+      if (!q.includes('display-mode: standalone')) return list;
+      return new Proxy(list, {
+        get: (target, key) => key === 'matches' ? true : typeof Reflect.get(target, key) === 'function'
+          ? Reflect.get(target, key).bind(target)
+          : Reflect.get(target, key),
+      });
+    };
+  });
+  await page.reload();
+  await expect(page.locator('#screenWelcome')).toHaveClass(/active/);
+  expect(await viewport()).toContain('maximum-scale=1, user-scalable=no');
+});
+
+test('text fields are at least 16px on a touch screen, so iOS does not zoom into them', async ({ page, hasTouch }) => {
+  test.skip(!hasTouch, 'touch screens only');
+  await open(page);
+  await page.click('[data-tab=screenSettings]');
+  const sizes = await page.evaluate(() => [...document.querySelectorAll<HTMLElement>('input:not([type=checkbox]):not([type=radio]):not([type=file]), select')]
+    .map(el => parseFloat(getComputedStyle(el).fontSize)));
+  expect(sizes.length).toBeGreaterThan(5);
+  expect(Math.min(...sizes)).toBeGreaterThanOrEqual(16);
+});

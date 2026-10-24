@@ -3,7 +3,7 @@
    · Cards · Home · Icons · People · Capture & camera · Items & assignment
    · Tip & bill · Toggles · Settings · History & saved bill · Dialog · Toast
    · App shell (top bar, action bar, tabs) · Side panes · Install & updates
-   · Tablet (768px+) · Desktop (1100px+) · Reduced motion */
+   · Tablet (768px+) · Desktop (1100px+) · Touch · Reduced motion */
 
 /* ── Fonts: served with the app and precached, so they work offline (SIL OFL 1.1) ── */
 @font-face{font-family:'Inter';font-style:normal;font-weight:400 800;font-display:swap;src:url('/fonts/inter-latin.woff2') format('woff2')}
@@ -1014,6 +1014,14 @@ kbd{font-family:ui-monospace,Consolas,monospace;font-size:var(--text-2xs);paddin
   }
 
 }
+
+/* ── Touch: no zooming into fields ── */
+/* iOS zooms the page into any text field under 16px, and an installed app has
+   no address bar to zoom back out with; double-tap zoom goes too */
+@media (pointer:coarse){
+  input:not([type=checkbox]):not([type=radio]),select:not([multiple]),textarea:not([readonly]){font-size:max(1rem,16px)}
+}
+html{touch-action:manipulation}
 
 /* ── Reduced motion ── */
 @media (prefers-reduced-motion:reduce){

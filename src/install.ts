@@ -49,6 +49,13 @@ export async function maybeNudgeInstall(): Promise<void> {
   }
 }
 
+// Installed, the app turns off pinch zoom like other apps do. A browser tab
+// keeps it, where people expect it. The system's own zoom and text size still work.
+export function lockZoomWhenInstalled(): void {
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (standalone() && viewport) viewport.setAttribute('content', viewport.getAttribute('content') + ', maximum-scale=1, user-scalable=no');
+}
+
 export function initInstall(): void {
   window.addEventListener('beforeinstallprompt', (e) => {
     e.preventDefault();
