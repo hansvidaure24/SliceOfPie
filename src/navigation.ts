@@ -7,7 +7,7 @@ import { renderHistory, renderSaveButton } from './history';
 import { goToSummary } from './summary';
 import { saveDraft, clearDraft } from './draft';
 import { setAside, renderLiveSummary } from './layout';
-import { renderScannerStatus } from './scanner-status';
+import { renderScannerStatus, warmScannerIfReady } from './scanner-status';
 
 const HOME = 'screenWelcome';
 
@@ -130,6 +130,7 @@ export function goTo(id: string): void {
   if (id === 'screenCapture') resetCapture();
 
   const current = document.querySelector('.screen.active') as HTMLElement | null;
+  if (current && current.id !== id) document.body.classList.add('navigated');
   if (current && current.id !== id) {
     leaveHandlers[current.id]?.();
     document.body.classList.add('transitioning');
@@ -162,6 +163,7 @@ export function goTo(id: string): void {
   if (id === 'screenItems') renderAssign();
   if (id === 'screenHistory') renderHistory();
   if (id === 'screenSettings' || id === 'screenCapture') void renderScannerStatus();
+  if (id === 'screenCapture') void warmScannerIfReady();
 
   renderChrome(id);
   syncHistory(id);

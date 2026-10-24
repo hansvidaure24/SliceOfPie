@@ -7,7 +7,8 @@ import { changePeople } from './people';
 import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './toggles';
 import { updateItemsCta, initAssign } from './assign';
 import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning, enterItemsScreen } from './items';
-import { takePhoto, closeCamera, shootPhoto, toggleTorch } from './camera';
+// The live camera loads when it's first opened
+const camera = () => import('./camera');
 import { updateHistoryBadge, startSaveBill, deleteBill, viewBill } from './history';
 import { goTo, goBack, quickNext, itemsNext, newBill, goToNextFromPeople, screenForSlug, syncBillUI, settleHomeLocation, startSplit, updateQuickCta, currentScreen } from './navigation';
 import { goToSummary } from './summary';
@@ -27,8 +28,10 @@ initActions({
   goTo: id => goTo(id!), goBack, goToNextFromPeople, startSplit: mode => startSplit(mode as 'even' | 'item'),
   changePeople: delta => changePeople(Number(delta)), setSplitMode: mode => setSplitMode(mode as 'even' | 'item'),
   toggleTaxInc, toggleRound, togglePartOfBill,
-  takePhoto, takePhotoNative, uploadPhoto, skipToManual, addItem,
-  closeCamera, shootPhoto, toggleTorch,
+  takePhoto: () => camera().then(m => m.takePhoto()), takePhotoNative, uploadPhoto, skipToManual, addItem,
+  closeCamera: () => camera().then(m => m.closeCamera()),
+  shootPhoto: () => camera().then(m => m.shootPhoto()),
+  toggleTorch: () => camera().then(m => m.toggleTorch()),
   quickNext, itemsNext,
   setTipBase: base => setTipBase(base as 'pre' | 'post'),
   doShare: mode => doShare(mode as 'auto' | 'alt' | undefined), reshareDetail: mode => reshareDetail(mode as 'auto' | 'alt' | undefined),

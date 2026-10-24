@@ -2,10 +2,7 @@ import { $, COLORS, esc, fmt, receiptHints, confirmDialog, showToast, setToggle 
 import { state } from './state';
 import { goTo, updateQuickCta } from './navigation';
 import { updateItemsCta, whoChips, itemsHead, whoColumns } from './assign';
-import { processReceipt } from './scan/process';
 import { OcrUnavailableError } from './scan/engine';
-import { prepareImage } from './scan/image';
-import { assessQuality } from './scan/quality';
 import { okToDownloadScanner } from './scanner-status';
 
 // The phone's own camera app via the file input (the live camera is in camera.ts)
@@ -52,6 +49,10 @@ export async function runOCR(file: Blob): Promise<void> {
     skipToManual();
     return;
   }
+  // The parser, photo checks and OCR engines load on the first scan, not with the app
+  const [{ processReceipt }, { prepareImage }, { assessQuality }] = await Promise.all([
+    import('./scan/process'), import('./scan/image'), import('./scan/quality'),
+  ]);
   let image = file;
   try {
     const prepared = await prepareImage(file);
