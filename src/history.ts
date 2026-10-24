@@ -6,7 +6,7 @@ import { goTo } from './navigation';
 import { putBill, deleteBillFromDB } from './db';
 import type { Bill } from './types';
 
-const DELETE_ICON = '<span class="trash-icon" style="margin-right:6px"></span>';
+const DELETE_ICON = '<span class="trash-icon"></span>';
 let swipeHintShown = false;
 
 export function startSaveBill(): void {
@@ -57,10 +57,17 @@ export function confirmSave(): void {
 
   state.billSavedThisSession = true;
   $('saveLabelWrap').classList.remove('show');
-  $('saveBillBtn').innerHTML = '<span class="check-icon" style="margin-right:6px"></span>Saved!';
-  ($('saveBillBtn') as HTMLElement).style.opacity = '.5';
+  renderSaveButton();
   updateHistoryBadge();
   showToast('Bill saved!');
+}
+
+export function renderSaveButton(): void {
+  const btn = $('saveBillBtn');
+  btn.innerHTML = state.billSavedThisSession
+    ? '<span class="check-icon"></span>Saved!'
+    : '<span class="bill-icon"></span>Save Bill';
+  btn.style.opacity = state.billSavedThisSession ? '.5' : '1';
 }
 
 export function renderHistory(): void {
@@ -68,7 +75,7 @@ export function renderHistory(): void {
     $('historyList').innerHTML = `
       <div class="empty-state">
         No saved bills yet.<br>
-        <span style="color:var(--muted)">Split a bill and tap Save!</span>
+        <span class="empty-hint">Split a bill and tap Save!</span>
       </div>`;
     return;
   }
@@ -94,7 +101,7 @@ export function renderHistory(): void {
         </div>
         <div class="history-bottom">
           <span class="history-total">${fmt(bill.total)}</span>
-          <span style="display:flex;align-items:center;gap:8px">
+          <span class="history-meta">
             <span class="history-status ${statusClass}">${statusText}</span>
             <span class="chevron-icon"></span>
           </span>
@@ -135,7 +142,7 @@ export function viewBill(id: number): void {
   $('detailDelBtn').innerHTML = DELETE_ICON + 'Delete Bill';
   $('detailDelBtn').classList.remove('del-confirm');
   const titleEl = $('detailTitle');
-  titleEl.innerHTML = esc(bill.label) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle" aria-hidden="true"></span>';
+  titleEl.innerHTML = esc(bill.label) + ' <span class="pencil-icon" aria-hidden="true"></span>';
   titleEl.setAttribute('role', 'button');
   titleEl.setAttribute('tabindex', '0');
   titleEl.setAttribute('aria-label', 'Edit bill label');
@@ -164,7 +171,7 @@ export function viewBill(id: number): void {
 function renderDetailPeople(bill: Bill): void {
   $('detailPeople').innerHTML = bill.people.map((person, i) => `
     <div class="detail-person">
-      <div style="display:flex;align-items:center;gap:10px">
+      <div class="detail-who">
         <div class="person-icon" style="background:${person.color}"></div>
         <div>
           <div class="detail-name" style="color:${person.color}">${esc(person.name)}</div>
@@ -173,7 +180,7 @@ function renderDetailPeople(bill: Bill): void {
       </div>
       <button class="paid-btn ${person.paid ? 'paid' : ''}" data-toggle-paid="${bill.id}-${i}"
               aria-label="${esc(person.name)}: mark as ${person.paid ? 'unpaid' : 'paid'}" aria-pressed="${person.paid}">
-        ${person.paid ? '<span class="check-icon" style="margin-right:4px"></span>Paid' : 'Not yet'}
+        ${person.paid ? '<span class="check-icon"></span>Paid' : 'Not yet'}
       </button>
     </div>
   `).join('');
@@ -221,7 +228,7 @@ function editBillLabel(bill: Bill): void {
     const newLabel = input.value.trim() || bill.label;
     bill.label = newLabel;
     putBill(bill).catch(() => {});
-    titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" style="width:16px;height:16px;vertical-align:middle" aria-hidden="true"></span>';
+    titleEl.innerHTML = esc(newLabel) + ' <span class="pencil-icon" aria-hidden="true"></span>';
     titleEl.onclick = () => editBillLabel(bill);
     titleEl.onkeydown = (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
     showToast('Label updated');

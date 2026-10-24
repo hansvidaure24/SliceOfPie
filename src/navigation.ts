@@ -3,8 +3,51 @@ import { state, getBillTotals } from './state';
 import { renderNames, updateCounterState } from './people';
 import { renderTipRow } from './tip';
 import { renderAssign } from './assign';
-import { renderHistory } from './history';
+import { renderHistory, renderSaveButton } from './history';
 import { goToSummary } from './summary';
+import { saveDraft, clearDraft } from './draft';
+
+const HOME = 'screenWelcome';
+
+// Shown in the address bar, so a reload or a shared link names the screen
+const SLUGS: Record<string, string> = {
+  screenWelcome: '',
+  screenSettings: 'settings',
+  screenHistory: 'history',
+  screenDetail: 'saved-bill',
+  screenPeople: 'people',
+  screenQuick: 'total',
+  screenCapture: 'scan',
+  screenCamera: 'camera',
+  screenItems: 'items',
+  screenSummary: 'bill',
+};
+
+export function screenForSlug(slug: string): string | null {
+  return Object.keys(SLUGS).find(id => SLUGS[id] === slug) ?? null;
+}
+
+// What Back does on each screen: the app's Back buttons, Escape, and the
+// system back gesture all run this
+const BACK: Record<string, () => void | Promise<void>> = {
+  screenSettings: () => goTo(HOME),
+  screenHistory: () => goTo(HOME),
+  screenDetail: () => goTo('screenHistory'),
+  screenPeople: () => goTo(HOME),
+  screenQuick: () => goTo('screenPeople'),
+  screenCapture: () => captureBack(),
+  screenCamera: () => goTo('screenCapture'),
+  screenItems: () => goTo('screenCapture'),
+  screenSummary: () => goBackFromSummary(),
+};
+
+export function currentScreen(): string {
+  return document.querySelector('.screen.active')?.id ?? HOME;
+}
+
+export async function goBack(): Promise<void> {
+  await BACK[currentScreen()]?.();
+}
 
 // Cleanup to run when a screen is left (e.g. releasing the camera)
 const leaveHandlers: Record<string, () => void> = {};
@@ -16,15 +59,7 @@ export function goTo(id: string): void {
   if (id === 'screenPeople') updateCounterState();
 
   // Reset capture screen state when navigating to it
-  if (id === 'screenCapture') {
-    ($('previewImg') as HTMLImageElement).style.display = 'none';
-    ($('previewImg') as HTMLImageElement).setAttribute('aria-hidden', 'true');
-    $('progressWrap').style.display = 'none';
-    ($('progressFill') as HTMLElement).style.width = '0%';
-    $('progressFill').parentElement!.setAttribute('aria-valuenow', '0');
-    $('progressFill').parentElement!.classList.remove('indeterminate');
-    ($('photoInput') as HTMLInputElement).value = '';
-  }
+  if (id === 'screenCapture') resetCapture();
 
   const current = document.querySelector('.screen.active') as HTMLElement | null;
   if (current && current.id !== id) {
@@ -61,6 +96,70 @@ export function goTo(id: string): void {
     if (state.splitMode === 'item') renderAssign();
   }
   if (id === 'screenHistory') renderHistory();
+
+  syncHistory(id);
+  saveDraft(id);
+}
+
+// Away from home an extra history entry (our "guard") sits on top, so the
+// system back gesture lands in popstate below instead of leaving the app.
+// Each guard gets its own id: arriving on ours again means Forward, arriving
+// anywhere else means Back.
+type GuardState = { guard?: number } | null;
+// After a reload the entry we're on may already be a guard; adopt it
+let guardId: number | null = (history.state as GuardState)?.guard ?? null;
+let droppingGuard = false;
+
+// Start-up landed on home: turn the entry we're on back into a plain one
+export function settleHomeLocation(): void {
+  guardId = null;
+  history.replaceState(null, '', location.pathname + location.search);
+}
+
+function syncHistory(id: string): void {
+  const url = location.pathname + location.search + (SLUGS[id] ? '#' + SLUGS[id] : '');
+  if (id === HOME) {
+    if (guardId !== null) {
+      guardId = null;
+      droppingGuard = true;
+      history.back();
+    } else {
+      history.replaceState(null, '', url);
+    }
+  } else if (guardId !== null) {
+    history.replaceState({ guard: guardId }, '', url);
+  } else {
+    guardId = Date.now();
+    history.pushState({ guard: guardId }, '', url);
+  }
+}
+
+window.addEventListener('popstate', async (e) => {
+  if (droppingGuard) {
+    droppingGuard = false;
+    history.replaceState(null, '', location.pathname + location.search);
+    // A goTo may have run while the back was in flight
+    if (currentScreen() !== HOME) syncHistory(currentScreen());
+    return;
+  }
+  const arrived = (e.state as GuardState)?.guard;
+  // Browser Forward re-entered our guard entry; nothing to do
+  if (arrived !== undefined && arrived === guardId) return;
+  guardId = null;
+  if ($('confirmOverlay').classList.contains('show')) $('confirmNo').click();
+  else await goBack();
+  // Back may have been cancelled (e.g. keeping an unsaved bill)
+  if (currentScreen() !== HOME) syncHistory(currentScreen());
+});
+
+function resetCapture(): void {
+  ($('previewImg') as HTMLImageElement).style.display = 'none';
+  ($('previewImg') as HTMLImageElement).setAttribute('aria-hidden', 'true');
+  $('progressWrap').style.display = 'none';
+  ($('progressFill') as HTMLElement).style.width = '0%';
+  $('progressFill').parentElement!.setAttribute('aria-valuenow', '0');
+  $('progressFill').parentElement!.classList.remove('indeterminate');
+  ($('photoInput') as HTMLInputElement).value = '';
 }
 
 export function quickNext(): void {
@@ -112,29 +211,29 @@ function resetState(): void {
   state.useReceiptTip = false;
 }
 
+// Puts the bill's inputs and toggles in line with state, after a reset or a restored draft
+export function syncBillUI(): void {
+  setToggle('roundToggle', state.roundUp);
+  setToggle('taxIncToggle', state.taxIncluded);
+  $('peopleCount').textContent = String(state.people.length);
+  $('peopleCount').setAttribute('aria-label', state.people.length + ' people splitting');
+  $('quickTaxCard').classList.toggle('hidden', state.taxIncluded);
+  ($('quickTotal') as HTMLInputElement).value = state.quickTotalAmt ? String(state.quickTotalAmt) : '';
+  ($('quickTax') as HTMLInputElement).value = state.quickTaxAmt ? String(state.quickTaxAmt) : '';
+  ($('taxInput') as HTMLInputElement).value = state.taxAmt ? String(state.taxAmt) : '';
+  $('modeEven').classList.toggle('active', state.splitMode === 'even');
+  $('modeItem').classList.toggle('active', state.splitMode === 'item');
+  $('tipPreTax').classList.toggle('active', state.tipBase === 'pre');
+  $('tipPostTax').classList.toggle('active', state.tipBase === 'post');
+  renderSaveButton();
+  renderTipRow();
+  renderNames();
+}
+
 function resetUI(): void {
-  setToggle('roundToggle', false);
-  setToggle('taxIncToggle', true);
-  $('peopleCount').textContent = '2';
-  $('peopleCount').setAttribute('aria-label', '2 people splitting');
-  $('quickTaxCard').classList.add('hidden');
-  ($('quickTotal') as HTMLInputElement).value = '';
-  ($('quickTax') as HTMLInputElement).value = '';
-  ($('taxInput') as HTMLInputElement).value = '';
-  $('modeEven').classList.add('active');
-  $('modeItem').classList.remove('active');
-  $('tipPreTax').classList.add('active');
-  $('tipPostTax').classList.remove('active');
+  syncBillUI();
   $('unassignedWarn').classList.remove('show');
-  ($('previewImg') as HTMLImageElement).style.display = 'none';
-  ($('previewImg') as HTMLImageElement).setAttribute('aria-hidden', 'true');
-  $('progressWrap').style.display = 'none';
-  ($('progressFill') as HTMLElement).style.width = '0%';
-  $('progressFill').parentElement!.setAttribute('aria-valuenow', '0');
-  $('progressFill').parentElement!.classList.remove('indeterminate');
-  ($('photoInput') as HTMLInputElement).value = '';
-  $('saveBillBtn').innerHTML = '<span class="bill-icon" style="margin-right:6px"></span>Save Bill';
-  ($('saveBillBtn') as HTMLElement).style.opacity = '1';
+  resetCapture();
   $('saveLabelWrap').classList.remove('show');
 }
 
@@ -164,7 +263,6 @@ export async function newBill(): Promise<void> {
   if (!(await confirmLeaveSummary())) return;
   resetState();
   resetUI();
-  renderTipRow();
-  renderNames();
-  goTo('screenWelcome');
+  clearDraft();
+  goTo(HOME);
 }
