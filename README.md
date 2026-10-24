@@ -94,7 +94,7 @@ npm run test:e2e    # Playwright: phone (Pixel 7) and desktop, against the built
 - **CI** (`.github/workflows/ci.yml`): every push and pull request runs the type check, both suites and Lighthouse; the build fails if performance drops below 90 or accessibility below 100.
 - **Before a release**, [docs/device-test-checklist.md](docs/device-test-checklist.md) lists what needs a real phone.
 
-Locally the end-to-end suite uses the Edge that ships with Windows; on other systems run `npx playwright install chromium` and set `CI=1`.
+The end-to-end suite runs on Playwright's own Chromium; download it once with `npx playwright install chromium`.
 
 ## Getting Started
 
