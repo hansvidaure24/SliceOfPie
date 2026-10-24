@@ -29,6 +29,14 @@ Split bills without the awkward math. Snap a receipt, assign items, add tip, and
 
 Every bill-splitting app I found either required everyone to sign up, needed an internet connection, or wanted my data. SliceOfPie runs entirely in your browser — no accounts, no backend, no tracking. Install it as a PWA and it works at the restaurant even without signal.
 
+## By the numbers
+
+- **Lighthouse (mobile):** 99 performance, 100 accessibility, 100 best practices, 100 SEO. 0 ms of blocking time and no layout shift.
+- **About 23 KB of JavaScript** (gzipped) to start. The scanner (about 36 MB) only downloads after you ask for it, then works offline.
+- **No accessibility issues** found by axe on any screen, in light or dark.
+- **198 unit tests and 47 end-to-end tests**, each end-to-end test run on a phone and a desktop screen, all on every push.
+- **No framework:** about 4,900 lines of TypeScript in 50 small modules.
+
 ## Features
 
 - **Even or by-item split** — tap people's names under each item (or tick their column on a computer); items nobody is on are flagged before you move on
@@ -45,6 +53,19 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 - **Dark/light theme and currencies** — follows your system or set manually; USD, EUR, GBP, JPY and more
 - **Privacy-first** — no server, no analytics, no cookies. Everything stays on your device
 
+## What was hard
+
+**Reading receipts on the phone.** I didn't want receipts going to a server, so OCR had to run in the browser. Tesseract.js was the obvious choice, but on my test images it only got every price right 4 times out of 16. I built a small benchmark page (`npm run bench`) and tried PaddleOCR's models on ONNX Runtime instead: 16 out of 16. That brought its own problems:
+- **Size.** It's about 36 MB, so the app asks before downloading it, caches it for offline use, and cleans up old versions after an update.
+- **Speed.** It runs in a Web Worker, so the page doesn't freeze while it reads.
+- **Matching prices to items.** It reads each piece of text on its own, so I wrote the code that puts items and prices back on the same line, correcting for a tilted photo first. At 3.5° of tilt, prices were landing next to the wrong items.
+
+The parser is tested against the OCR output of real receipts, so a change that breaks one shows up straight away.
+
+**Money that adds up.** Splitting $100 three ways gives $33.333…, and rounding each share on its own showed "$66.67 owed back to you" next to two rows of $33.33. Now the shares are worked out in whole cents. Everyone else's share is rounded to the nearest cent, and whoever paid takes the leftover, so it's $33.33, $33.33 and $33.34. A 200-case test checks that the shares always add up to the bill. Along the way I found that 178.365 is stored as 178.36499…, so the total and the shares could round in different directions. Everything now rounds through one function.
+
+**An iPhone bug I couldn't reproduce.** Installed on an iPhone, the app opened with the bottom tabs floating about 60 points above the bottom of the screen, then snapped into place a few seconds later. It looked fine in Safari and in every desktop test. My first three fixes did nothing, so I stopped guessing and added a hidden readout to Settings that shows the window and screen sizes at launch. One screen recording later, the numbers were clear: iOS opens a Home Screen app that draws under the status bar with a window 62 points short and no safe areas, and fixes it on its own a few seconds later. Nothing the page draws can reach that strip. The fix was to give the installed app a solid status bar, so there's nothing for iOS to resize. The full story is in [docs/ios-pwa-launch-bug.md](docs/ios-pwa-launch-bug.md).
+
 ## Tech Stack
 
 - **Vite 8** (Rolldown) + **TypeScript 7** (strict mode), no framework
@@ -55,6 +76,8 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 - A strict **Content-Security-Policy** (no inline script, no eval on the page)
 
 ## Architecture Decisions
+
+For a guided tour of the code, from start-up to scanning to updates, see [docs/how-it-works.md](docs/how-it-works.md).
 
 **Why vanilla TS instead of React/Vue/Svelte?**
 The app is ~4,800 lines across 49 modules. A framework would add a virtual DOM and a state management library to solve problems this app doesn't have. Manual DOM updates via `renderX()` functions mean every state change is explicit and traceable. The result is a small startup bundle (about 22 KB of JavaScript gzipped) and zero framework churn.
@@ -181,7 +204,7 @@ src/
   update.ts        When a new version of the app takes over
 test/              Vitest unit tests and receipt fixtures
 e2e/               Playwright end-to-end tests
-docs/              README images and the real-device test checklist
+docs/              How it works, the iPhone bug write-up, README images, device checklist
 scripts/           Fetches the pinned OCR models
 bench/             OCR benchmark page
 .github/           CI workflow and Dependabot
