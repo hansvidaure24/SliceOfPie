@@ -1,41 +1,23 @@
 {
+  "merchant": "THE BLUE PLATE DINER",
+  "date": "2026-10-18",
   "items": [
-    {
-      "name": "Cheeseburger",
-      "price": 12.99
-    },
-    {
-      "name": "Cheeseburger",
-      "price": 12.99
-    },
-    {
-      "name": "Chicken Caesar Salad",
-      "price": 13.5
-    },
-    {
-      "name": "Fries",
-      "price": 3.99
-    },
-    {
-      "name": "Fries",
-      "price": 3.99
-    },
-    {
-      "name": "Fries",
-      "price": 3.99
-    },
-    {
-      "name": "Iced Tea",
-      "price": 3.25
-    },
-    {
-      "name": "Milkshake",
-      "price": 13
-    },
-    {
-      "name": "Apple Pie a la Mode",
-      "price": 7.95
-    }
+    { "name": "Cheeseburger", "price": 12.99 },
+    { "name": "Cheeseburger", "price": 12.99 },
+    { "name": "Chicken Caesar Salad", "price": 13.5 },
+    { "name": "Fries", "price": 3.99 },
+    { "name": "Fries", "price": 3.99 },
+    { "name": "Fries", "price": 3.99 },
+    { "name": "Iced Tea", "price": 3.25 },
+    { "name": "Milkshake", "price": 6.5 },
+    { "name": "Milkshake", "price": 6.5 },
+    { "name": "Apple Pie a la Mode", "price": 7.95 }
   ],
-  "tax": 6.24
+  "subtotal": 75.65,
+  "discount": 0,
+  "tax": 6.24,
+  "taxIncluded": false,
+  "tip": null,
+  "total": 81.89,
+  "confidence": "high"
 }

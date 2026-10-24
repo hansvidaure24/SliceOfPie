@@ -5,9 +5,10 @@ import { restorePaymentFields, savePayment, togglePay } from './payment';
 import { renderPresets, addPreset, renderTipRow, setTipBase } from './tip';
 import { changePeople, renderNames } from './people';
 import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './toggles';
-import { takePhoto, uploadPhoto, skipToManual, addItem, runOCR, updateRunning } from './items';
+import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning } from './items';
+import { takePhoto, closeCamera, shootPhoto, toggleTorch } from './camera';
 import { updateHistoryBadge, startSaveBill, confirmSave, deleteBill } from './history';
-import { goTo, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary } from './navigation';
+import { goTo, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary, captureBack } from './navigation';
 import { doShare, reshareDetail } from './share';
 import { exportImage } from './export-image';
 import { loadHistory } from './db';
@@ -15,9 +16,10 @@ import { registerSW } from 'virtual:pwa-register';
 
 // Vite bundles as ESM — expose handlers for inline onclick attributes
 Object.assign(window, {
-  goTo, goToNextFromPeople, goBackFromSummary,
+  goTo, goToNextFromPeople, goBackFromSummary, captureBack,
   changePeople, setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill,
-  takePhoto, uploadPhoto, skipToManual, addItem,
+  takePhoto, takePhotoNative, uploadPhoto, skipToManual, addItem,
+  closeCamera, shootPhoto, toggleTorch,
   quickNext, itemsNext,
   setTipBase,
   doShare, reshareDetail, newBill,
@@ -82,19 +84,9 @@ loadHistory().then(bills => {
 }).catch(() => {});
 
 // Photo input — preview and OCR
-let ocrRunning = false;
-($('photoInput') as HTMLInputElement).addEventListener('change', async (e) => {
+($('photoInput') as HTMLInputElement).addEventListener('change', (e) => {
   const file = (e.target as HTMLInputElement).files?.[0];
-  if (!file || ocrRunning) return;
-  ocrRunning = true;
-  const img = $('previewImg') as HTMLImageElement;
-  if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
-  img.src = URL.createObjectURL(file);
-  img.style.display = 'block';
-  img.setAttribute('aria-hidden', 'false');
-  $('progressWrap').style.display = 'block';
-  await runOCR(file);
-  ocrRunning = false;
+  if (file) void scanPhoto(file);
 });
 
 // Bind numeric inputs to state
@@ -135,7 +127,8 @@ const ESC_BACK: Record<string, () => void> = {
   screenDetail: () => goTo('screenHistory'),
   screenPeople: () => goTo('screenWelcome'),
   screenQuick: () => goTo('screenPeople'),
-  screenCapture: () => goTo('screenPeople'),
+  screenCapture: () => captureBack(),
+  screenCamera: () => goTo('screenCapture'),
   screenItems: () => goTo('screenCapture'),
   screenSummary: () => goBackFromSummary(),
 };

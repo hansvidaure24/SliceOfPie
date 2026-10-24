@@ -1,5 +1,5 @@
 import { $, esc, fmt, showToast, defaultLabel, tap, confirmDialog } from './helpers';
-import { state, getBillTotals, getPayerName, isPayer, findBill } from './state';
+import { state, getBillTotals, getPayerName, isPayer, findBill, effectiveTipPct } from './state';
 import { calcOwes } from './summary';
 import { goTo } from './navigation';
 
@@ -13,9 +13,15 @@ export function startSaveBill(): void {
   const { total } = getBillTotals();
   if (total <= 0) { showToast('Nothing to save'); return; }
   if (state.billSavedThisSession) { showToast('Already saved'); return; }
-  ($('saveLabelInput') as HTMLInputElement).value = defaultLabel();
+  ($('saveLabelInput') as HTMLInputElement).value = state.receipt?.merchant ? displayName(state.receipt.merchant) : defaultLabel();
   $('saveLabelWrap').classList.add('show');
   ($('saveLabelInput') as HTMLInputElement).focus();
+}
+
+// Receipts often print the merchant in capitals; "AROMA CAFE" reads better as "Aroma Cafe"
+function displayName(merchant: string): string {
+  if (merchant !== merchant.toUpperCase()) return merchant;
+  return merchant.toLowerCase().replace(/(^|[\s\-/&])(\p{L})/gu, (_, sep, ch) => sep + ch.toUpperCase());
 }
 
 export function confirmSave(): void {
@@ -29,8 +35,10 @@ export function confirmSave(): void {
     date: new Date().toISOString(),
     label,
     total,
-    tipPct: state.tipPct,
+    tipPct: effectiveTipPct(),
     splitMode: state.splitMode,
+    ...(state.receipt?.merchant ? { merchant: state.receipt.merchant } : {}),
+    ...(state.receipt?.date ? { receiptDate: state.receipt.date } : {}),
     payerName: getPayerName(),
     people: breakdown.map((entry, i) => ({
       name: entry.name,
@@ -134,7 +142,9 @@ export function viewBill(id: number): void {
   titleEl.onclick = () => editBillLabel(bill);
   titleEl.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); editBillLabel(bill); } };
 
-  const date = new Date(bill.date);
+  // The date printed on the receipt (when scanned) is when the meal happened
+  const [y, m, d] = (bill.receiptDate ?? '').split('-').map(Number);
+  const date = bill.receiptDate ? new Date(y, m - 1, d) : new Date(bill.date);
   $('detailDate').textContent = date.toLocaleDateString(undefined, {
     weekday: 'long', month: 'long', day: 'numeric',
   });

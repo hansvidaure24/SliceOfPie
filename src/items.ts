@@ -1,11 +1,14 @@
-import { $, COLORS, esc, fmt } from './helpers';
+import { $, COLORS, esc, fmt, receiptHints, confirmDialog, showToast, setToggle } from './helpers';
 import { state } from './state';
 import { goTo } from './navigation';
 import { renderAssign } from './assign';
 import { processReceipt } from './scan/process';
 import { OcrUnavailableError } from './scan/engine';
+import { prepareImage } from './scan/image';
+import { assessQuality } from './scan/quality';
 
-export function takePhoto(): void {
+// The phone's own camera app via the file input (the live camera is in camera.ts)
+export function takePhotoNative(): void {
   const input = $('photoInput') as HTMLInputElement;
   input.setAttribute('capture', 'environment');
   input.click();
@@ -17,9 +20,49 @@ export function uploadPhoto(): void {
   input.click();
 }
 
-export async function runOCR(file: File): Promise<void> {
+// Resolves true when the user chose to retake, after resetting the capture screen
+async function offerRetake(msg: string, sub: string, keepLabel: string): Promise<boolean> {
+  if (await confirmDialog(msg, sub, { yes: keepLabel, no: 'Retake' })) return false;
+  goTo('screenCapture');
+  showToast('Take another photo');
+  return true;
+}
+
+// Entry point for a photo from the file input or the live camera
+let scanning = false;
+export async function scanPhoto(photo: Blob): Promise<void> {
+  if (scanning) return;
+  scanning = true;
+  const img = $('previewImg') as HTMLImageElement;
+  if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  img.src = URL.createObjectURL(photo);
+  img.style.display = 'block';
+  img.setAttribute('aria-hidden', 'false');
+  $('progressWrap').style.display = 'block';
   try {
-    const parsed = await processReceipt(file, {
+    await runOCR(photo);
+  } finally {
+    scanning = false;
+  }
+}
+
+export async function runOCR(file: Blob): Promise<void> {
+  let image = file;
+  try {
+    const prepared = await prepareImage(file);
+    image = prepared.blob;
+    const q = assessQuality(prepared.gray, prepared.grayWidth, prepared.grayHeight);
+    if ((q.blurry || q.dark) && await offerRetake(
+      q.dark ? 'This photo is too dark to read' : 'This photo is too blurry to read',
+      q.dark ? 'Add more light, then take it again.' : 'Hold the phone steady with the receipt in focus.',
+      'Use anyway',
+    )) return;
+  } catch {
+    // Couldn't decode it ourselves; let the OCR engine try the original
+  }
+
+  try {
+    const parsed = await processReceipt(image, {
       onProgress: p => {
         const bar = $('progressFill').parentElement!;
         // PaddleOCR can't report recognition progress, so show an indeterminate bar
@@ -34,10 +77,47 @@ export async function runOCR(file: File): Promise<void> {
         $('progressText').textContent = p.phase === 'download'
           ? 'Downloading scanner (first time only)... ' + p.pct + '%'
           : 'Scanning... ' + p.pct + '%';
-      }
+      },
+      parse: receiptHints(),
     });
+    const receipt = { merchant: parsed.merchant, date: parsed.date, total: parsed.total, tip: parsed.tip };
+
+    if (state.splitMode === 'even') {
+      // Even split only needs the bill total, before any tip printed on it
+      const bill = parsed.total !== null ? parsed.total - (parsed.tip ?? 0)
+        : parsed.subtotal !== null ? parsed.subtotal + (parsed.taxIncluded ? 0 : parsed.tax)
+        : null;
+      if (bill === null || bill <= 0) {
+        if (await offerRetake('No total found', 'Retake the photo with the bottom of the receipt in view, or type the total yourself.', 'Enter manually')) return;
+        skipToManual();
+        return;
+      }
+      state.receipt = receipt;
+      state.useReceiptTip = parsed.tip !== null;
+      fillQuickTotal(Math.round(bill * 100) / 100);
+      goTo('screenQuick');
+      showToast('Total filled in from the receipt');
+      return;
+    }
+
+    // The parser checks items + tax + tip against the printed totals; when that
+    // fails the photo was usually misread
+    if (parsed.confidence === 'low' && await offerRetake(
+      parsed.items.length ? 'Some amounts may be wrong' : 'No prices found',
+      parsed.items.length
+        ? "The items don't add up to the receipt's total. Retake the photo, or check the items yourself."
+        : 'Retake the photo with the whole receipt in view, or enter the items yourself.',
+      parsed.items.length ? 'Check items' : 'Enter manually',
+    )) return;
+    state.receipt = receipt;
+    // Don't stack the app's tip percentage on a tip that's already on the receipt
+    state.useReceiptTip = parsed.tip !== null;
     state.items = parsed.items.length ? parsed.items : [{ name: '', price: 0 }];
-    state.taxAmt = parsed.tax;
+    // A negative line so the split reflects what was actually paid; it needs
+    // assigning like any item (usually to everyone)
+    if (parsed.discount > 0) state.items.push({ name: 'Discount', price: -parsed.discount });
+    // VAT already inside the item prices (EU receipts) must not be added again
+    state.taxAmt = parsed.taxIncluded ? 0 : parsed.tax;
     ($('taxInput') as HTMLInputElement).value = String(state.taxAmt || '');
     $('itemsSubtitle').textContent = 'Fix anything the scan missed';
     enterItemsScreen();
@@ -49,7 +129,25 @@ export async function runOCR(file: File): Promise<void> {
   }
 }
 
+function fillQuickTotal(amount: number): void {
+  state.quickTotalAmt = amount;
+  ($('quickTotal') as HTMLInputElement).value = amount.toFixed(2);
+  // The receipt total already includes tax
+  state.taxIncluded = true;
+  setToggle('taxIncToggle', true);
+  $('quickTaxCard').classList.add('hidden');
+  state.quickTaxAmt = 0;
+  ($('quickTax') as HTMLInputElement).value = '';
+}
+
 export function skipToManual(): void {
+  state.receipt = null;
+  state.useReceiptTip = false;
+  if (state.splitMode === 'even') {
+    goTo('screenQuick');
+    ($('quickTotal') as HTMLInputElement).focus();
+    return;
+  }
   state.items = [{ name: '', price: 0 }];
   state.taxAmt = 0;
   ($('taxInput') as HTMLInputElement).value = '';
@@ -117,4 +215,20 @@ export function updateRunning(): void {
   const sub = state.items.reduce((sum, item) => sum + (item.price || 0), 0);
   const taxNote = state.taxAmt ? ' + ' + fmt(state.taxAmt) + ' tax' : '';
   $('runningSub').textContent = 'Subtotal: ' + fmt(sub) + taxNote;
+
+  // Compare against the scanned receipt's total, so a misread price stands out
+  const check = $('receiptCheck');
+  const total = state.receipt?.total ?? null;
+  if (total === null) {
+    check.textContent = '';
+    check.className = 'receipt-check';
+    return;
+  }
+  const tip = state.receipt?.tip ?? 0;
+  const ours = Math.round((sub + state.taxAmt + tip) * 100) / 100;
+  const matches = Math.abs(ours - total) < 0.015;
+  check.className = 'receipt-check ' + (matches ? 'ok' : 'off');
+  check.textContent = matches
+    ? 'Matches the receipt total of ' + fmt(total)
+    : (tip ? 'Items + tax + tip' : 'Items + tax') + ' come to ' + fmt(ours) + '; the receipt says ' + fmt(total);
 }

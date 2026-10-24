@@ -6,6 +6,12 @@ import { renderAssign } from './assign';
 import { renderHistory } from './history';
 import { goToSummary } from './summary';
 
+// Cleanup to run when a screen is left (e.g. releasing the camera)
+const leaveHandlers: Record<string, () => void> = {};
+export function onLeaveScreen(id: string, fn: () => void): void {
+  leaveHandlers[id] = fn;
+}
+
 export function goTo(id: string): void {
   if (id === 'screenPeople') updateCounterState();
 
@@ -22,6 +28,7 @@ export function goTo(id: string): void {
 
   const current = document.querySelector('.screen.active') as HTMLElement | null;
   if (current && current.id !== id) {
+    leaveHandlers[current.id]?.();
     document.body.classList.add('transitioning');
     current.classList.remove('active');
     current.classList.add('leaving');
@@ -66,8 +73,9 @@ export function itemsNext(): void {
   if (subtotal <= 0) { showToast('Add at least one item'); return; }
 
   if (state.splitMode === 'item') {
+    // Includes a negative "Discount" line, which also has to go to someone
     const unassigned = state.items.filter(item =>
-      (item.price || 0) > 0 && (!item.assignees || item.assignees.length === 0)
+      (item.price || 0) !== 0 && (!item.assignees || item.assignees.length === 0)
     );
     const warn = $('unassignedWarn');
 
@@ -100,6 +108,8 @@ function resetState(): void {
   state.payer = 'me';
   state.imPartOfBill = true;
   state.billSavedThisSession = false;
+  state.receipt = null;
+  state.useReceiptTip = false;
 }
 
 function resetUI(): void {
@@ -126,6 +136,11 @@ function resetUI(): void {
   $('saveBillBtn').innerHTML = '<span class="bill-icon" style="margin-right:6px"></span>Save Bill';
   ($('saveBillBtn') as HTMLElement).style.opacity = '1';
   $('saveLabelWrap').classList.remove('show');
+}
+
+// The capture screen is reached from People (by item) or from the total screen (even split)
+export function captureBack(): void {
+  goTo(state.splitMode === 'even' ? 'screenQuick' : 'screenPeople');
 }
 
 export function goToNextFromPeople(): void {

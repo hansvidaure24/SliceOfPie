@@ -1,6 +1,6 @@
 import { fmt, shareText, defaultLabel } from './helpers';
 import { $, esc } from './helpers';
-import { state, getBillTotals, getPayerName, isPayer, findBill } from './state';
+import { state, getBillTotals, getPayerName, isPayer, findBill, tipLabel } from './state';
 import { getPaymentLines } from './payment';
 import { calcOwes } from './summary';
 
@@ -25,7 +25,7 @@ export async function doShare(): Promise<void> {
   const parts: string[] = [];
   if (state.splitMode !== 'even' || !state.taxIncluded) parts.push('Subtotal: ' + fmt(sub));
   if (tax) parts.push('Tax: ' + fmt(tax));
-  parts.push('Tip (' + state.tipPct + '%): ' + fmt(tip));
+  parts.push(tipLabel() + ': ' + fmt(tip));
   lines.push(parts.join(' | '));
   lines.push('Total: ' + fmt(total));
   lines.push('');

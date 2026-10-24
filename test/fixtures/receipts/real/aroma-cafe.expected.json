@@ -1,0 +1,13 @@
+{
+  "merchant": "AROMA CAFE",
+  "date": "2019-12-27",
+  "items": [
+    { "name": "Americano", "price": 3.19 },
+    { "name": "Almond Scone", "price": 1.99 },
+    { "name": "16oz Bottle Water", "price": 2.99 }
+  ],
+  "subtotal": 8.17,
+  "tax": 0.53,
+  "tip": null,
+  "total": 8.70
+}

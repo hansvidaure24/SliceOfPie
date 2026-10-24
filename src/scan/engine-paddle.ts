@@ -29,6 +29,8 @@ export function modelsFromAssets(det: string, rec: string, baseUrl: string): Pad
 export interface PaddleScan {
   lines: OcrLine[];
   segments: OcrSegment[];
+  detMs: number;
+  recMs: number;
   totalMs: number;
 }
 
@@ -70,6 +72,12 @@ async function download(files: { url: string; bytes: number }[], onPct: (pct: nu
   onPct(100);
 }
 
+// Find text boxes on a copy scaled to at most 1280 px; recognition still reads
+// each box from the full-resolution photo. On 1512×2016 receipt photos this cut
+// detection from ~1.4 s to ~0.3–0.5 s with every field still read correctly.
+// (The SDK default runs detection at full resolution, which grows with megapixels.)
+const DETECTION_PARAMS = { textDetLimitType: 'max', textDetLimitSideLen: 1280 };
+
 export function createPaddleEngine(models: PaddleModels, opts: { params?: Record<string, unknown> } = {}): PaddleEngine {
   const files = [
     { url: workerUrl, bytes: WORKER_BYTES_ESTIMATE },
@@ -80,7 +88,7 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
   const config: PaddleConfig = {
     det: { name: models.det.name, url: models.det.url },
     rec: { name: models.rec.name, url: models.rec.url },
-    params: opts.params,
+    params: { ...DETECTION_PARAMS, ...opts.params },
   };
 
   let worker: Worker | null = null;
@@ -150,7 +158,7 @@ export function createPaddleEngine(models: PaddleModels, opts: { params?: Record
       pending.set(id, { resolve, reject });
       worker!.postMessage({ type: 'recognize', id, image } satisfies WorkerRequest);
     });
-    return { lines: mergeRows(res.segments), segments: res.segments, totalMs: res.totalMs };
+    return { lines: mergeRows(res.segments), segments: res.segments, detMs: res.detMs, recMs: res.recMs, totalMs: res.totalMs };
   }
 
   return {

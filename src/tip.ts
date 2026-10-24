@@ -1,4 +1,4 @@
-import { $, tap } from './helpers';
+import { $, tap, fmt } from './helpers';
 import { state } from './state';
 import { updateSummary } from './summary';
 
@@ -56,19 +56,32 @@ export function removePreset(index: number): void {
 
 export function renderTipRow(): void {
   const row = $('tipRow');
-  row.innerHTML = state.tipPresets.map((pct: number) =>
-    `<button class="tip-btn ${pct === state.tipPct ? 'active' : ''}" data-tip="${pct}">${pct}%</button>`
+  const printed = state.receipt?.tip ?? null;
+  // A tip already printed on the scanned receipt, offered so it isn't added twice
+  const receiptBtn = printed !== null
+    ? `<button class="tip-btn receipt-tip ${state.useReceiptTip ? 'active' : ''}" data-tip-receipt>Tip on receipt: ${fmt(printed)}</button>`
+    : '';
+  row.innerHTML = receiptBtn + state.tipPresets.map((pct: number) =>
+    `<button class="tip-btn ${pct === state.tipPct && !state.useReceiptTip ? 'active' : ''}" data-tip="${pct}">${pct}%</button>`
   ).join('') + `<input class="custom-tip" id="customTip" type="number" inputmode="decimal" placeholder="%" aria-label="Custom tip percent">`;
 
-  row.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => {
+  row.querySelectorAll<HTMLButtonElement>('[data-tip]').forEach(btn => {
     btn.addEventListener('click', () => setTip(Number(btn.dataset.tip)));
   });
+  row.querySelector<HTMLButtonElement>('[data-tip-receipt]')?.addEventListener('click', chooseReceiptTip);
 
   const customInput = $('customTip') as HTMLInputElement;
-  if (!state.tipPresets.includes(state.tipPct)) {
+  if (!state.useReceiptTip && !state.tipPresets.includes(state.tipPct)) {
     customInput.value = String(state.tipPct);
   }
   customInput.addEventListener('input', setCustomTip);
+}
+
+export function chooseReceiptTip(): void {
+  tap();
+  state.useReceiptTip = true;
+  renderTipRow();
+  updateSummary();
 }
 
 export function setTipBase(base: 'pre' | 'post'): void {
@@ -81,10 +94,11 @@ export function setTipBase(base: 'pre' | 'post'): void {
 export function setTip(pct: number): void {
   tap();
   state.tipPct = pct;
+  state.useReceiptTip = false;
   const custom = $('customTip') as HTMLInputElement | null;
   if (custom) custom.value = '';
   document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn =>
-    btn.classList.toggle('active', Number(btn.dataset.tip) === pct)
+    btn.classList.toggle('active', btn.dataset.tip !== undefined && Number(btn.dataset.tip) === pct)
   );
   localStorage.setItem('sp_tip', String(pct));
   updateSummary();
@@ -97,6 +111,7 @@ export function setCustomTip(): void {
   const val = Math.min(100, parseFloat(custom.value));
   if (!isNaN(val) && val >= 0) {
     state.tipPct = val;
+    state.useReceiptTip = false;
     if (val !== parseFloat(custom.value)) custom.value = String(val);
     document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => btn.classList.remove('active'));
     localStorage.setItem('sp_tip', String(val));
