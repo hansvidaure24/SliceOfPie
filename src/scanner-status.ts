@@ -30,7 +30,7 @@ export async function renderScannerStatus(): Promise<void> {
 async function onScannerButton(): Promise<void> {
   if (busy) return;
   if (await paddleEngine.isCached()) {
-    if (!(await confirmDialog('Remove the receipt scanner?', `This frees about ${sizeMb()} MB. Your next scan downloads it again.`, { yes: 'Remove' }))) return;
+    if (!(await confirmDialog('Remove the receipt scanner?', `This frees about ${sizeMb()} MB. Your next scan downloads it again.`, { yes: 'Remove', warn: true }))) return;
     await paddleEngine.forget();
     showToast('Scanner removed');
     await renderScannerStatus();

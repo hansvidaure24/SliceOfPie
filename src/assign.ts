@@ -63,7 +63,7 @@ export function renderAssign(): void {
   const head = $('itemsList').querySelector('[data-items-head]');
   if (head) head.outerHTML = itemsHead();
   const cols = whoColumns();
-  $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 52px)` : '0px');
+  $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 3.25rem)` : '0px');
   $('itemsList').querySelectorAll<HTMLElement>('[data-who]').forEach(group => {
     keepingFocus(group, () => { group.innerHTML = whoChips(Number(group.dataset.who)); });
   });
