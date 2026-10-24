@@ -895,6 +895,8 @@ kbd{font-family:ui-monospace,Consolas,monospace;font-size:.7rem;padding:1px 5px;
 
   /* History: cards in grid */
   #historyList{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  /* "No saved bills yet" spans both columns so it sits in the middle */
+  #historyList>.empty-state{grid-column:1/-1}
   #historyList .swipe-wrap{margin-bottom:0}
 
   .cta-bar{border-radius:var(--radius) var(--radius) 0 0;margin-inline:0}
