@@ -91,7 +91,9 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 @media (min-width:481px){
-  body{padding:calc(24px + var(--safe-top)) max(24px,var(--gutter-right)) calc(24px + var(--safe-bottom)) max(24px,var(--gutter-left))}
+  /* Wider side margins; full-width bars bleed by the same amount */
+  :root{--gutter-left:max(24px,env(safe-area-inset-left,0px));--gutter-right:max(24px,env(safe-area-inset-right,0px))}
+  body{padding:calc(24px + var(--safe-top)) var(--gutter-right) calc(24px + var(--safe-bottom)) var(--gutter-left)}
 }
 .container{max-width:480px;margin:0 auto}
 h1{font-family:var(--font-display);font-weight:800;font-size:var(--text-xl);text-align:center;margin:var(--space-2) 0;letter-spacing:-.01em;line-height:1.15;text-wrap:balance}
@@ -278,7 +280,8 @@ body.transitioning .btn{pointer-events:none}
 .item-price:focus{border-color:var(--crust);outline:none}
 .currency-symbol{font-size:var(--text-lg);color:var(--crust);font-weight:700}
 .currency-row{display:flex;align-items:center;gap:6px}
-.quick-entry-input.item-price{width:100%;font-size:var(--text-md);padding:10px var(--space-2)}
+/* The Total and Tax fields fill what's left beside the currency sign, number next to it */
+.quick-entry-input.item-price{flex:1;min-width:0;width:auto;text-align:left;font-size:var(--text-md);padding:10px var(--space-2)}
 .item-del{background:none;border:none;color:var(--cherry);font-size:var(--text-lg);cursor:pointer;padding:var(--space-2) 10px;min-width:40px;min-height:40px;border-radius:50%;transition:background .12s}
 .item-del[hidden]{display:block;visibility:hidden}
 .item-del:focus-visible{background:var(--cherry-glow);outline:none}
@@ -694,7 +697,7 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0;z-
 /* Paints the notch area so content scrolling under the sticky bar stays hidden */
 body::before{content:'';position:fixed;inset:0 0 auto;height:var(--safe-top);background:var(--bg);z-index:30}
 body[data-chrome="flow"],body[data-chrome="bar"]{padding-top:var(--safe-top)}
-body[data-chrome="tabs"]{--chrome-bottom:64px;padding-bottom:calc(88px + var(--safe-bottom))}
+body[data-chrome="tabs"]{--chrome-bottom:64px}
 body:has(.screen.active .cta-bar){--chrome-bottom:76px;padding-bottom:0}
 
 .app-bar{
@@ -760,8 +763,17 @@ body[data-chrome="flow"] .app-bar,body[data-chrome="bar"] .app-bar{display:grid}
 .summary-extra .btn[hidden]{display:none}
 .summary-extra .btn{font-size:var(--text-sm)}
 
+/* The tabs end the page and stick to the bottom, like the Next bar, rather than
+   position:fixed: an iPhone Home Screen app opens with fixed elements a status
+   bar too high until the first scroll. The page is a column at least the
+   screen's height, so on a short screen the tabs still sit at the very bottom. */
+body[data-chrome="tabs"]{display:flex;flex-direction:column;padding-bottom:0}
+body[data-chrome="tabs"] .container{flex:1;width:100%;position:relative}
+/* The screen fading out overlaps the one coming in, so the tabs don't jump */
+body[data-chrome="tabs"] .screen.leaving{position:absolute;left:0;right:0;pointer-events:none}
 .tab-bar{
-  position:fixed;left:0;right:0;bottom:0;z-index:25;display:none;justify-content:center;
+  position:sticky;bottom:0;z-index:25;display:none;justify-content:center;
+  margin:var(--space-6) calc(-1 * var(--gutter-right)) 0 calc(-1 * var(--gutter-left));
   padding:6px var(--gutter-right) calc(6px + var(--safe-bottom)) var(--gutter-left);
   background:color-mix(in srgb,var(--bg2) 94%,transparent);
   -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
@@ -943,10 +955,11 @@ kbd{font-family:ui-monospace,Consolas,monospace;font-size:var(--text-2xs);paddin
 /* ── Desktop: a side rail replaces the tabs; people become columns ── */
 @media (min-width:1100px){
   body{padding-left:calc(var(--rail-w) + 32px + env(safe-area-inset-left,0px));padding-right:var(--space-6)}
-  body[data-chrome="tabs"]{--chrome-bottom:0px;padding-bottom:calc(24px + var(--safe-bottom))}
+  body[data-chrome="tabs"]{--chrome-bottom:0px;display:block;padding-bottom:calc(24px + var(--safe-bottom))}
+  body[data-chrome="tabs"] .screen.leaving{position:static}
   body:not([data-chrome="none"]) .tab-bar{display:flex}
   .tab-bar{
-    top:0;right:auto;width:var(--rail-w);flex-direction:column;justify-content:flex-start;gap:var(--space-1);
+    position:fixed;top:0;bottom:0;left:0;right:auto;margin:0;width:var(--rail-w);flex-direction:column;justify-content:flex-start;gap:var(--space-1);
     padding:calc(20px + var(--safe-top)) 12px 20px calc(12px + env(safe-area-inset-left,0px));
     border-top:none;border-right:1px solid var(--border-subtle);background:var(--bg2);
   }
