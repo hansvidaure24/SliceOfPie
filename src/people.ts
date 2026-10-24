@@ -1,5 +1,6 @@
 import { $, COLORS, esc, showToast } from './helpers';
 import { state } from './state';
+import { removePersonFromItems, pruneAssignees } from './bill';
 import { renderLiveSummary } from './layout';
 
 function loadLastGroup(): void {
@@ -9,10 +10,10 @@ function loadLastGroup(): void {
     name: p.name,
     isMe: state.imPartOfBill && i === 0,
   }));
-  const el = $('peopleCount');
-  el.textContent = String(state.people.length);
-  el.setAttribute('aria-label', state.people.length + ' people splitting');
-  renderNames();
+  // Items already on someone who isn't in this group come off them
+  pruneAssignees(state.items, state.people.length);
+  if (typeof state.payer === 'number' && state.payer >= state.people.length) state.payer = state.imPartOfBill ? 'me' : 0;
+  showPeople();
   showToast('Loaded ' + last.people.length + ' people from "' + last.label + '"');
 }
 
@@ -86,10 +87,7 @@ export function changePeople(delta: number): void {
     for (let i = state.people.length - 1; i >= 0; i--) {
       if (!state.people[i].isMe) {
         state.people.splice(i, 1);
-        // Fix assignee indices: drop references to removed person, shift down indices above it
-        for (const item of state.items) {
-          if (item.assignees) item.assignees = item.assignees.filter(a => a !== i).map(a => a > i ? a - 1 : a);
-        }
+        removePersonFromItems(state.items, i);
         break;
       }
     }

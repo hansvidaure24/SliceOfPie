@@ -84,8 +84,10 @@ export function receiptHints(): { zeroDecimal: boolean; monthFirst: boolean } {
   return { zeroDecimal: ZERO_DECIMAL.has(currencySymbol), monthFirst: MONTH_FIRST.has(currencySymbol) };
 }
 
+// A discount reads "-$6.00", not "$-6.00"
 export function fmt(n: number): string {
-  return currencySymbol + n.toFixed(ZERO_DECIMAL.has(currencySymbol) ? 0 : 2);
+  const digits = Math.abs(n).toFixed(ZERO_DECIMAL.has(currencySymbol) ? 0 : 2);
+  return (n < 0 && Number(digits) !== 0 ? '-' : '') + currencySymbol + digits;
 }
 
 export function esc(s: string): string {
