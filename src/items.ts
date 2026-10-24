@@ -33,6 +33,7 @@ export async function runOCR(file: File): Promise<void> {
         if (m.status === 'recognizing text') {
           const pct = Math.round(m.progress * 100);
           ($('progressFill') as HTMLElement).style.width = pct + '%';
+          $('progressFill').parentElement!.setAttribute('aria-valuenow', String(pct));
           $('progressText').textContent = 'Scanning... ' + pct + '%';
         }
       }
@@ -41,6 +42,7 @@ export async function runOCR(file: File): Promise<void> {
     state.items = parsed.items.length ? parsed.items : [{ name: '', price: 0 }];
     state.taxAmt = parsed.tax;
     ($('taxInput') as HTMLInputElement).value = String(state.taxAmt || '');
+    $('itemsSubtitle').textContent = 'Fix anything the scan missed';
     enterItemsScreen();
   } catch {
     $('progressText').textContent = 'Scan failed — entering manual mode';
@@ -119,6 +121,7 @@ export function skipToManual(): void {
   state.items = [{ name: '', price: 0 }];
   state.taxAmt = 0;
   ($('taxInput') as HTMLInputElement).value = '';
+  $('itemsSubtitle').textContent = 'Add your items';
   enterItemsScreen();
   const first = $('itemsList').querySelector<HTMLInputElement>('.item-name');
   if (first) setTimeout(() => first.focus(), 300);
@@ -135,10 +138,10 @@ export function enterItemsScreen(): void {
 export function renderItems(): void {
   $('itemsList').innerHTML = state.items.map((item, i) => `
     <div class="item-row">
-      <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}">
+      <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name">
       <input class="item-price" type="number" inputmode="decimal" step="0.01"
-             value="${item.price || ''}" placeholder="0.00" data-item-price="${i}">
-      <button class="item-del" data-item-del="${i}" aria-label="Remove item"><span class="trash-icon"></span></button>
+             value="${item.price || ''}" placeholder="0.00" data-item-price="${i}" aria-label="Item ${i + 1} price">
+      <button class="item-del" data-item-del="${i}" aria-label="Remove item"${state.items.length <= 1 ? ' disabled style="visibility:hidden"' : ''}><span class="trash-icon"></span></button>
     </div>
   `).join('');
 
@@ -171,6 +174,7 @@ export function addItem(): void {
 }
 
 export function removeItem(index: number): void {
+  if (state.items.length <= 1) return;
   state.items.splice(index, 1);
   renderItems();
   updateRunning();

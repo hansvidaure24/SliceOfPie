@@ -96,16 +96,16 @@ export function updateSummary(): void {
   const breakdownHtml = renderBreakdownLines(breakdown);
 
   if (state.splitMode === 'even') {
-    $('evenResult').style.display = 'block';
-    $('itemResult').style.display = 'none';
+    $('evenResult').classList.remove('hidden');
+    $('itemResult').classList.add('hidden');
     const ppEl = $('perPerson');
     const oldPP = ppEl.textContent;
     ppEl.textContent = fmt(breakdown[0]?.amount || 0);
     if (oldPP !== ppEl.textContent) pulse(ppEl);
     $('evenBreakdown').innerHTML = breakdownHtml;
   } else {
-    $('evenResult').style.display = 'none';
-    $('itemResult').style.display = 'block';
+    $('evenResult').classList.add('hidden');
+    $('itemResult').classList.remove('hidden');
     renderPieChart(breakdown);
     $('breakdownList').innerHTML = breakdownHtml;
   }

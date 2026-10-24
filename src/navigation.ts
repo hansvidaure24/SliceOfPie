@@ -1,17 +1,21 @@
 import { $, setToggle, showToast, confirmDialog } from './helpers';
 import { state, getBillTotals } from './state';
-import { renderNames } from './people';
+import { renderNames, updateCounterState } from './people';
 import { renderTipRow } from './tip';
 import { renderAssign } from './assign';
 import { renderHistory } from './history';
 import { goToSummary } from './summary';
 
 export function goTo(id: string): void {
+  if (id === 'screenPeople') updateCounterState();
+
   // Reset capture screen state when navigating to it
   if (id === 'screenCapture') {
     ($('previewImg') as HTMLImageElement).style.display = 'none';
+    ($('previewImg') as HTMLImageElement).setAttribute('aria-hidden', 'true');
     $('progressWrap').style.display = 'none';
     ($('progressFill') as HTMLElement).style.width = '0%';
+    $('progressFill').parentElement!.setAttribute('aria-valuenow', '0');
     ($('photoInput') as HTMLInputElement).value = '';
   }
 
@@ -101,7 +105,8 @@ function resetUI(): void {
   setToggle('roundToggle', false);
   setToggle('taxIncToggle', true);
   $('peopleCount').textContent = '2';
-  $('quickTaxCard').style.display = 'none';
+  $('peopleCount').setAttribute('aria-label', '2 people splitting');
+  $('quickTaxCard').classList.add('hidden');
   ($('quickTotal') as HTMLInputElement).value = '';
   ($('quickTax') as HTMLInputElement).value = '';
   ($('taxInput') as HTMLInputElement).value = '';
@@ -111,8 +116,10 @@ function resetUI(): void {
   $('tipPostTax').classList.remove('active');
   $('unassignedWarn').classList.remove('show');
   ($('previewImg') as HTMLImageElement).style.display = 'none';
+  ($('previewImg') as HTMLImageElement).setAttribute('aria-hidden', 'true');
   $('progressWrap').style.display = 'none';
   ($('progressFill') as HTMLElement).style.width = '0%';
+  $('progressFill').parentElement!.setAttribute('aria-valuenow', '0');
   ($('photoInput') as HTMLInputElement).value = '';
   $('saveBillBtn').innerHTML = '<span class="bill-icon" style="margin-right:6px"></span>Save Bill';
   ($('saveBillBtn') as HTMLElement).style.opacity = '1';

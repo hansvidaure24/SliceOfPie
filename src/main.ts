@@ -29,7 +29,9 @@ Object.assign(window, {
 function renderThemeToggle(): void {
   const current = getThemePref();
   $('themeToggle').querySelectorAll<HTMLButtonElement>('[data-theme]').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.theme === current);
+    const selected = btn.dataset.theme === current;
+    btn.classList.toggle('active', selected);
+    btn.setAttribute('aria-checked', String(selected));
   });
 }
 
@@ -89,6 +91,7 @@ let ocrRunning = false;
   if (img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
   img.src = URL.createObjectURL(file);
   img.style.display = 'block';
+  img.setAttribute('aria-hidden', 'false');
   $('progressWrap').style.display = 'block';
   await runOCR(file);
   ocrRunning = false;
