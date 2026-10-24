@@ -1,0 +1,26 @@
+# Monthly update PRs, grouped so there's one to review per ecosystem.
+# CI runs on each one; merge when it's green.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      dev-tools:
+        dependency-type: development
+    ignore:
+      # The OCR runtime is pinned with the model files (src/scan/ocr-assets.json)
+      # and needs a scan check on real receipts before it moves
+      - dependency-name: onnxruntime-web
+      # Matches the Node version CI and Vercel run (22)
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

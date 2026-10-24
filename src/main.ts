@@ -20,6 +20,7 @@ import { doShare, reshareDetail, labelShareButtons } from './share';
 import { exportImage } from './export-image';
 import { loadHistory } from './db';
 import { initActions } from './actions';
+import { exportBills, importBills, initBackup } from './backup';
 import { initReceiptDrop } from './layout';
 import { initInstall, lockZoomWhenInstalled } from './install';
 import { initScannerStatus } from './scanner-status';
@@ -45,7 +46,7 @@ initActions({
   setTip: pct => setTip(pct!), chooseReceiptTip, setCustomTip,
   savePayment, togglePay: method => togglePay(method as Parameters<typeof togglePay>[0]), addPreset,
   removePreset: i => removePreset(i!),
-  exportImage,
+  exportImage, exportBills, importBills,
 });
 
 function renderThemeToggle(): void {
@@ -140,6 +141,7 @@ initAssign();
 initPeople();
 initHistory();
 initTipSettings();
+initBackup();
 
 // A dropped or pasted receipt scans like a photo; the total screen hands off to the scan screen
 initReceiptDrop(file => {

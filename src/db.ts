@@ -86,3 +86,9 @@ export async function loadHistory(): Promise<Bill[]> {
   }
   return bills;
 }
+
+// Once there's a bill worth keeping, ask the browser not to clear the app's
+// data when the device runs low on space (installed apps usually get a yes)
+export function keepDataOnDevice(): void {
+  navigator.storage?.persisted?.().then(already => already || navigator.storage.persist()).catch(() => {});
+}
