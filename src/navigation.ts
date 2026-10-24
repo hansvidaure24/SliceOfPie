@@ -2,7 +2,7 @@ import { $, esc, fmt, setToggle, showToast, confirmDialog } from './helpers';
 import { state, getBillTotals } from './state';
 import { renderNames, updateCounterState } from './people';
 import { renderTipRow } from './tip';
-import { renderAssign, updateItemsCta } from './assign';
+import { renderAssign, updateItemsCta, unassignedCount, showFirstUnassigned } from './assign';
 import { renderHistory, renderSaveButton } from './history';
 import { goToSummary } from './summary';
 import { saveDraft, clearDraft } from './draft';
@@ -110,7 +110,7 @@ export function onLeaveScreen(id: string, fn: () => void): void {
 }
 
 export function goTo(id: string): void {
-  if (id === 'screenPeople') updateCounterState();
+  if (id === 'screenPeople') { updateCounterState(); renderNames(); }
 
   // Reset capture screen state when navigating to it
   if (id === 'screenCapture') resetCapture();
@@ -145,10 +145,7 @@ export function goTo(id: string): void {
     heading.focus({ preventScroll: true });
   }
 
-  if (id === 'screenItems') {
-    $('assignSection').style.display = state.splitMode === 'item' ? 'block' : 'none';
-    if (state.splitMode === 'item') renderAssign();
-  }
+  if (id === 'screenItems') renderAssign();
   if (id === 'screenHistory') renderHistory();
 
   renderChrome(id);
@@ -223,27 +220,18 @@ export function quickNext(): void {
   goToSummary();
 }
 
-export function itemsNext(): void {
+export async function itemsNext(): Promise<void> {
   const subtotal = state.items.reduce((sum, item) => sum + (item.price || 0), 0);
   if (subtotal <= 0) { showToast('Add at least one item'); return; }
 
-  if (state.splitMode === 'item') {
-    // Includes a negative "Discount" line, which also has to go to someone
-    const unassigned = state.items.filter(item =>
-      (item.price || 0) !== 0 && (!item.assignees || item.assignees.length === 0)
+  const unassigned = unassignedCount();
+  if (unassigned > 0) {
+    const proceed = await confirmDialog(
+      unassigned === 1 ? '1 item has nobody on it' : unassigned + ' items have nobody on them',
+      "They won't count toward anyone's share.",
+      { yes: 'Continue anyway', no: 'Assign them' },
     );
-    const warn = $('unassignedWarn');
-
-    // First tap shows warning, second tap proceeds anyway
-    if (unassigned.length > 0) {
-      if (!warn.classList.contains('show')) {
-        warn.classList.add('show');
-        warn.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        showToast(unassigned.length + ' item(s) unassigned');
-        return;
-      }
-    }
-    warn.classList.remove('show');
+    if (!proceed) { showFirstUnassigned(); return; }
   }
 
   goToSummary();
@@ -291,7 +279,6 @@ export function syncBillUI(): void {
 
 function resetUI(): void {
   syncBillUI();
-  $('unassignedWarn').classList.remove('show');
   resetCapture();
 }
 

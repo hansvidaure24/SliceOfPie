@@ -15,6 +15,61 @@ function loadLastGroup(): void {
   showToast('Loaded ' + last.people.length + ' people from "' + last.label + '"');
 }
 
+// Contact Picker API (Android Chrome); elsewhere the button isn't shown
+interface ContactsManager {
+  select(props: string[], opts?: { multiple?: boolean }): Promise<{ name?: string[] }[]>;
+}
+const contacts = (navigator as Navigator & { contacts?: ContactsManager }).contacts;
+
+const MAX_OTHERS = 8;
+const PLACEHOLDER = /^person \d+$/i;
+
+// Fills the first unnamed "Person N" slot, or adds a person; false if not added
+function addPersonNamed(raw: string): boolean {
+  const name = raw.trim().slice(0, 20);
+  if (!name || state.people.some(p => p.name.toLowerCase() === name.toLowerCase())) return false;
+  const blank = state.people.find(p => !p.isMe && PLACEHOLDER.test(p.name));
+  if (blank) blank.name = name;
+  else if (otherCount() < MAX_OTHERS) state.people.push({ name });
+  else return false;
+  return true;
+}
+
+function showPeople(): void {
+  const ctr = $('peopleCount');
+  ctr.textContent = String(state.people.length);
+  ctr.setAttribute('aria-label', state.people.length + ' people splitting');
+  updateCounterState();
+  renderNames();
+}
+
+async function pickContacts(): Promise<void> {
+  let picked: { name?: string[] }[];
+  try {
+    picked = await contacts!.select(['name'], { multiple: true });
+  } catch {
+    return; // cancelled
+  }
+  const added = picked.filter(c => c.name?.[0] && addPersonNamed(c.name[0])).length;
+  showPeople();
+  if (added < picked.length) showToast(otherCount() >= MAX_OTHERS ? 'Up to ' + MAX_OTHERS + ' people besides you' : 'Some were already on the list');
+}
+
+// People from saved bills, newest first, who aren't on this one yet
+function recentNames(): string[] {
+  const skip = new Set([state.payment.name.toLowerCase(), 'me', ...state.people.map(p => p.name.toLowerCase())]);
+  const names: string[] = [];
+  for (const bill of state.history) {
+    for (const person of bill.people) {
+      const key = person.name.toLowerCase();
+      if (skip.has(key) || PLACEHOLDER.test(key)) continue;
+      skip.add(key);
+      names.push(person.name);
+    }
+  }
+  return names.slice(0, 6);
+}
+
 function otherCount(): number {
   return state.people.filter(p => !p.isMe).length;
 }
@@ -42,11 +97,7 @@ export function changePeople(delta: number): void {
     state.payer = state.imPartOfBill ? 'me' : 0;
   }
 
-  const ctr = $('peopleCount');
-  ctr.textContent = String(state.people.length);
-  ctr.setAttribute('aria-label', state.people.length + ' people splitting');
-  updateCounterState();
-  renderNames();
+  showPeople();
 }
 
 export function updateCounterState(): void {
@@ -60,7 +111,7 @@ export function updateCounterState(): void {
 export function renderNames(): void {
   const rows = state.people.map((person, i) => `
     <div class="person-name-row">
-      <div class="person-icon" style="background:${person.isMe ? 'var(--crust)' : COLORS[i % 8]}"></div>
+      <div class="person-icon" style="background:${COLORS[i % 8]}"></div>
       <input class="person-name-input" value="${esc(person.name)}"
              placeholder="${person.isMe ? 'Your name' : 'Name'}"
              maxlength="20"
@@ -78,16 +129,29 @@ export function renderNames(): void {
     </div>
   ` : '';
 
-  const lastGroupBtn = state.history.length > 0
-    ? '<button class="btn btn-ghost last-group-btn">Last group</button>'
+  const recent = recentNames();
+  const contactsBtn = contacts
+    ? '<button class="btn btn-secondary contacts-btn" data-contacts><span class="person-icon"></span>Add from contacts</button>'
     : '';
+  const quickAdd = state.history.length > 0 ? `
+    <div class="quick-add">
+      <span class="section-label">Add again</span>
+      <div class="quick-add-chips">
+        ${recent.map(name => `<button class="name-chip" data-recent="${esc(name)}"><span class="add-icon" aria-hidden="true"></span>${esc(name)}</button>`).join('')}
+        <button class="name-chip" data-last-group>Last group</button>
+      </div>
+    </div>` : '';
 
-  $('namesList').innerHTML = rows + joinRow + lastGroupBtn;
+  $('namesList').innerHTML = rows + joinRow + contactsBtn + quickAdd;
 
-  const lastBtn = $('namesList').querySelector('.last-group-btn');
-  if (lastBtn) {
-    lastBtn.addEventListener('click', loadLastGroup);
-  }
+  $('namesList').querySelector('[data-last-group]')?.addEventListener('click', loadLastGroup);
+  $('namesList').querySelector('[data-contacts]')?.addEventListener('click', () => void pickContacts());
+  $('namesList').querySelectorAll<HTMLButtonElement>('[data-recent]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (addPersonNamed(btn.dataset.recent!)) showPeople();
+      else showToast('Up to ' + MAX_OTHERS + ' people besides you');
+    });
+  });
 
   $('namesList').querySelectorAll<HTMLInputElement>('[data-person]').forEach(input => {
     const idx = Number(input.dataset.person);

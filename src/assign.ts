@@ -1,71 +1,98 @@
-import { $, COLORS, esc, fmt } from './helpers';
+import { $, COLORS, esc, fmt, tap } from './helpers';
 import { state } from './state';
+
+function unassignedIndexes(): number[] {
+  if (state.splitMode !== 'item') return [];
+  // Includes a negative "Discount" line, which also has to go to someone
+  return state.items.flatMap((it, i) => (it.price || 0) !== 0 && !it.assignees?.length ? [i] : []);
+}
+
+export function unassignedCount(): number {
+  return unassignedIndexes().length;
+}
 
 // The Items screen's bottom bar: the running total, and whether anything still needs a person
 export function updateItemsCta(): void {
   const sub = state.items.reduce((s, it) => s + (it.price || 0), 0);
   $('itemsCtaTotal').textContent = fmt(sub + state.taxAmt);
-  const unassigned = state.splitMode === 'item'
-    ? state.items.filter(it => (it.price || 0) !== 0 && !it.assignees?.length).length
-    : 0;
+  const unassigned = unassignedIndexes();
   const note = $('itemsCtaNote');
-  note.textContent = unassigned
-    ? unassigned + (unassigned === 1 ? ' item' : ' items') + ' unassigned'
+  note.textContent = unassigned.length
+    ? unassigned.length + (unassigned.length === 1 ? ' item' : ' items') + ' unassigned'
     : state.taxAmt ? 'Items + tax' : 'Subtotal';
-  note.classList.toggle('warn', unassigned > 0);
+  note.classList.toggle('warn', unassigned.length > 0);
+  $('itemsList').querySelectorAll<HTMLElement>('[data-row]').forEach(row => {
+    row.classList.toggle('unassigned', unassigned.includes(Number(row.dataset.row)));
+  });
 }
 
-export function renderAssign(): void {
-  $('assignList').innerHTML = state.items.map((item, itemIdx) => {
-    if (!item.assignees) item.assignees = [];
-
-    const badges = state.people.map((person, personIdx) => {
-      const on = item.assignees!.includes(personIdx);
-      const style = on ? `background:${COLORS[personIdx % 8]};border-color:${COLORS[personIdx % 8]}` : '';
-      return `<button class="person-badge ${on ? 'on' : ''}" style="${style}"
-        data-assign="${itemIdx}-${personIdx}">${esc(person.name)}</button>`;
-    }).join('');
-
-    return `<div class="assign-wrap">
-      <div class="assign-item-label">${esc(item.name || 'Item ' + (itemIdx + 1))} — ${fmt(item.price || 0)}</div>
-      <div class="assign-row">
-        ${badges}
-        <button class="assign-action" data-assign-all="${itemIdx}">All</button>
-        <button class="assign-action" data-assign-clear="${itemIdx}">Clear</button>
-      </div>
-    </div>`;
+// The person chips under an item: tap a name to put it on their share
+export function whoChips(itemIdx: number): string {
+  if (state.splitMode !== 'item') return '';
+  const item = state.items[itemIdx];
+  if (!item.assignees) item.assignees = [];
+  const everyone = state.people.length > 1 && item.assignees.length === state.people.length;
+  const chips = state.people.map((person, personIdx) => {
+    const on = item.assignees!.includes(personIdx);
+    return `<button class="who-chip${on ? ' on' : ''}" style="--who:${COLORS[personIdx % 8]}"
+      data-assign="${itemIdx}-${personIdx}" aria-pressed="${on}">${esc(person.name)}</button>`;
   }).join('');
+  const all = state.people.length > 1
+    ? `<button class="who-chip who-all${everyone ? ' on' : ''}" data-assign-all="${itemIdx}" aria-pressed="${everyone}">Everyone</button>`
+    : '';
+  return chips + all;
+}
+
+// Redraws every item's chips, e.g. after people were renamed or added
+export function renderAssign(): void {
+  $('itemsList').querySelectorAll<HTMLElement>('[data-who]').forEach(group => {
+    group.innerHTML = whoChips(Number(group.dataset.who));
+  });
   updateItemsCta();
+}
 
-  const list = $('assignList');
-
-  list.querySelectorAll<HTMLButtonElement>('[data-assign]').forEach(btn => {
-    const [itemIdx, personIdx] = btn.dataset.assign!.split('-').map(Number);
-    btn.addEventListener('click', () => toggleAssign(itemIdx, personIdx));
-  });
-
-  list.querySelectorAll<HTMLButtonElement>('[data-assign-all]').forEach(btn => {
-    btn.addEventListener('click', () => assignAll(Number(btn.dataset.assignAll)));
-  });
-
-  list.querySelectorAll<HTMLButtonElement>('[data-assign-clear]').forEach(btn => {
-    btn.addEventListener('click', () => assignClear(Number(btn.dataset.assignClear)));
-  });
+function renderChips(itemIdx: number): void {
+  const group = $('itemsList').querySelector<HTMLElement>(`[data-who="${itemIdx}"]`);
+  if (group) group.innerHTML = whoChips(itemIdx);
+  updateItemsCta();
 }
 
 function toggleAssign(itemIdx: number, personIdx: number): void {
   const assignees = state.items[itemIdx].assignees || (state.items[itemIdx].assignees = []);
   const pos = assignees.indexOf(personIdx);
   pos >= 0 ? assignees.splice(pos, 1) : assignees.push(personIdx);
-  renderAssign();
+  renderChips(itemIdx);
 }
 
-function assignAll(itemIdx: number): void {
-  state.items[itemIdx].assignees = state.people.map((_, i) => i);
-  renderAssign();
+// Everyone, or nobody when everyone was already on it
+function toggleAll(itemIdx: number): void {
+  const item = state.items[itemIdx];
+  item.assignees = item.assignees?.length === state.people.length ? [] : state.people.map((_, i) => i);
+  renderChips(itemIdx);
 }
 
-function assignClear(itemIdx: number): void {
-  state.items[itemIdx].assignees = [];
-  renderAssign();
+// One listener for every chip, since rows are redrawn as items change
+export function initAssign(): void {
+  $('itemsList').addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLButtonElement>('[data-assign],[data-assign-all]');
+    if (!btn) return;
+    tap();
+    if (btn.dataset.assignAll !== undefined) {
+      toggleAll(Number(btn.dataset.assignAll));
+      return;
+    }
+    const [itemIdx, personIdx] = btn.dataset.assign!.split('-').map(Number);
+    toggleAssign(itemIdx, personIdx);
+  });
+}
+
+// Brings the first item nobody is on into view
+export function showFirstUnassigned(): void {
+  const first = unassignedIndexes()[0];
+  const row = $('itemsList').querySelector<HTMLElement>(`[data-row="${first}"]`);
+  if (!row) return;
+  row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  row.classList.remove('flash');
+  void row.offsetWidth;
+  row.classList.add('flash');
 }

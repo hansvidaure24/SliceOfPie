@@ -251,14 +251,6 @@
     <p class="receipt-check" id="receiptCheck" aria-live="polite"></p>
   </div>
 
-  <div id="assignSection" style="display:none">
-    <div class="warn-banner" id="unassignedWarn"><span class="warning-icon"></span>Some items aren't assigned to anyone — they won't be included in the split.</div>
-    <div class="card">
-      <div class="section-label">Assign items to people</div>
-      <div id="assignList"></div>
-    </div>
-  </div>
-
   <div class="cta-bar">
     <div class="cta-total"><small id="itemsCtaNote">Subtotal</small><b id="itemsCtaTotal">$0.00</b></div>
     <button class="btn btn-primary" onclick="itemsNext()">Next: Tip</button>
@@ -269,40 +261,38 @@
 <div id="screenSummary" class="screen">
   <h1>The <span class="accent">bill</span></h1>
 
-  <div class="card">
+  <div class="card card-accent result-card" id="resultCard">
+    <p class="result-label" id="resultLabel"></p>
+    <p class="result-amt" id="resultAmt" aria-live="polite">$0.00</p>
+    <p class="result-sub" id="resultSub"></p>
+    <div class="pie-chart-wrap" id="pieChartWrap"></div>
+    <div class="result-people" id="breakdownList"></div>
+  </div>
+
+  <div class="card tip-card">
     <div class="section-label">Tip</div>
     <div class="tip-row" id="tipRow"></div>
-    <div class="tip-base-row" id="tipBaseRow">
-      <button class="tip-base-btn active" id="tipPreTax" onclick="setTipBase('pre')">On pre-tax</button>
-      <button class="tip-base-btn" id="tipPostTax" onclick="setTipBase('post')">On post-tax</button>
-    </div>
-    <div class="card-divider"></div>
-    <div class="round-row">
-      <span class="round-label"><span class="arrow-up-icon" aria-hidden="true"></span>Round up to nearest dollar</span>
-      <button class="toggle" id="roundToggle" onclick="toggleRound()" role="switch" aria-checked="false" aria-label="Round up"></button>
-    </div>
+    <details class="more-options">
+      <summary><span id="tipMoreLabel">On pre-tax</span><span class="chevron-icon" aria-hidden="true"></span></summary>
+      <div class="tip-base-row" id="tipBaseRow">
+        <button class="tip-base-btn active" id="tipPreTax" onclick="setTipBase('pre')">On pre-tax</button>
+        <button class="tip-base-btn" id="tipPostTax" onclick="setTipBase('post')">On post-tax</button>
+      </div>
+      <div class="round-row">
+        <span class="round-label"><span class="arrow-up-icon" aria-hidden="true"></span>Round up to nearest dollar</span>
+        <button class="toggle" id="roundToggle" onclick="toggleRound()" role="switch" aria-checked="false" aria-label="Round up"></button>
+      </div>
+    </details>
     <div class="card-divider"></div>
     <div class="section-label">Who paid?</div>
     <div class="payer-row" id="payerRow"></div>
   </div>
 
-  <div class="card card-accent" id="summaryCard">
+  <div class="card sum-card" id="summaryCard">
     <div class="sum-line"><span id="sumSubLabel">Subtotal</span><span id="sumSub">$0.00</span></div>
     <div class="sum-line" id="sumTaxLine"><span>Tax</span><span id="sumTax">$0.00</span></div>
     <div class="sum-line"><span id="sumTipLabel">Tip (18%)</span><span id="sumTipAmt">$0.00</span></div>
-    <div class="sum-line total"><span>Total</span><span id="sumTotal" aria-live="polite">$0.00</span></div>
-
-    <div id="evenResult">
-      <div class="per-person-label">Per Person</div>
-      <div class="per-person-val" id="perPerson">$0.00</div>
-      <div id="evenBreakdown"></div>
-    </div>
-
-    <div id="itemResult" class="hidden">
-      <div class="pie-chart-wrap" id="pieChartWrap"></div>
-      <div class="section-label spaced">Each person owes</div>
-      <div id="breakdownList"></div>
-    </div>
+    <div class="sum-line total"><span>Total</span><span id="sumTotal">$0.00</span></div>
   </div>
 
   <div class="summary-extra">
