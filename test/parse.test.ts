@@ -161,6 +161,15 @@ describe('parseReceipt', () => {
       expect(parseReceipt(lines).items.map(i => i.name)).toEqual(['R1 Supreme Fish Maw Chicken', 'Quail Egg(3)']);
     });
 
+    it('does not join a menu section heading to the item above it', () => {
+      expect(names('Oyster 12.50\nDesserts\nFudge Cake 4.25')).toEqual(['Oyster', 'Fudge Cake']);
+      expect(names('Wings 9.00\nDrinks:\nSoda 2.50')).toEqual(['Wings', 'Soda']);
+    });
+
+    it('does not join anything below a "1 x Item" line', () => {
+      expect(names('1 x Fudge Cake $4.25\nRemove this block')).toEqual(['Fudge Cake']);
+    });
+
     it('does not join a line that is far below or off to the side', () => {
       const lines = boxed([
         ['Burger $12.50', 40, 100, 600, 130],
