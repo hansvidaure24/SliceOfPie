@@ -1,0 +1,13 @@
+CAFÉ LUMIÈRE
+Rue de la Paix 12, Paris
+
+Cappuccino              3,50
+2 Croissant             4,80
+Jus d'orange            4,20
+Tarte Tatin             6,90
+
+Sous-total             19,40
+VAT 10%                 1,76
+TOTAL                  19,40
+CARTE BANCAIRE         19,40
+Merci !
