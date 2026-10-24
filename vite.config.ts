@@ -1,5 +1,20 @@
 import { defineConfig } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import headers from './security-headers.json'
+
+// `vite preview` sends the same security headers as vercel.json, so the
+// production build is tested under the policy it ships with
+const OCR_WORKER = /^\/assets\/paddle\.worker-/
+const securityHeaders = {
+  name: 'security-headers',
+  configurePreviewServer(server: { middlewares: { use: (fn: (req: { url?: string }, res: { setHeader: (k: string, v: string) => void }, next: () => void) => void) => void } }) {
+    server.middlewares.use((req, res, next) => {
+      for (const [key, value] of Object.entries(headers.common)) res.setHeader(key, value)
+      res.setHeader('Content-Security-Policy', OCR_WORKER.test(req.url ?? '') ? headers.ocrWorker : headers.page)
+      next()
+    })
+  },
+}
 
 export default defineConfig({
   resolve: {
@@ -27,6 +42,7 @@ export default defineConfig({
     exclude: ['onnxruntime-web'],
   },
   plugins: [
+    securityHeaders,
     VitePWA({
       strategies: 'injectManifest',
       srcDir: 'src',

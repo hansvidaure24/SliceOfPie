@@ -9,29 +9,31 @@ import { updateItemsCta, initAssign } from './assign';
 import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning, enterItemsScreen } from './items';
 import { takePhoto, closeCamera, shootPhoto, toggleTorch } from './camera';
 import { updateHistoryBadge, startSaveBill, deleteBill, viewBill } from './history';
-import { goTo, goBack, quickNext, itemsNext, newBill, goToNextFromPeople, goBackFromSummary, captureBack, screenForSlug, syncBillUI, settleHomeLocation, startSplit, updateQuickCta, currentScreen } from './navigation';
+import { goTo, goBack, quickNext, itemsNext, newBill, goToNextFromPeople, screenForSlug, syncBillUI, settleHomeLocation, startSplit, updateQuickCta, currentScreen } from './navigation';
 import { goToSummary } from './summary';
 import { restoreDraft } from './draft';
 import { doShare, reshareDetail } from './share';
 import { exportImage } from './export-image';
 import { loadHistory } from './db';
+import { initActions } from './actions';
 import { initReceiptDrop } from './layout';
 import { initInstall } from './install';
 import { initScannerStatus } from './scanner-status';
 import { SHARE_CACHE, SHARED_RECEIPT_URL } from './scan/cache-name';
 import { registerSW } from 'virtual:pwa-register';
 
-// Vite bundles as ESM — expose handlers for inline onclick attributes
-Object.assign(window, {
-  goTo, goBack, goToNextFromPeople, goBackFromSummary, captureBack,
-  changePeople, setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill,
+// What each data-action in the page does
+initActions({
+  goTo: id => goTo(id!), goBack, goToNextFromPeople, startSplit: mode => startSplit(mode as 'even' | 'item'),
+  changePeople: delta => changePeople(Number(delta)), setSplitMode: mode => setSplitMode(mode as 'even' | 'item'),
+  toggleTaxInc, toggleRound, togglePartOfBill,
   takePhoto, takePhotoNative, uploadPhoto, skipToManual, addItem,
   closeCamera, shootPhoto, toggleTorch,
   quickNext, itemsNext,
-  setTipBase,
-  doShare, reshareDetail, newBill,
-  startSaveBill, deleteBill, startSplit,
-  savePayment, togglePay, addPreset,
+  setTipBase: base => setTipBase(base as 'pre' | 'post'),
+  doShare: mode => doShare(mode as 'auto' | 'alt' | undefined), reshareDetail: mode => reshareDetail(mode as 'auto' | 'alt' | undefined),
+  newBill, startSaveBill, deleteBill,
+  savePayment, togglePay: method => togglePay(method as Parameters<typeof togglePay>[0]), addPreset,
   exportImage,
 });
 
