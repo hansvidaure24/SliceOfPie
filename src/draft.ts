@@ -49,7 +49,9 @@ export function restoreDraft(): string | null {
   return draft.screen;
 }
 
-document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') saveDraft();
-});
-window.addEventListener('pagehide', () => saveDraft());
+if (typeof document !== 'undefined') {
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') saveDraft();
+  });
+  window.addEventListener('pagehide', () => saveDraft());
+}
