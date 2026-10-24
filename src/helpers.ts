@@ -1,6 +1,8 @@
+// One color per person, in seat order. Chosen so every pair stays distinct
+// with deuteranopia and protanopia too, and every color shows on both themes.
 export const COLORS = [
-  '#C0392B', '#2E86C1', '#D4A017', '#27AE60',
-  '#8E44AD', '#16A085', '#D35400', '#2C3E50',
+  '#C0392B', '#6C5CE7', '#17BECF', '#E69F00',
+  '#C2185B', '#1F77B4', '#7F8C8D', '#D35400',
 ] as const;
 
 // Black or white, whichever reads better on a person's color
@@ -111,19 +113,27 @@ export function pulse(el: HTMLElement): void {
   el.classList.add('pulse');
 }
 
-export function confirmDialog(msg: string, sub = '', labels: { yes?: string; no?: string } = {}): Promise<boolean> {
+// warn shows the "!" badge: for discarding, deleting, or a photo that may be misread
+export interface DialogLabels { yes?: string; no?: string; warn?: boolean }
+
+export function confirmDialog(msg: string, sub = '', labels: DialogLabels = {}): Promise<boolean> {
   return openDialog(msg, sub, labels, null).then(result => result !== null);
 }
 
 // The same sheet with a text field; resolves to the text, or null when cancelled
-export function promptDialog(msg: string, value: string, labels: { yes?: string; no?: string } = {}): Promise<string | null> {
+export function promptDialog(msg: string, value: string, labels: DialogLabels = {}): Promise<string | null> {
   return openDialog(msg, '', labels, value);
 }
 
-function openDialog(msg: string, sub: string, labels: { yes?: string; no?: string }, value: string | null): Promise<string | null> {
+export function dialogOpen(): boolean {
+  return ($('confirmDialog') as HTMLDialogElement).open;
+}
+
+// A native modal <dialog>: the browser keeps focus inside it, makes the page
+// behind it inert, and turns Escape into a cancel
+function openDialog(msg: string, sub: string, labels: DialogLabels, value: string | null): Promise<string | null> {
   return new Promise(resolve => {
-    const overlay = $('confirmOverlay');
-    const box = overlay.querySelector('.confirm-box') as HTMLElement;
+    const dialog = $('confirmDialog') as HTMLDialogElement;
     const yesBtn = $('confirmYes');
     const noBtn = $('confirmNo');
     const input = $('confirmInput') as HTMLInputElement;
@@ -133,48 +143,54 @@ function openDialog(msg: string, sub: string, labels: { yes?: string; no?: strin
     noBtn.hidden = labels.no === '';
     $('confirmMsg').textContent = msg;
     $('confirmSub').textContent = sub;
-    $('confirmSub').style.display = sub ? '' : 'none';
+    $('confirmSub').hidden = !sub;
     input.hidden = value === null;
     input.value = value ?? '';
-    overlay.classList.toggle('prompt', value !== null);
-    box.setAttribute('role', value === null ? 'alertdialog' : 'dialog');
-    box.setAttribute('aria-modal', 'true');
-    box.setAttribute('aria-labelledby', 'confirmMsg');
-    box.setAttribute('aria-describedby', 'confirmSub');
-    overlay.classList.add('show');
+    dialog.classList.toggle('warn', !!labels.warn);
+    dialog.setAttribute('role', value === null ? 'alertdialog' : 'dialog');
+    if (!dialog.open) dialog.showModal();
     if (value === null) {
       (noBtn.hidden ? yesBtn : noBtn).focus();
     } else {
       input.focus();
       input.select();
     }
-    const focusable = [value === null ? null : input, noBtn.hidden ? null : noBtn, yesBtn].filter(Boolean) as HTMLElement[];
+
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && e.target === input) {
         e.preventDefault();
         cleanup(input.value);
-        return;
       }
-      if (e.key !== 'Tab') return;
-      const idx = focusable.indexOf(document.activeElement as HTMLElement);
-      e.preventDefault();
-      focusable[(idx + (e.shiftKey ? -1 : 1) + focusable.length) % focusable.length].focus();
     };
-    overlay.addEventListener('keydown', onKey);
-    // Tapping the dimmed area outside the sheet cancels
-    const onScrim = (e: MouseEvent) => { if (e.target === overlay) cleanup(null); };
-    overlay.addEventListener('click', onScrim);
+    const onCancel = (e: Event) => {
+      e.preventDefault();
+      cleanup(null);
+    };
+    // A click on the dimmed backdrop lands on the <dialog> itself, outside its body
+    const onBackdrop = (e: MouseEvent) => { if (e.target === dialog) cleanup(null); };
+    dialog.addEventListener('keydown', onKey);
+    dialog.addEventListener('cancel', onCancel);
+    dialog.addEventListener('click', onBackdrop);
     const cleanup = (result: string | null) => {
-      overlay.classList.remove('show');
-      overlay.removeEventListener('keydown', onKey);
-      overlay.removeEventListener('click', onScrim);
+      dialog.removeEventListener('keydown', onKey);
+      dialog.removeEventListener('cancel', onCancel);
+      dialog.removeEventListener('click', onBackdrop);
       yesBtn.onclick = null;
       noBtn.onclick = null;
+      dialog.close();
       resolve(result);
     };
     yesBtn.onclick = () => cleanup(input.value);
     noBtn.onclick = () => cleanup(null);
   });
+}
+
+// Said by screen readers without showing anything
+export function announce(msg: string): void {
+  const el = $('announcer');
+  el.textContent = '';
+  // A fresh text node after a tick so the same message is read again
+  setTimeout(() => { el.textContent = msg; }, 50);
 }
 
 export function showToast(msg: string): void {

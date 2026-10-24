@@ -23,7 +23,7 @@ export function uploadPhoto(): void {
 
 // Resolves true when the user chose to retake, after resetting the capture screen
 async function offerRetake(msg: string, sub: string, keepLabel: string): Promise<boolean> {
-  if (await confirmDialog(msg, sub, { yes: keepLabel, no: 'Retake' })) return false;
+  if (await confirmDialog(msg, sub, { yes: keepLabel, no: 'Retake', warn: true })) return false;
   goTo('screenCapture');
   showToast('Take another photo');
   return true;
@@ -175,7 +175,7 @@ export function enterItemsScreen(): void {
 export function renderItems(): void {
   const byItem = state.splitMode === 'item';
   const cols = whoColumns();
-  $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 52px)` : '0px');
+  $('itemsList').style.setProperty('--who-cols', cols ? `repeat(${cols}, 3.25rem)` : '0px');
   $('itemsList').innerHTML = itemsHead() + state.items.map((item, i) => `
     <div class="item-row" data-row="${i}">
       <div class="item-main">

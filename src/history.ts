@@ -127,7 +127,7 @@ export function renderHistory(): void {
     btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const id = Number(btn.dataset.histDel);
-      if (await confirmDialog('Delete this bill?', 'This action cannot be undone.')) swipeDelete(id);
+      if (await confirmDialog('Delete this bill?', 'This action cannot be undone.', { yes: 'Delete', warn: true })) swipeDelete(id);
     });
   });
 
@@ -288,7 +288,7 @@ function initSwipe(): void {
         tap();
         card.style.transform = `translateX(-100%)`;
         card.addEventListener('transitionend', async () => {
-          if (await confirmDialog('Delete this bill?', 'This action cannot be undone.')) {
+          if (await confirmDialog('Delete this bill?', 'This action cannot be undone.', { yes: 'Delete', warn: true })) {
             swipeDelete(billId);
           } else {
             card.style.transform = '';

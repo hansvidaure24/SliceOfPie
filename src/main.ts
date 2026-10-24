@@ -179,11 +179,8 @@ document.addEventListener('keydown', (e) => {
 
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
-  const overlay = document.getElementById('confirmOverlay');
-  if (overlay?.classList.contains('show')) {
-    document.getElementById('confirmNo')?.click();
-    return;
-  }
+  // An open dialog handles its own Escape
+  if (document.querySelector('dialog[open]')) return;
   if (document.activeElement instanceof HTMLInputElement) {
     document.activeElement.blur();
     return;

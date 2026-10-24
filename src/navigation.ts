@@ -1,4 +1,4 @@
-import { $, esc, fmt, setToggle, showToast, confirmDialog } from './helpers';
+import { $, esc, fmt, setToggle, showToast, confirmDialog, dialogOpen, announce } from './helpers';
 import { state, getBillTotals } from './state';
 import { renderNames, updateCounterState } from './people';
 import { renderTipRow } from './tip';
@@ -65,6 +65,8 @@ const STEPS: Record<'even' | 'item', [string, string[]][]> = {
   item: [['People', ['screenPeople']], ['Scan', ['screenCapture']], ['Items', ['screenItems']], ['Bill', ['screenSummary']]],
 };
 
+let lastAnnounced = '';
+
 function renderChrome(id: string): void {
   const chrome = CHROME[id] ?? 'bar';
   document.body.dataset.chrome = chrome;
@@ -78,6 +80,8 @@ function renderChrome(id: string): void {
     `<li class="${i < at ? 'done' : ''}"${i === at ? ' aria-current="step"' : ''}>${esc(label)}</li>`
   ).join('');
   $('appSteps').setAttribute('aria-label', at >= 0 ? `Step ${at + 1} of ${steps.length}` : 'Progress');
+  if (at >= 0 && id !== lastAnnounced) announce(`Step ${at + 1} of ${steps.length}: ${steps[at][0]}`);
+  lastAnnounced = id;
 
   document.querySelectorAll<HTMLElement>('#tabBar [data-tab]').forEach(tab => {
     if (tab.dataset.tab === id) tab.setAttribute('aria-current', 'page');
@@ -210,7 +214,7 @@ window.addEventListener('popstate', async (e) => {
   // Browser Forward re-entered our guard entry; nothing to do
   if (arrived !== undefined && arrived === guardId) return;
   guardId = null;
-  if ($('confirmOverlay').classList.contains('show')) $('confirmNo').click();
+  if (dialogOpen()) $('confirmNo').click();
   else await goBack();
   // Back may have been cancelled (e.g. keeping an unsaved bill)
   if (currentScreen() !== HOME) syncHistory(currentScreen());
@@ -240,7 +244,7 @@ export async function itemsNext(): Promise<void> {
     const proceed = await confirmDialog(
       unassigned === 1 ? '1 item has nobody on it' : unassigned + ' items have nobody on them',
       "They won't count toward anyone's share.",
-      { yes: 'Continue anyway', no: 'Assign them' },
+      { yes: 'Continue anyway', no: 'Assign them', warn: true },
     );
     if (!proceed) { showFirstUnassigned(); return; }
   }
@@ -305,7 +309,7 @@ export function goToNextFromPeople(): void {
 async function confirmLeaveSummary(): Promise<boolean> {
   const { total } = getBillTotals();
   if (total > 0 && !state.billSavedThisSession) {
-    return confirmDialog('You have an unsaved bill. Discard it?');
+    return confirmDialog('You have an unsaved bill. Discard it?', '', { yes: 'Discard', warn: true });
   }
   return true;
 }

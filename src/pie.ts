@@ -41,16 +41,27 @@ export function renderPieChart(breakdown: Breakdown[]): void {
     cumulative += slice.frac;
   }
 
+  // Slices are named, not only colored, so they can be told apart without color
   const labelsSvg = slices.map((slice, i) => {
     if (slice.frac <= 0.08) return '';
     const midAngle = START_ANGLE + (offsets[i] + slice.frac / 2) * Math.PI * 2;
     const labelRadius = RADIUS * 0.55;
     const lx = CX + labelRadius * Math.cos(midAngle);
     const ly = CY + labelRadius * Math.sin(midAngle);
+    const pct = Math.round(slice.frac * 100) + '%';
+    const name = slice.name.length > 9 ? slice.name.slice(0, 8) + '…' : slice.name;
+    const text = slice.frac >= 0.15
+      ? `<tspan x="${lx}" dy="-0.6em" font-size="9.5" font-weight="600">${esc(name)}</tspan><tspan x="${lx}" dy="1.2em">${pct}</tspan>`
+      : pct;
     return `<text x="${lx}" y="${ly}" text-anchor="middle" dominant-baseline="central"
       fill="${inkOn(slice.color)}" font-size="11" font-weight="700" style="pointer-events:none;opacity:0"
-      class="pie-label">${Math.round(slice.frac * 100)}%</text>`;
+      class="pie-label">${text}</text>`;
   }).join('');
+
+  // Screen readers get the shares as a sentence instead of the drawing
+  const wrapEl = $('pieChartWrap');
+  wrapEl.setAttribute('role', 'img');
+  wrapEl.setAttribute('aria-label', 'Share of the bill: ' + slices.map(s => `${s.name} ${Math.round(s.frac * 100)}%`).join(', '));
 
   const legendHtml = slices.map(slice =>
     `<span class="pie-legend-item"><span class="pie-legend-dot" style="background:${slice.color}"></span>${esc(slice.name)}</span>`
