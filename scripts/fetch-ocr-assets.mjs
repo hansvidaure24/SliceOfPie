@@ -3,7 +3,7 @@
 // matches ocr-assets.json (Vite bundles its wasm into dist/assets).
 // Runs before dev and build. Pass --bench to also fetch the benchmark-only models.
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -25,10 +25,20 @@ async function sha256(path) {
   return createHash('sha256').update(await readFile(path)).digest('hex');
 }
 
+// A copy kept under node_modules/.cache, which Vercel restores between deploys
+// (public/ocr isn't), so a deploy doesn't download the models again
+const cacheDir = join(root, 'node_modules/.cache/sliceofpie-ocr');
+
 async function fetchModel(name, dir) {
   const { sha256: want } = assets.models[name];
   const dest = join(dir, name + '.tar');
   if (await exists(dest) && await sha256(dest) === want) return;
+  const cached = join(cacheDir, name + '.tar');
+  if (await exists(cached) && await sha256(cached) === want) {
+    await mkdir(dir, { recursive: true });
+    await copyFile(cached, dest);
+    return;
+  }
 
   const url = `${assets.modelBaseUrl}${name}_onnx_infer.tar`;
   console.log(`[ocr] downloading ${name}`);
@@ -39,6 +49,8 @@ async function fetchModel(name, dir) {
   if (got !== want) throw new Error(`${name}: sha256 mismatch (got ${got})`);
   await mkdir(dir, { recursive: true });
   await writeFile(dest, buf);
+  await mkdir(cacheDir, { recursive: true });
+  await writeFile(cached, buf);
 }
 
 const wasmSrc = join(root, 'node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm');

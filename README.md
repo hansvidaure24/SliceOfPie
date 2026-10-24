@@ -102,7 +102,7 @@ The end-to-end suite runs on Playwright's own Chromium; download it once with `n
 
 ## Getting Started
 
-Needs Node 22.12 or newer.
+Needs Node 22 (22.12 or later) or Node 24.
 
 ```bash
 npm install
