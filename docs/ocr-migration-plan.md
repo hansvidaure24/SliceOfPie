@@ -73,9 +73,19 @@ The original plan starts with the camera. I'd swap the engine first instead. The
 - Feature flag `localStorage.sp_ocrEngine = 'tesseract' | 'paddle'` so both engines can be compared on the same fixtures during this step.
 - **Done when:** a receipt scanned through the existing upload path returns `OcrLine[]` with boxes and scores, works in airplane mode after the first scan, and the UI stays responsive.
 
+**As built (2026-10-23).** Done, with these departures from the sketch above:
+- **Models:** PP-OCRv5 mobile det + `latin_PP-OCRv5_mobile_rec`, chosen with the benchmark (`bench/README.md`). It got every price and tax right on 16/16 synthetic images; v6 tiny managed 10/16 and Tesseract 4/16.
+- **Own worker, not the SDK's `worker: true`.** The SDK's prebuilt worker bundles the WebGPU build of ONNX Runtime 1.24.3, which needs a 25 MB wasm. `src/scan/paddle.worker.ts` runs the SDK's main-thread pipeline inside our own worker, and `vite.config.ts` aliases `onnxruntime-web` to its wasm-only build (12 MB). The SDK decodes Blobs through a DOM canvas, so the worker decodes with `OffscreenCanvas` and passes an OpenCV Mat. That needs Safari 16.4+; older browsers fall back to Tesseract.
+- **No `wasmPaths` / no copied wasm.** Vite emits ONNX Runtime's wasm as a content-hashed asset, which the runtime finds on its own. `public/ocr/` only holds the model tars. `onnxruntime-web` is pinned to 1.24.3 to match what the SDK was built against, and the fetch script fails the build if they drift.
+- **First download:** ~36 MB in total (worker chunk with OpenCV 10.6 MB, wasm 12.4 MB, models 12.9 MB), fetched on the main thread with a byte-accurate progress bar. The service worker caches each file in `ocr-v1` (cache-first). Verified with `vite preview`: first scan downloads and caches all four files, a scan with the server stopped works from the cache, and a scan offline before any download shows the existing "OCR unavailable offline" message.
+- **Row merging moved here from Step 2** (`src/scan/rows.ts`), because PaddleOCR returns one box per text run and Step 1 would otherwise have split every price from its item. It corrects for photo tilt first: without that, a 3.5° tilt in the benchmark paired prices with the wrong items.
+- **Fallback order:** PaddleOCR, then Tesseract if PaddleOCR fails or can't run. `localStorage.sp_ocrEngine = 'tesseract'` forces the old engine.
+- **Not done yet:** idle pre-warming and a "download for offline" button in Settings. Wasm threads are also off (no COOP/COEP), so scans are single-threaded: about 1.7 s per receipt on desktop, untested on a phone.
+
 ### Step 2: Field extraction (Phase 6)
 - Change `parseReceipt(lines: OcrLine[], opts: { currency })` to return `{ merchant, date, items, subtotal, tax, total, currency, confidence, fieldSources }`.
-- Row merging: sort by box center-y and merge boxes whose vertical overlap is over about 50% of line height, left to right. This is the change that turns "Burger ...... 12.50" back into one line. Paddle emits them as separate boxes, which Tesseract never did.
+- ~~Row merging~~: done in Step 1 (`rows.ts`).
+- The name cleanup regex strips every non-ASCII letter, so a perfectly read "Crème brûlée" becomes "Cr me brul e". Allow Unicode letters (`\p{L}`) now that the recognizer reads Latin accents.
 - Keep the current heuristics: the SKIP list, tax max, the $10k ceiling, and **qty → N unit items**. The original plan doesn't mention that last one, but by-item assignment depends on it.
 - Add total, date, merchant and the `items + tax ≈ total` sanity check as the plan describes. Use the user's selected currency (`helpers.ts`) as the prior for `1.234,56` vs `1,234.56`. JPY and other zero-decimal currencies need prices without `.dd`, which the current regexes reject.
 - `fieldSources` maps each field or item index to its source line boxes, for Step 5.

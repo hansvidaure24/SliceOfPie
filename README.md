@@ -22,7 +22,7 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 ## Features
 
 - **Even or by-item split** — assign items to specific people or split the total evenly
-- **OCR receipt scanning** — snap a photo or upload an image, Tesseract.js extracts line items on-device
+- **OCR receipt scanning** — snap a photo or upload an image, PaddleOCR reads it on-device in a Web Worker. The scanner downloads once (~36 MB) on the first scan, then works offline
 - **Tip & tax** — preset tip buttons, custom %, pre-tax or post-tax, round-up toggle
 - **Bill history** — saved to IndexedDB, track who's paid with one tap, swipe to delete
 - **Export as image** — generate a shareable PNG of the bill breakdown
@@ -39,9 +39,9 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 - **Vite 5** + **TypeScript** (strict mode)
 - **vite-plugin-pwa** with `injectManifest` strategy
 - **Workbox** for precaching and offline support
-- **Tesseract.js 5** for client-side OCR
+- **PaddleOCR.js** (PP-OCRv5 mobile detection + Latin recognition) on **ONNX Runtime Web** (wasm) for client-side OCR, with Tesseract.js 5 as a fallback for browsers that can't run it
 - **IndexedDB** for bill history (auto-migrates from localStorage)
-- No runtime dependencies beyond Tesseract.js (loaded from CDN)
+- OCR models and wasm are served from the app's own origin and cached by the service worker on first scan; only the Tesseract fallback still loads from a CDN
 
 ## Architecture Decisions
 
@@ -72,6 +72,10 @@ npm install
 npm run dev
 ```
 
+`npm run dev` and `npm run build` first run `scripts/fetch-ocr-assets.mjs`, which downloads the pinned OCR models (~13 MB, SHA-256 checked) into `public/ocr/`. That folder is gitignored.
+
+`npm run bench` opens an OCR benchmark page comparing model sets and Tesseract on synthetic receipt images (see `bench/README.md`).
+
 Open `http://localhost:5173` in your browser.
 
 ## Build
@@ -95,8 +99,12 @@ src/
   scan/
     process.ts     processReceipt(): image → parsed items
     engine.ts      OcrEngine interface
-    engine-tesseract.ts  Tesseract.js engine (CDN)
+    engine-paddle.ts     PaddleOCR engine: first-download progress, worker client
+    paddle.worker.ts     Runs PaddleOCR off the main thread
+    engine-tesseract.ts  Tesseract.js fallback engine (CDN)
+    rows.ts        Merge OCR text boxes into receipt lines (tilt-aware)
     parse.ts       Receipt text → items & tax
+    ocr-assets.json      Pinned model files, sizes and hashes
   assign.ts        Item-to-person assignment
   summary.ts       Bill calculation & breakdown
   tip.ts           Tip presets & custom tip
@@ -118,7 +126,7 @@ public/
 
 ## Privacy
 
-All data is stored locally on your device using IndexedDB and localStorage. Nothing is sent to any server. OCR runs entirely in the browser via Tesseract.js. See the in-app privacy note in Settings.
+All data is stored locally on your device using IndexedDB and localStorage. Nothing is sent to any server. OCR runs entirely in the browser: the PaddleOCR model files are downloaded from this app's own server, and your receipt photo never leaves the device. See the in-app privacy note in Settings.
 
 ## License
 
