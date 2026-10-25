@@ -58,7 +58,9 @@ Stop drawing under the status bar:
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 ```
 
-With a solid status bar, the page starts just below the clock, so the height it gets when it opens is the height it keeps. There's nothing for iOS to resize. The price is a black strip behind the status bar, which is barely visible in the app's dark theme. I removed the nudges, because code that doesn't help is still code someone has to read. I kept the readout in Settings.
+With a solid status bar, the page starts just below the clock, so the height it gets when it opens is the height it keeps. There's nothing for iOS to resize. The price is a black strip behind the status bar, which is barely visible in the app's dark theme.
+
+On the iPhone, the installed app now opens with the tab bar at the bottom from the first frame, with no slide and no scroll needed. I removed the nudges, because code that doesn't help is still code someone has to read. I kept the readout in Settings.
 
 ## What I'd do differently
 
