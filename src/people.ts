@@ -1,4 +1,4 @@
-import { $, esc } from './helpers';
+import { $, esc, tap } from './helpers';
 import { personColor } from './colors';
 import { showToast } from './notify';
 import { state } from './state';
@@ -86,6 +86,7 @@ function otherCount(): number {
 }
 
 export function changePeople(delta: number): void {
+  tap();
   const target = Math.max(1, Math.min(8, otherCount() + delta));
 
   while (otherCount() < target) {
@@ -155,6 +156,7 @@ export function renderNames(): void {
 
 // A name from "Add again"
 export function addRecentName(name: string): void {
+  tap();
   if (addPersonNamed(name)) showPeople();
   else showToast('Up to ' + MAX_OTHERS + ' people besides you');
 }

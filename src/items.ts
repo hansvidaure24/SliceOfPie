@@ -1,4 +1,4 @@
-import { $, esc, setToggle } from './helpers';
+import { $, esc, setToggle, tap } from './helpers';
 import { COLORS } from './colors';
 import { fmt, receiptHints } from './money';
 import { confirmDialog } from './dialog';
@@ -235,6 +235,7 @@ export function renderItems(): void {
 }
 
 export function addItem(): void {
+  tap();
   state.items.push({ name: '', price: 0 });
   renderItems();
   updateItemsCta();
@@ -244,6 +245,7 @@ export function addItem(): void {
 
 export function removeItem(index: number): void {
   if (state.items.length <= 1) return;
+  tap();
   state.items.splice(index, 1);
   renderItems();
   updateRunning();
