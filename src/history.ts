@@ -199,6 +199,7 @@ function renderDetailPeople(bill: Bill): void {
 
 // Marks someone on the open bill as paid, or not
 export function togglePaid(personIdx: number): void {
+  tap();
   const bill = findBill(state.viewingBillId!);
   const person = bill?.people[personIdx];
   if (!bill || !person) return;
@@ -249,6 +250,7 @@ export async function renameBill(): Promise<void> {
 }
 
 export function deleteBill(): void {
+  tap();
   // Two-tap confirm: first tap arms, second tap deletes
   if (!deleteArmed) {
     deleteArmed = true;

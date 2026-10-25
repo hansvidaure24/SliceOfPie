@@ -74,6 +74,7 @@ export function chooseReceiptTip(): void {
 }
 
 export function setTipBase(base: 'pre' | 'post'): void {
+  tap();
   state.tipBase = base;
   $('tipPreTax').classList.toggle('active', base === 'pre');
   $('tipPostTax').classList.toggle('active', base === 'post');
