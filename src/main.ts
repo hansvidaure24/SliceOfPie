@@ -7,14 +7,14 @@ import { quickNext, itemsNext, newBill, goToNextFromPeople, syncBillUI, startSpl
 import { state } from './state';
 import { restorePaymentFields, savePayment, togglePay } from './payment';
 import { renderPresets, addPreset, removePreset, setTipBase, setTip, chooseReceiptTip, setCustomTip, initTipSettings } from './tip';
-import { changePeople, loadLastGroup, pickContacts, addRecentName, initPeople } from './people';
+import { changePeople, loadLastGroup, pickContacts, addRecentName, initPeople, PLACEHOLDER } from './people';
 import { setSplitMode, toggleTaxInc, toggleRound, togglePartOfBill } from './toggles';
 import { updateItemsCta, initAssign } from './assign';
 import { takePhotoNative, uploadPhoto, skipToManual, addItem, scanPhoto, updateRunning, enterItemsScreen } from './items';
 // The live camera loads when it's first opened
 const camera = () => import('./camera');
 import { updateHistoryBadge, startSaveBill, deleteBill, viewBill, askDeleteBill, togglePaid, renameBill, initHistory } from './history';
-import { setPayer } from './summary';
+import { setPayer, initBreakdownCopy } from './summary';
 import { restoreDraft } from './draft';
 import { doShare, reshareDetail, labelShareButtons } from './share';
 import { exportImage } from './export-image';
@@ -108,6 +108,8 @@ syncBillUI();
 initInstall();
 initScannerStatus();
 labelShareButtons();
+const mod = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl';
+$('dropHint').textContent = `You can also drop a photo here, or paste one with ${mod}+V.`;
 
 // App shortcuts (long-press the icon) and photos shared from other apps arrive as query params
 const launch = new URLSearchParams(location.search);
@@ -144,6 +146,7 @@ initPeople();
 initHistory();
 initTipSettings();
 initBackup();
+initBreakdownCopy();
 
 // A dropped or pasted receipt scans like a photo; the total screen hands off to the scan screen
 initReceiptDrop(file => {
@@ -179,16 +182,47 @@ document.addEventListener('focusin', (e) => {
   }
 });
 
-// Enter key advances screens with numeric inputs
+// Tap a number field → select all so you can type over the old value
+document.addEventListener('focus', (e) => {
+  const input = e.target as HTMLInputElement;
+  if (input.matches('.item-price, .quick-entry-input, .tax-input, .custom-tip, .preset-input')) {
+    requestAnimationFrame(() => input.select());
+  }
+  if (input.matches('.person-name-input') && PLACEHOLDER.test(input.value)) {
+    requestAnimationFrame(() => input.select());
+  }
+}, true);
+
+// Enter key advances screens with numeric inputs, or moves between name fields
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Enter') return;
   const focused = document.activeElement as HTMLElement | null;
-  if (focused?.classList.contains('person-name-input')) return;
+  if (focused?.matches('.custom-tip, .tax-input, .preset-input, .pay-input')) {
+    e.preventDefault();
+    (focused as HTMLInputElement).blur();
+    return;
+  }
+  if (focused?.classList.contains('person-name-input')) {
+    e.preventDefault();
+    const all = [...document.querySelectorAll<HTMLInputElement>('#namesList .person-name-input')];
+    const idx = all.indexOf(focused as HTMLInputElement);
+    if (idx >= 0 && idx < all.length - 1) all[idx + 1].focus();
+    else { (focused as HTMLInputElement).blur(); goToNextFromPeople(); }
+    return;
+  }
   const active = document.querySelector('.screen.active') as HTMLElement | null;
   if (!active) return;
   const id = active.id;
-  if (id === 'screenQuick') quickNext();
+  if (id === 'screenQuick') { (document.activeElement as HTMLElement)?.blur(); quickNext(); }
   else if (id === 'screenPeople') goToNextFromPeople();
+});
+
+document.addEventListener('keydown', (e) => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+    e.preventDefault();
+    const screen = document.querySelector('.screen.active');
+    if (screen?.id === 'screenSummary' && !state.billSavedThisSession) void startSaveBill();
+  }
 });
 
 document.addEventListener('keydown', (e) => {

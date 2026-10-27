@@ -58,9 +58,9 @@
     </button>
   </div>
   <section class="owed" id="owedSection" hidden>
-    <div class="section-label">Still unpaid</div>
+    <div class="section-label" id="owedSectionLabel">Still unpaid</div>
     <div id="owedList"></div>
-    <button class="link-btn" data-action="goTo" data-arg="screenHistory">All bills <span class="chevron-icon"></span></button>
+    <button class="link-btn" id="owedLink" data-action="goTo" data-arg="screenHistory">All bills <span class="chevron-icon"></span></button>
   </section>
 </div>
 
@@ -71,7 +71,7 @@
   <div class="card">
     <div class="section-label">Your Name</div>
     <input class="pay-input full" id="payName" placeholder="Your name" aria-label="Your name"
-           data-action="savePayment">
+           data-action="savePayment" enterkeyhint="done" autocomplete="given-name" autocapitalize="words">
   </div>
   <div class="card">
     <div class="section-label">Appearance</div>
@@ -88,23 +88,23 @@
     <div class="section-label">Payment Methods</div>
     <div class="pay-row">
       <span class="pay-icon">Venmo</span>
-      <input class="pay-input" id="payVenmo" placeholder="@username" aria-label="Venmo username" data-action="savePayment">
+      <input class="pay-input" id="payVenmo" placeholder="@username" aria-label="Venmo username" data-action="savePayment" autocomplete="off">
       <button class="toggle pay-toggle" id="togVenmo" data-action="togglePay" data-arg="Venmo" role="switch" aria-checked="false" aria-label="Include Venmo"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Zelle</span>
-      <input class="pay-input" id="payZelle" placeholder="email or phone" aria-label="Zelle email or phone" data-action="savePayment">
+      <input class="pay-input" id="payZelle" placeholder="email or phone" aria-label="Zelle email or phone" data-action="savePayment" autocomplete="off">
       <button class="toggle pay-toggle" id="togZelle" data-action="togglePay" data-arg="Zelle" role="switch" aria-checked="false" aria-label="Include Zelle"></button>
     </div>
     <div class="pay-row">
       <span class="pay-icon">Cash App</span>
-      <input class="pay-input" id="payCashApp" placeholder="$cashtag" aria-label="Cash App cashtag" data-action="savePayment">
+      <input class="pay-input" id="payCashApp" placeholder="$cashtag" aria-label="Cash App cashtag" data-action="savePayment" autocomplete="off">
       <button class="toggle pay-toggle" id="togCashApp" data-action="togglePay" data-arg="CashApp" role="switch" aria-checked="false" aria-label="Include Cash App"></button>
     </div>
     <div class="pay-row">
       <div class="pay-other">
-        <input class="pay-input" id="payOtherLabel" placeholder="Other" aria-label="Other payment method name" data-action="savePayment">
-        <input class="pay-input" id="payOtherValue" placeholder="username or email" aria-label="Other payment method username" data-action="savePayment">
+        <input class="pay-input" id="payOtherLabel" placeholder="Other" aria-label="Other payment method name" data-action="savePayment" autocomplete="off">
+        <input class="pay-input" id="payOtherValue" placeholder="username or email" aria-label="Other payment method username" data-action="savePayment" autocomplete="off">
       </div>
       <button class="toggle pay-toggle" id="togOther" data-action="togglePay" data-arg="Other" role="switch" aria-checked="false" aria-label="Include other method"></button>
     </div>
@@ -129,7 +129,7 @@
   <div class="card" id="backupCard">
     <div class="section-label">Your bills</div>
     <div class="status-row">
-      <div class="status-text"><b>Back up saved bills</b><small>Saved bills stay on this device. Export them to a file to keep a copy or move them to a new phone.</small></div>
+      <div class="status-text"><b>Back up saved bills</b><small>Saved bills stay on this device. Export them to a file to keep a copy or move them to a new phone.</small><small id="backupCount"></small></div>
     </div>
     <div class="backup-actions">
       <button class="btn btn-secondary btn-inline" data-action="exportBills">Export</button>
@@ -153,7 +153,7 @@
 <!-- SCREEN: History -->
 <div id="screenHistory" class="screen">
   <h1>Bill <span class="accent">History</span></h1>
-  <p class="subtitle">Past splits and who still owes</p>
+  <p class="subtitle" id="historySubtitle">Past splits and who still owes</p>
   <div id="historyList" role="list" aria-label="Saved bills"></div>
 </div>
 
@@ -163,7 +163,7 @@
   <p class="subtitle" id="detailDate"></p>
   <div class="card" id="detailSummaryCard"></div>
   <div class="card">
-    <div class="section-label">Who owes what</div>
+    <div class="section-label" id="detailPeopleLabel">Who owes what</div>
     <div id="detailPeople"></div>
   </div>
   <div class="summary-extra">
@@ -190,12 +190,12 @@
   <div class="card">
     <div class="section-label">Split Method</div>
     <div class="mode-toggle">
-      <button class="mode-btn active" id="modeEven" data-action="setSplitMode" data-arg="even">Even Split</button>
-      <button class="mode-btn" id="modeItem" data-action="setSplitMode" data-arg="item"><span class="list-icon"></span>By Item</button>
+      <button class="mode-btn active" id="modeEven" data-action="setSplitMode" data-arg="even" aria-pressed="true">Even Split</button>
+      <button class="mode-btn" id="modeItem" data-action="setSplitMode" data-arg="item" aria-pressed="false"><span class="list-icon"></span>By Item</button>
     </div>
   </div>
   <div class="cta-bar">
-    <button class="btn btn-primary" data-action="goToNextFromPeople">Next</button>
+    <button class="btn btn-primary" id="peopleNextBtn" data-action="goToNextFromPeople">Next</button>
   </div>
 </div>
 
@@ -203,13 +203,14 @@
 <div id="screenQuick" class="screen">
   <h1>The <span class="accent">total</span></h1>
   <p class="subtitle">Enter the bottom-line number from the receipt</p>
-  <button class="btn btn-secondary scan-total-btn" data-action="goTo" data-arg="screenCapture"><span class="camera-icon"></span>Scan receipt</button>
+  <p class="merchant-tag" id="quickMerchant" hidden></p>
+  <button class="btn btn-secondary scan-total-btn" id="scanTotalBtn" data-action="goTo" data-arg="screenCapture"><span class="camera-icon"></span>Scan receipt</button>
   <div class="card">
     <div class="section-label">Receipt Total</div>
     <div class="currency-row">
       <span id="quickTotalSymbol" class="currency-symbol">$</span>
       <input id="quickTotal" class="item-price quick-entry-input" type="number" inputmode="decimal" step="0.01"
-             placeholder="0.00" aria-label="Receipt total">
+             placeholder="0.00" aria-label="Receipt total" enterkeyhint="done">
     </div>
     <div class="tax-toggle-row">
       <span class="round-label">Tax is included</span>
@@ -221,11 +222,11 @@
     <div class="currency-row">
       <span id="quickTaxSymbol" class="currency-symbol">$</span>
       <input id="quickTax" class="item-price quick-entry-input" type="number" inputmode="decimal" step="0.01"
-             placeholder="0.00" aria-label="Tax amount">
+             placeholder="0.00" aria-label="Tax amount" enterkeyhint="done">
     </div>
   </div>
   <div class="cta-bar">
-    <div class="cta-total"><small>Bill total</small><b id="quickCtaTotal">$0.00</b></div>
+    <div class="cta-total"><small id="quickCtaNote">Bill total</small><b id="quickCtaTotal">$0.00</b></div>
     <button class="btn btn-primary" data-action="quickNext">Next: Tip</button>
   </div>
 </div>
@@ -240,7 +241,7 @@
     <button class="btn btn-ghost" data-action="skipToManual"><span class="pencil-icon"></span>Enter Manually</button>
   </div>
   <p class="scanner-note" id="captureScannerNote"></p>
-  <p class="drop-hint">You can also drop a photo here, or paste one with Ctrl+V.</p>
+  <p class="drop-hint" id="dropHint">You can also drop a photo here, or paste one.</p>
   <input type="file" id="photoInput" accept="image/*" aria-label="Upload receipt photo">
   <img id="previewImg" class="preview-img" alt="Receipt preview" style="display:none" aria-hidden="true">
   <div id="progressWrap" class="progress-wrap" style="display:none">
@@ -279,7 +280,7 @@
     <div class="tax-row">
       <span class="tax-label">Tax</span>
       <span id="taxSymbol" class="unit-label">$</span>
-      <input class="tax-input" id="taxInput" type="number" inputmode="decimal" step="0.01" value="0" placeholder="0.00" aria-label="Tax amount">
+      <input class="tax-input" id="taxInput" type="number" inputmode="decimal" step="0.01" value="0" placeholder="0.00" aria-label="Tax amount" enterkeyhint="done">
     </div>
     <div class="running-sub" id="runningSub">Subtotal: $0.00</div>
     <p class="kbd-hint"><kbd>Enter</kbd> next field or new item · <kbd>Alt</kbd>+<kbd>1</kbd>–<kbd>9</kbd> toggle a person on the item you're in</p>
@@ -313,8 +314,8 @@
     <details class="more-options">
       <summary><span id="tipMoreLabel">On pre-tax</span><span class="chevron-icon" aria-hidden="true"></span></summary>
       <div class="tip-base-row" id="tipBaseRow">
-        <button class="tip-base-btn active" id="tipPreTax" data-action="setTipBase" data-arg="pre">On pre-tax</button>
-        <button class="tip-base-btn" id="tipPostTax" data-action="setTipBase" data-arg="post">On post-tax</button>
+        <button class="tip-base-btn active" id="tipPreTax" data-action="setTipBase" data-arg="pre" aria-pressed="true">On pre-tax</button>
+        <button class="tip-base-btn" id="tipPostTax" data-action="setTipBase" data-arg="post" aria-pressed="false">On post-tax</button>
       </div>
       <div class="round-row">
         <span class="round-label"><span class="arrow-up-icon" aria-hidden="true"></span>Round up to nearest dollar</span>
@@ -337,6 +338,7 @@
     <button class="btn btn-ghost btn-inline" id="shareAltBtn" data-action="doShare" data-arg="alt"><span class="share-icon"></span>Share…</button>
     <button class="btn btn-ghost btn-inline" id="imageBtn" data-action="exportImage"><span class="gallery-icon"></span>Share as image</button>
   </div>
+  <p class="kbd-hint" id="saveKbdHint"></p>
   <div class="cta-bar">
     <button class="btn btn-secondary" id="saveBillBtn" data-action="startSaveBill"><span class="bill-icon"></span>Save Bill</button>
     <button class="btn btn-primary" id="shareBtn" data-action="doShare"><span class="share-icon"></span>Share</button>
@@ -349,7 +351,7 @@
     <div class="confirm-icon" aria-hidden="true">!</div>
     <p class="confirm-msg" id="confirmMsg"></p>
     <p class="confirm-sub" id="confirmSub"></p>
-    <input class="save-label-input confirm-input" id="confirmInput" aria-labelledby="confirmMsg" hidden>
+    <input class="save-label-input confirm-input" id="confirmInput" aria-labelledby="confirmMsg" enterkeyhint="done" autocomplete="off" hidden>
     <div class="confirm-btns">
       <button class="btn btn-ghost" id="confirmNo">Cancel</button>
       <button class="btn btn-primary" id="confirmYes">Confirm</button>

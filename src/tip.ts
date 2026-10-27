@@ -1,6 +1,6 @@
 import { $, tap } from './helpers';
 import { fmt } from './money';
-import { state } from './state';
+import { state, getBillTotals } from './state';
 import { save } from './storage';
 import { updateSummary } from './summary';
 
@@ -13,7 +13,7 @@ export function renderPresets(): void {
   list.innerHTML = state.tipPresets.map((pct: number, i: number) => `
     <div class="preset-row">
       <input class="preset-input" type="number" inputmode="decimal" value="${pct}" min="0" max="100"
-             data-preset="${i}" aria-label="Tip preset ${i + 1}">
+             data-preset="${i}" aria-label="Tip preset ${i + 1}" enterkeyhint="done">
       <span class="unit-label">%</span>
       ${state.tipPresets.length > 2
         ? `<button class="preset-del" data-action="removePreset" data-arg="${i}" aria-label="Remove ${pct}% preset"><span class="trash-icon"></span></button>`
@@ -35,18 +35,27 @@ export function updatePreset(index: number, val: string): void {
 
 export function addPreset(): void {
   if (state.tipPresets.length >= 4) return;
-  state.tipPresets.push(25);
+  let val = 25;
+  while (state.tipPresets.includes(val) && val > 0) val -= 5;
+  if (val <= 0) val = state.tipPresets[state.tipPresets.length - 1] + 5;
+  state.tipPresets.push(Math.min(val, 100));
   state.tipPresets.sort((a: number, b: number) => a - b);
   state.tipPresets = [...new Set(state.tipPresets)];
   savePresets();
   renderPresets();
+  const idx = state.tipPresets.indexOf(Math.min(val, 100));
+  const input = $('presetsList').querySelector<HTMLInputElement>(`[data-preset="${idx}"]`);
+  if (input) { input.focus(); input.select(); }
 }
 
 export function removePreset(index: string): void {
   if (state.tipPresets.length <= 2) return;
-  state.tipPresets.splice(Number(index), 1);
+  const i = Number(index);
+  state.tipPresets.splice(i, 1);
   savePresets();
   renderPresets();
+  const target = Math.min(i, state.tipPresets.length - 1);
+  $('presetsList').querySelector<HTMLInputElement>(`[data-preset="${target}"]`)?.focus();
 }
 
 export function renderTipRow(): void {
@@ -54,11 +63,15 @@ export function renderTipRow(): void {
   const printed = state.receipt?.tip ?? null;
   // A tip already printed on the scanned receipt, offered so it isn't added twice
   const receiptBtn = printed !== null
-    ? `<button class="tip-btn receipt-tip ${state.useReceiptTip ? 'active' : ''}" data-action="chooseReceiptTip">Tip on receipt: ${fmt(printed)}</button>`
+    ? `<button class="tip-btn receipt-tip ${state.useReceiptTip ? 'active' : ''}" data-action="chooseReceiptTip" aria-pressed="${state.useReceiptTip}">Tip on receipt: ${fmt(printed)}</button>`
     : '';
-  row.innerHTML = receiptBtn + state.tipPresets.map((pct: number) =>
-    `<button class="tip-btn ${pct === state.tipPct && !state.useReceiptTip ? 'active' : ''}" data-action="setTip" data-arg="${pct}">${pct}%</button>`
-  ).join('') + `<input class="custom-tip" id="customTip" type="number" inputmode="decimal" placeholder="%" aria-label="Custom tip percent" data-action="setCustomTip">`;
+  const { sub, tax } = getBillTotals();
+  const tipOn = state.tipBase === 'post' ? sub + tax : sub;
+  row.innerHTML = receiptBtn + state.tipPresets.map((pct: number) => {
+    const on = pct === state.tipPct && !state.useReceiptTip;
+    const dollar = tipOn > 0 ? `<span class="tip-dollar">${fmt(tipOn * pct / 100)}</span>` : '';
+    return `<button class="tip-btn ${on ? 'active' : ''}" data-action="setTip" data-arg="${pct}" aria-pressed="${on}">${pct}%${dollar}</button>`;
+  }).join('') + `<input class="custom-tip" id="customTip" type="number" inputmode="decimal" placeholder="%" aria-label="Custom tip percent" data-action="setCustomTip" enterkeyhint="done">`;
 
   const customInput = $('customTip') as HTMLInputElement;
   if (!state.useReceiptTip && !state.tipPresets.includes(state.tipPct)) {
@@ -78,6 +91,8 @@ export function setTipBase(base: 'pre' | 'post'): void {
   state.tipBase = base;
   $('tipPreTax').classList.toggle('active', base === 'pre');
   $('tipPostTax').classList.toggle('active', base === 'post');
+  $('tipPreTax').setAttribute('aria-pressed', String(base === 'pre'));
+  $('tipPostTax').setAttribute('aria-pressed', String(base === 'post'));
   updateSummary();
 }
 
@@ -88,9 +103,11 @@ export function setTip(arg: string): void {
   state.useReceiptTip = false;
   const custom = $('customTip') as HTMLInputElement | null;
   if (custom) custom.value = '';
-  document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn =>
-    btn.classList.toggle('active', btn.dataset.action === 'setTip' && Number(btn.dataset.arg) === pct)
-  );
+  document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => {
+    const on = btn.dataset.action === 'setTip' && Number(btn.dataset.arg) === pct;
+    btn.classList.toggle('active', on);
+    btn.setAttribute('aria-pressed', String(on));
+  });
   save('sp_tip', String(pct));
   updateSummary();
 }
@@ -103,7 +120,7 @@ export function setCustomTip(): void {
     state.tipPct = val;
     state.useReceiptTip = false;
     if (val !== parseFloat(custom.value)) custom.value = String(val);
-    document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll<HTMLButtonElement>('.tip-btn').forEach(btn => { btn.classList.remove('active'); btn.setAttribute('aria-pressed', 'false'); });
     save('sp_tip', String(val));
     updateSummary();
   }

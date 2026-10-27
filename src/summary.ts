@@ -1,7 +1,10 @@
 import { $, esc, pulse, tap } from './helpers';
 import { fmt } from './money';
 import { calcOwes } from './bill';
-import { state, getBillTotals, isPayer, receiptTip } from './state';
+import { showToast } from './notify';
+import { copyText } from './share';
+import { getPaymentLines } from './payment';
+import { state, getBillTotals, isPayer, receiptTip, getPayerName } from './state';
 import { renderPieChart } from './pie';
 import type { Breakdown } from './types';
 
@@ -9,7 +12,7 @@ export function renderPayerRow(): void {
   $('payerRow').innerHTML = state.people.map((person, i) => {
     const on = (person.isMe ? state.payer === 'me' : state.payer === i) ? 'on' : '';
     const label = person.isMe ? esc(person.name) + ' (you)' : esc(person.name);
-    return `<button class="payer-badge ${on}" data-action="setPayer" data-arg="${person.isMe ? 'me' : i}">${label}</button>`;
+    return `<button class="payer-badge ${on}" data-action="setPayer" data-arg="${person.isMe ? 'me' : i}" aria-pressed="${on ? 'true' : 'false'}">${label}</button>`;
   }).join('');
 }
 
@@ -102,9 +105,31 @@ function renderResult(breakdown: Breakdown[], total: number): void {
 function renderBreakdownLines(breakdown: Breakdown[]): string {
   return breakdown.map((entry, i) => {
     const paid = isPayer(i);
-    return `<div class="owe-row${paid ? ' is-payer' : ''}" style="--who:${entry.color}">
+    return `<button class="owe-row${paid ? ' is-payer' : ''}" style="--who:${entry.color}" data-copy-share="${i}" aria-label="Copy ${esc(entry.name)}'s share">
       <span class="owe-name">${esc(entry.name)}</span>
-      <span class="owe-amt">${paid ? 'paid the bill' : fmt(entry.amount)}</span>
-    </div>`;
+      <span class="owe-amt">${paid ? '<span class="check-icon"></span>paid the bill' : fmt(entry.amount)}</span>
+    </button>`;
   }).join('');
+}
+
+export function initBreakdownCopy(): void {
+  $('breakdownList').addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-copy-share]');
+    if (!btn) return;
+    tap();
+    const idx = Number(btn.dataset.copyShare);
+    const breakdown = calcOwes();
+    const entry = breakdown[idx];
+    if (!entry) return;
+    if (isPayer(idx)) { showToast(entry.name + ' paid the bill'); return; }
+    btn.classList.add('copied');
+    setTimeout(() => btn.classList.remove('copied'), 600);
+    const lines = [entry.name + ' owes ' + fmt(entry.amount)];
+    const myName = state.payment.name?.toLowerCase();
+    if (myName && getPayerName().toLowerCase() === myName) {
+      const payLines = getPaymentLines();
+      if (payLines.length) lines.push(...payLines);
+    }
+    void copyText(lines.join('\n'));
+  });
 }

@@ -81,6 +81,12 @@ html{background:#1A0E08}
 }
 html[data-theme="light"]{background:#F5EDE4}
 
+/* ── Focus ── */
+:focus-visible{outline:2px solid var(--crust);outline-offset:2px}
+/* Inputs already show focus via border-color; suppress the double ring */
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none}
+.toggle:focus-visible{outline-offset:3px}
+
 /* ── Base ── */
 body{
   font-family:'Inter',system-ui,-apple-system,sans-serif;
@@ -333,6 +339,11 @@ body.transitioning .btn{pointer-events:none}
 .receipt-check.ok{color:var(--status-done)}
 .receipt-check.ok::before{content:'✓ '}
 .receipt-check.off{color:var(--status-partial)}
+.merchant-tag{
+  text-align:center;font-size:var(--text-sm);font-weight:600;color:var(--crust);
+  margin:-10px 0 var(--space-3);
+}
+.merchant-tag[hidden]{display:none}
 .scan-total-btn{width:100%;margin-bottom:var(--space-4)}
 .unit-label{color:var(--muted);font-size:var(--text-sm)}
 .pay-input.full{width:100%}
@@ -396,6 +407,7 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 }
 .tip-btn:active{transform:translateY(1px)}
 .tip-btn.active{background:var(--cherry);border-color:var(--cherry-dark);color:#fff;border-bottom:2px solid var(--cherry-dark)}
+.tip-dollar{display:block;font-size:var(--text-2xs);font-weight:400;opacity:.7;margin-top:1px}
 .custom-tip{
   width:72px;background:var(--surface2);border:2px solid var(--surface2);color:var(--cream);
   border-radius:8px;text-align:center;font-size:var(--text-sm);padding:9px;font-variant-numeric:tabular-nums;
@@ -425,13 +437,18 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 .result-card .pie-chart-wrap[hidden]{display:none}
 .result-people{margin-top:var(--space-3);text-align:left}
 .owe-row{
-  display:flex;align-items:center;gap:var(--space-2);padding:9px 0;font-size:var(--text-sm);
-  border-top:1px solid var(--border-subtle);
+  display:flex;align-items:center;gap:var(--space-2);padding:9px var(--space-2);font-size:var(--text-sm);
+  border-top:1px solid var(--border-subtle);width:100%;background:none;border-left:none;border-right:none;border-bottom:none;
+  color:var(--text);cursor:pointer;border-radius:var(--radius-sm);transition:background .12s;
 }
+.owe-row:active{background:var(--surface2)}
+.owe-row.copied{animation:copiedFlash .5s ease-out}
+@keyframes copiedFlash{0%{background:color-mix(in srgb,var(--who) 25%,transparent)}100%{background:transparent}}
 .owe-row::before{content:'';width:10px;height:10px;border-radius:50%;background:var(--who);flex-shrink:0}
 .owe-name{flex:1;min-width:0;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .owe-amt{font-weight:700;font-variant-numeric:tabular-nums}
-.owe-row.is-payer .owe-amt{font-weight:500;font-style:italic;color:var(--muted)}
+.owe-row.is-payer .owe-amt{font-weight:500;font-style:italic;color:var(--muted);display:flex;align-items:center;gap:4px}
+.owe-row.is-payer .check-icon{width:14px;height:14px;background:var(--status-done)}
 
 /* Settings that rarely change, folded under one line that says how they're set */
 .more-options summary{
@@ -574,6 +591,8 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 .history-date{font-size:var(--text-xs);color:var(--muted)}
 .history-bottom{display:flex;justify-content:space-between;align-items:center;margin-top:var(--space-2)}
 .history-total{font-weight:700;color:var(--cherry-text);font-size:var(--text-md)}
+.history-each{font-weight:500;font-size:var(--text-xs);color:var(--muted)}
+.history-tag{font-size:var(--text-2xs);color:var(--muted);background:var(--surface2);padding:1px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
 .history-meta{display:flex;align-items:center;gap:var(--space-2)}
 .history-status{font-size:var(--text-xs);padding:var(--space-1) 10px;border-radius:50px;font-weight:600}
 .status-none{background:color-mix(in srgb, var(--status-none) 12%, transparent);color:var(--status-none)}
@@ -597,6 +616,12 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
   .swipe-wrap{overflow:visible}
   .history-card:hover .history-del{opacity:1;pointer-events:auto}
   .item-del:hover{background:var(--cherry-glow)}
+  .add-btn:hover{border-color:var(--crust);color:var(--crust)}
+  .preset-add:hover{border-color:var(--crust);color:var(--crust)}
+  .name-chip:hover{border-color:var(--crust);color:var(--crust)}
+  .owed-card:hover{background:var(--surface2)}
+  .payer-badge:hover:not(.on){border-color:var(--crust)}
+  .owe-row:hover{background:var(--surface2)}
 }
 
 @keyframes swipe-hint{0%,100%{transform:translateX(0)}40%{transform:translateX(-40px)}}
@@ -605,10 +630,14 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 }
 
 /* ── Bill Detail ── */
-.detail-person{display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) 0;border-bottom:1px solid var(--border-subtle)}
+.detail-person{display:flex;justify-content:space-between;align-items:center;padding:var(--space-3) 0;border-bottom:1px solid var(--border-subtle);animation:rowSlideIn .25s ease-out both}
+.detail-person:nth-child(1){animation-delay:0s}.detail-person:nth-child(2){animation-delay:.04s}.detail-person:nth-child(3){animation-delay:.08s}.detail-person:nth-child(4){animation-delay:.12s}.detail-person:nth-child(5){animation-delay:.16s}.detail-person:nth-child(6){animation-delay:.2s}.detail-person:nth-child(n+7){animation-delay:.24s}
+@keyframes rowSlideIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .detail-person:first-child{padding-top:0}
 .detail-person:last-child{border-bottom:none;padding-bottom:0}
-.detail-who{display:flex;align-items:center;gap:10px}
+.detail-who{display:flex;align-items:center;gap:10px;background:none;border:none;color:inherit;cursor:pointer;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);text-align:left;transition:background .12s}
+.detail-who:active{background:var(--surface2)}
+.detail-who.copied{animation:copiedFlash .5s ease-out}
 .detail-name{font-weight:600;font-size:var(--text-sm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
 .detail-amount{font-size:var(--text-sm);color:var(--cream-dim);margin-top:2px}
 .paid-btn{
@@ -621,6 +650,8 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 .paid-btn:not(.paid) .check-icon{opacity:.35}
 .paid-btn.paid{background:var(--paid);border-color:var(--paid);color:#fff;box-shadow:0 2px 8px var(--paid-glow)}
 .del-confirm{background:var(--cherry);border-color:var(--cherry);color:#fff !important}
+.all-settled{animation:settledGlow .6s ease-out;border-color:var(--status-done)}
+@keyframes settledGlow{0%{box-shadow:0 0 0 0 var(--paid-glow)}50%{box-shadow:0 0 0 8px var(--paid-glow)}100%{box-shadow:none}}
 .detail-amount.paid-text{color:var(--status-done)}
 
 /* ── Save Bill Label ── */
@@ -643,10 +674,6 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 @keyframes badgePop{0%{transform:scale(.5)}60%{transform:scale(1.25)}100%{transform:scale(1)}}
 
 /* ── Pie Legend ── */
-
-/* ── Focus visible ── */
-:focus-visible{outline:2px solid var(--crust);outline-offset:2px}
-.toggle:focus-visible{outline-offset:3px}
 
 /* ── Confirm dialog (a native <dialog>) ── */
 .sheet{
@@ -818,11 +845,15 @@ body[data-chrome="tabs"] .tab-bar{display:flex}
 .start-primary .start-sub{color:#fff}
 .owed{width:100%}
 .owed[hidden]{display:none}
+.caught-up{display:flex;align-items:center;gap:6px;color:var(--status-done)}
+.caught-up .check-icon{width:16px;height:16px;background:var(--status-done)}
 .owed-card{
   display:flex;flex-direction:column;gap:6px;width:100%;text-align:left;cursor:pointer;
   padding:var(--space-3) var(--space-4);margin-bottom:var(--space-2);border-radius:var(--radius-sm);
-  background:var(--surface);border:1px solid var(--surface-border);color:var(--text);
+  background:var(--surface);border:1px solid var(--surface-border);color:var(--text);transition:background .12s;
+  animation:rowSlideIn .25s ease-out both;
 }
+.owed-card:nth-child(1){animation-delay:0s}.owed-card:nth-child(2){animation-delay:.05s}.owed-card:nth-child(3){animation-delay:.1s}
 .owed-card:active{background:var(--surface2)}
 .owed-top,.owed-bottom{display:flex;justify-content:space-between;align-items:center;gap:var(--space-2)}
 .owed-top b:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
