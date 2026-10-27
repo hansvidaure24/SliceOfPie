@@ -2,7 +2,7 @@ import { $, esc } from './helpers';
 import { fmt } from './money';
 import { state, getBillTotals } from './state';
 import { calcOwes, unassignedIndexes } from './bill';
-import { relativeDate } from './history';
+import { relativeDate } from './helpers';
 
 // Wide screens put a panel beside the screen: the split's running totals
 // while you build it, or the list of saved bills next to one you're viewing

@@ -1,6 +1,7 @@
 import { fmt } from './money';
 import { showToast } from './notify';
-import { billLabel, relativeDate } from './history';
+import { relativeDate } from './helpers';
+import { billLabel } from './history';
 import { state, getBillTotals, getPayerName, isPayer, findBill, tipLabel } from './state';
 import { getPaymentLines } from './payment';
 import { calcOwes } from './bill';

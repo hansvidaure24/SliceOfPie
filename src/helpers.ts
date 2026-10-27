@@ -25,6 +25,19 @@ export function pulse(el: HTMLElement): void {
   el.classList.add('pulse');
 }
 
+export function relativeDate(date: Date): string {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diff = (today.getTime() - day.getTime()) / 86_400_000;
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Yesterday';
+  if (diff < 7) return date.toLocaleDateString(undefined, { weekday: 'long' });
+  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  if (now.getFullYear() !== date.getFullYear()) opts.year = 'numeric';
+  return date.toLocaleDateString(undefined, opts);
+}
+
 export function defaultLabel(): string {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   const d = new Date();
