@@ -1,4 +1,4 @@
-import { $, esc, defaultLabel, tap } from './helpers';
+import { $, esc, defaultLabel, tap, relativeDate } from './helpers';
 import { copyText } from './share';
 import { getPaymentLines } from './payment';
 import { fmt } from './money';
@@ -15,18 +15,6 @@ import type { Bill } from './types';
 const DELETE_ICON = '<span class="trash-icon"></span>';
 let swipeHintShown = false;
 
-export function relativeDate(date: Date): string {
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diff = (today.getTime() - day.getTime()) / 86_400_000;
-  if (diff === 0) return 'Today';
-  if (diff === 1) return 'Yesterday';
-  if (diff < 7) return date.toLocaleDateString(undefined, { weekday: 'long' });
-  const opts: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-  if (now.getFullYear() !== date.getFullYear()) opts.year = 'numeric';
-  return date.toLocaleDateString(undefined, opts);
-}
 // Delete Bill on the detail screen takes two taps; the first one arms it for a few seconds
 let deleteArmed = false;
 let deleteTimer: ReturnType<typeof setTimeout> | null = null;
