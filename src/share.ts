@@ -1,6 +1,6 @@
 import { fmt } from './money';
 import { showToast } from './notify';
-import { billLabel } from './history';
+import { billLabel, relativeDate } from './history';
 import { state, getBillTotals, getPayerName, isPayer, findBill, tipLabel } from './state';
 import { getPaymentLines } from './payment';
 import { calcOwes } from './bill';
@@ -62,6 +62,10 @@ export async function doShare(mode: ShareMode = 'auto'): Promise<void> {
   const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
   const label = billLabel();
   const lines: string[] = ['SliceOfPie — ' + label];
+  if (state.receipt?.date) {
+    const [yr, mo, dy] = state.receipt.date.split('-').map(Number);
+    lines.push(new Date(yr, mo - 1, dy).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }));
+  }
 
   if (state.splitMode === 'item') {
     lines.push('');
@@ -96,10 +100,14 @@ export async function shareBill(id: number, mode: ShareMode = 'auto'): Promise<v
   const bill = findBill(id);
   if (!bill) return;
 
+  const dateStr = bill.receiptDate
+    ? (() => { const [y, m, d] = bill.receiptDate!.split('-').map(Number); return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }); })()
+    : relativeDate(new Date(bill.date));
   const lines: string[] = [
     'SliceOfPie — ' + bill.label,
+    dateStr,
     '',
-    'Total: ' + fmt(bill.total),
+    'Total: ' + fmt(bill.total) + (bill.tipPct ? ' (incl. ' + bill.tipPct + '% tip)' : ''),
     '',
   ];
 
@@ -108,7 +116,7 @@ export async function shareBill(id: number, mode: ShareMode = 'auto'): Promise<v
     else lines.push(person.name + ' owes: ' + fmt(person.amount));
   });
 
-  lines.push(...buildPaymentFooter(bill.payerName, true));
+  lines.push(...buildPaymentFooter(bill.payerName));
   await shareText(lines.join('\n'), mode);
 }
 
@@ -116,8 +124,9 @@ export function reshareDetail(mode: ShareMode = 'auto'): void {
   void shareBill(state.viewingBillId!, mode);
 }
 
-function buildPaymentFooter(payerName: string, fromHistory = false): string[] {
-  if (!fromHistory && state.payer === 'me' && state.imPartOfBill) {
+function buildPaymentFooter(payerName: string): string[] {
+  const myName = state.payment.name?.toLowerCase();
+  if (myName && payerName.toLowerCase() === myName) {
     const payLines = getPaymentLines();
     if (payLines.length) return payLines;
   }

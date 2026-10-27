@@ -9,6 +9,7 @@ import { onEnterScreen } from './router';
 onEnterScreen('screenPeople', () => {
   updateCounterState();
   renderNames();
+  $('peopleNextBtn').textContent = state.splitMode === 'even' ? 'Next: Total' : 'Next: Scan';
 });
 
 export function loadLastGroup(): void {
@@ -32,7 +33,7 @@ interface ContactsManager {
 const contacts = (navigator as Navigator & { contacts?: ContactsManager }).contacts;
 
 const MAX_OTHERS = 8;
-const PLACEHOLDER = /^person \d+$/i;
+export const PLACEHOLDER = /^person \d+$/i;
 
 // Fills the first unnamed "Person N" slot, or adds a person; false if not added
 function addPersonNamed(raw: string): boolean {
@@ -61,9 +62,11 @@ export async function pickContacts(): Promise<void> {
   } catch {
     return; // cancelled
   }
+  if (!picked.length) return;
   const added = picked.filter(c => c.name?.[0] && addPersonNamed(c.name[0])).length;
   showPeople();
-  if (added < picked.length) showToast(otherCount() >= MAX_OTHERS ? 'Up to ' + MAX_OTHERS + ' people besides you' : 'Some were already on the list');
+  if (added > 0 && added === picked.length) showToast('Added ' + added + (added === 1 ? ' person' : ' people'));
+  else if (added < picked.length) showToast(otherCount() >= MAX_OTHERS ? 'Up to ' + MAX_OTHERS + ' people besides you' : 'Some were already on the list');
 }
 
 // People from saved bills, newest first, who aren't on this one yet
@@ -85,12 +88,20 @@ function otherCount(): number {
   return state.people.filter(p => !p.isMe).length;
 }
 
+function nextPlaceholder(): string {
+  const taken = new Set(state.people.map(p => p.name.toLowerCase()));
+  for (let n = 1; ; n++) {
+    const name = 'Person ' + n;
+    if (!taken.has(name.toLowerCase())) return name;
+  }
+}
+
 export function changePeople(delta: number): void {
   tap();
   const target = Math.max(1, Math.min(8, otherCount() + delta));
 
   while (otherCount() < target) {
-    state.people.push({ name: 'Person ' + (otherCount() + 1) });
+    state.people.push({ name: nextPlaceholder() });
   }
   while (otherCount() > target) {
     for (let i = state.people.length - 1; i >= 0; i--) {
@@ -107,6 +118,13 @@ export function changePeople(delta: number): void {
   }
 
   showPeople();
+  if (delta > 0) focusLastName();
+}
+
+function focusLastName(): void {
+  const inputs = $('namesList').querySelectorAll<HTMLInputElement>('.person-name-input');
+  const last = inputs[inputs.length - 1];
+  if (last) setTimeout(() => { last.focus(); last.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
 }
 
 export function updateCounterState(): void {
@@ -126,6 +144,8 @@ export function renderNames(): void {
              maxlength="20"
              data-person="${i}"
              aria-label="${person.isMe ? 'Your name' : 'Person ' + (i + 1) + ' name'}"
+             enterkeyhint="${i < state.people.length - 1 ? 'next' : 'done'}"
+             autocomplete="off" autocapitalize="words" spellcheck="false"
              ${person.isMe ? 'data-me' : ''}>
       ${person.isMe ? '<div class="me-toggle-row"><span class="me-label">I\'m splitting</span><button class="toggle on" data-toggle="partOfBill" data-action="togglePartOfBill" role="switch" aria-checked="true" aria-label="I\'m part of this bill"></button></div>' : ''}
     </div>
@@ -142,12 +162,16 @@ export function renderNames(): void {
   const contactsBtn = contacts
     ? '<button class="btn btn-secondary contacts-btn" data-action="pickContacts"><span class="person-icon"></span>Add from contacts</button>'
     : '';
-  const quickAdd = state.history.length > 0 ? `
+  const lastGroup = state.history[0];
+  const lastNames = lastGroup ? new Set(lastGroup.people.map(p => p.name.toLowerCase())) : null;
+  const currentNames = new Set(state.people.map(p => p.name.toLowerCase()));
+  const sameGroup = lastNames && lastNames.size === currentNames.size && [...lastNames].every(n => currentNames.has(n));
+  const quickAdd = state.history.length > 0 && (recent.length > 0 || !sameGroup) ? `
     <div class="quick-add">
       <span class="section-label">Add again</span>
       <div class="quick-add-chips">
         ${recent.map(name => `<button class="name-chip" data-action="addRecentName" data-arg="${esc(name)}"><span class="add-icon" aria-hidden="true"></span>${esc(name)}</button>`).join('')}
-        <button class="name-chip" data-action="loadLastGroup">Last group</button>
+        ${sameGroup ? '' : `<button class="name-chip" data-action="loadLastGroup">Last group${lastGroup.label ? ' · ' + esc(lastGroup.label) : ''}</button>`}
       </div>
     </div>` : '';
 
@@ -157,7 +181,7 @@ export function renderNames(): void {
 // A name from "Add again"
 export function addRecentName(name: string): void {
   tap();
-  if (addPersonNamed(name)) showPeople();
+  if (addPersonNamed(name)) { showPeople(); focusLastName(); }
   else showToast('Up to ' + MAX_OTHERS + ' people besides you');
 }
 

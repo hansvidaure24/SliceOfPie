@@ -34,17 +34,38 @@ export function togglePay(key: keyof typeof state.payToggles): void {
   savePayment();
 }
 
-export function getPaymentLines(): string[] {
+function paymentMethods(withLinks: boolean): string[] {
   const pay = state.payment;
   const tog = state.payToggles;
   const lines: string[] = [];
 
-  if (tog.Venmo && pay.venmo) lines.push('Venmo: ' + pay.venmo);
+  if (tog.Venmo && pay.venmo) {
+    const handle = pay.venmo.replace(/^@/, '').replace(/^https?:\/\/venmo\.com\/u\//i, '');
+    lines.push(withLinks
+      ? 'Venmo: https://venmo.com/u/' + encodeURIComponent(handle)
+      : 'Venmo: @' + handle);
+  }
   if (tog.Zelle && pay.zelle) lines.push('Zelle: ' + pay.zelle);
-  if (tog.CashApp && pay.cashApp) lines.push('Cash App: ' + pay.cashApp);
+  if (tog.CashApp && pay.cashApp) {
+    const tag = pay.cashApp.replace(/^\$/, '').replace(/^https?:\/\/cash\.app\/\$?/i, '');
+    lines.push(withLinks
+      ? 'Cash App: https://cash.app/$' + encodeURIComponent(tag)
+      : 'Cash App: $' + tag);
+  }
   if (tog.Other && pay.otherLabel && pay.otherValue) lines.push(pay.otherLabel + ': ' + pay.otherValue);
+  return lines;
+}
 
-  if (lines.length === 0) return [];
-  const sendTo = pay.name ? 'Send to ' + pay.name + ':' : 'Send to:';
-  return ['', sendTo, ...lines];
+export function getPaymentLines(): string[] {
+  const methods = paymentMethods(true);
+  if (!methods.length) return [];
+  const sendTo = state.payment.name ? 'Send to ' + state.payment.name + ':' : 'Send to:';
+  return ['', sendTo, ...methods];
+}
+
+export function getPaymentLinesShort(): string[] {
+  const methods = paymentMethods(false);
+  if (!methods.length) return [];
+  const sendTo = state.payment.name ? 'Send to ' + state.payment.name + ':' : 'Send to:';
+  return ['', sendTo, ...methods];
 }

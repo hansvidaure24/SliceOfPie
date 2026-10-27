@@ -4,11 +4,17 @@ import { prefersCopy } from './share';
 import { state } from './state';
 import { putBill, keepDataOnDevice } from './db';
 import { updateHistoryBadge } from './history';
+import { onEnterScreen } from './router';
 import { readBackup, writeBackup } from './backup-format';
 import type { Bill } from './types';
 
 // Saved bills live only on this device; these move them to a file and back,
 // for a new phone or a cleared browser.
+
+export function renderBackupCount(): void {
+  const n = state.history.length;
+  $('backupCount').textContent = n === 0 ? 'No saved bills yet.' : n === 1 ? '1 saved bill.' : n + ' saved bills.';
+}
 
 export function exportBills(): void {
   if (!state.history.length) { showToast('No saved bills to export'); return; }
@@ -40,6 +46,7 @@ export function importBills(): void {
 }
 
 export function initBackup(): void {
+  onEnterScreen('screenSettings', renderBackupCount);
   const input = $('importInput') as HTMLInputElement;
   input.addEventListener('change', async () => {
     const file = input.files?.[0];
@@ -62,6 +69,7 @@ export function initBackup(): void {
     }
     state.history = [...state.history, ...added].sort((a, b) => b.id - a.id);
     updateHistoryBadge();
+    renderBackupCount();
     if (added.length) keepDataOnDevice();
     showToast(added.length
       ? 'Imported ' + added.length + (added.length === 1 ? ' bill' : ' bills')

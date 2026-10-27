@@ -25,5 +25,5 @@ export function applyTheme(): void {
     document.documentElement.setAttribute('data-theme', 'light');
   }
   const metaTheme = document.querySelector('meta[name="theme-color"]');
-  if (metaTheme) metaTheme.setAttribute('content', resolved === 'light' ? '#FFFFFF' : '#3A2418');
+  if (metaTheme) metaTheme.setAttribute('content', resolved === 'light' ? '#F5EDE4' : '#3A2418');
 }

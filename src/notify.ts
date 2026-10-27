@@ -8,9 +8,11 @@ export function announce(msg: string): void {
   setTimeout(() => { el.textContent = msg; }, 50);
 }
 
+let toastTimer = 0;
 export function showToast(msg: string): void {
+  clearTimeout(toastTimer);
   const toast = $('toast');
   toast.textContent = msg;
   toast.classList.add('show');
-  setTimeout(() => toast.classList.remove('show'), 2000);
+  toastTimer = window.setTimeout(() => toast.classList.remove('show'), 2000);
 }

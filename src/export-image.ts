@@ -4,6 +4,7 @@ import { prefersCopy } from './share';
 import { state, getBillTotals, isPayer, tipLabel } from './state';
 import { calcOwes } from './bill';
 import { billLabel } from './history';
+import { getPaymentLinesShort } from './payment';
 
 const PAD = 40;
 
@@ -13,7 +14,7 @@ function getColors() {
   return { bg: v('--bg2'), surface: v('--surface'), cherry: v('--cherry'), crust: v('--crust'), cream: v('--text'), muted: v('--muted') };
 }
 
-interface Line { text: string; color: string; size: number; bold: boolean; y: number }
+interface Line { text: string; color: string; size: number; bold: boolean; y: number; dot?: string }
 
 export async function exportImage(): Promise<void> {
   await document.fonts.ready;
@@ -32,7 +33,22 @@ export async function exportImage(): Promise<void> {
   };
 
   add('SliceOfPie', { color: COLORS.crust, size: 22, bold: true, gap: 4 });
-  add(label, { color: COLORS.muted, size: 14, gap: 20 });
+  add(label, { color: COLORS.muted, size: 14, gap: state.receipt?.date ? 2 : 20 });
+  if (state.receipt?.date) {
+    const [yr, mo, dy] = state.receipt.date.split('-').map(Number);
+    const d = new Date(yr, mo - 1, dy);
+    add(d.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' }), { color: COLORS.muted, size: 12, gap: 16 });
+  }
+
+  if (state.splitMode === 'item' && state.items.some(it => it.price)) {
+    for (const item of state.items) {
+      if (!item.price) continue;
+      const who = (item.assignees || []).map(i => state.people[i]?.name).filter(Boolean);
+      const suffix = who.length ? '  → ' + who.join(', ') : '';
+      add((item.name || 'Item') + '  ' + fmt(item.price) + suffix, { color: COLORS.cream, size: 14, gap: 4 });
+    }
+    y += 8;
+  }
 
   add('Subtotal  ' + fmt(sub), { size: 15 });
   if (tax > 0) add('Tax  ' + fmt(tax), { size: 15 });
@@ -44,18 +60,28 @@ export async function exportImage(): Promise<void> {
   breakdown.forEach((entry, i) => {
     const paid = isPayer(i);
     const owes = paid ? '(paid)' : 'owes ' + fmt(entry.amount);
-    add(entry.name + '  ' + owes, { color: entry.color, size: 15, gap: 6 });
+    lines.push({ text: entry.name + '  ' + owes, color: COLORS.cream, size: 15, bold: false, y, dot: entry.color });
+    y += 15 + 6;
   });
+
+  const payLines = getPaymentLinesShort();
+  if (payLines.length) {
+    y += 10;
+    for (const line of payLines) {
+      if (line) add(line, { color: COLORS.muted, size: 13, gap: 4 });
+    }
+  }
 
   y += 16;
   add('slice-of-pie-xi.vercel.app', { color: COLORS.muted, size: 12, gap: 0 });
 
   // Measure max text width to auto-size canvas
+  const DOT_SPACE = 18;
   const measure = document.createElement('canvas').getContext('2d')!;
   let maxW = 0;
   for (const line of lines) {
     measure.font = (line.bold ? '700 ' : '400 ') + line.size + 'px Inter, system-ui, sans-serif';
-    maxW = Math.max(maxW, measure.measureText(line.text).width);
+    maxW = Math.max(maxW, measure.measureText(line.text).width + (line.dot ? DOT_SPACE : 0));
   }
   const W = Math.ceil(maxW) + PAD * 2 + 32;
 
@@ -77,9 +103,16 @@ export async function exportImage(): Promise<void> {
   ctx.fill();
 
   for (const line of lines) {
+    const x = PAD + 8 + (line.dot ? DOT_SPACE : 0);
+    if (line.dot) {
+      ctx.fillStyle = line.dot;
+      ctx.beginPath();
+      ctx.arc(PAD + 8 + 4, line.y + line.size - 5, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.fillStyle = line.color;
     ctx.font = (line.bold ? '700 ' : '400 ') + line.size + 'px Inter, system-ui, sans-serif';
-    ctx.fillText(line.text, PAD + 8, line.y + line.size);
+    ctx.fillText(line.text, x, line.y + line.size);
   }
 
   canvas.toBlob(async blob => {

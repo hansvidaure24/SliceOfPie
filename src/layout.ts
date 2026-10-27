@@ -2,6 +2,7 @@ import { $, esc } from './helpers';
 import { fmt } from './money';
 import { state, getBillTotals } from './state';
 import { calcOwes, unassignedIndexes } from './bill';
+import { relativeDate } from './history';
 
 // Wide screens put a panel beside the screen: the split's running totals
 // while you build it, or the list of saved bills next to one you're viewing
@@ -43,10 +44,12 @@ export function renderLiveSummary(): void {
   ).join('');
 
   const tipText = state.useReceiptTip ? 'Tip (from receipt)' : 'Tip (' + state.tipPct + '%)';
+  const eachLine = state.splitMode === 'even' && state.people.length > 1 && total > 0
+    ? `<div class="sum-line"><span>Each</span><span>${fmt(total / state.people.length)}</span></div>` : '';
   $('liveTotals').innerHTML = `
     <div class="sum-line"><span>${state.splitMode === 'even' && state.taxIncluded ? 'Bill total' : 'Items + tax'}</span><span>${fmt(sub + tax)}</span></div>
     <div class="sum-line"><span>${tipText}</span><span>${fmt(tip)}</span></div>
-    <div class="sum-line total"><span>Total</span><span>${fmt(total)}</span></div>`;
+    <div class="sum-line total"><span>Total</span><span>${fmt(total)}</span></div>${eachLine}`;
 
   const unassigned = unassignedIndexes().length;
   $('liveNote').textContent = sub <= 0
@@ -61,7 +64,8 @@ export function renderBillsPane(): void {
   if (document.body.dataset.aside !== 'bills') return;
   $('billsPaneList').innerHTML = state.history.map(bill => {
     const unpaid = bill.people.filter(p => !p.paid).length;
-    const date = new Date(bill.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    const [ry, rm, rd] = (bill.receiptDate ?? '').split('-').map(Number);
+    const date = relativeDate(bill.receiptDate ? new Date(ry, rm - 1, rd) : new Date(bill.date));
     return `<button class="pane-bill${bill.id === state.viewingBillId ? ' current' : ''}" data-action="viewBill" data-arg="${bill.id}"
         ${bill.id === state.viewingBillId ? 'aria-current="true"' : ''}>
       <span class="pane-bill-top"><b>${esc(bill.label)}</b><span>${fmt(bill.total)}</span></span>

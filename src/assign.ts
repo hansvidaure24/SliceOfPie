@@ -18,9 +18,12 @@ export function updateItemsCta(): void {
   $('itemsCtaTotal').textContent = fmt(sub + state.taxAmt);
   const unassigned = unassignedIndexes();
   const note = $('itemsCtaNote');
+  const priced = state.items.filter(it => it.price).length;
   note.textContent = unassigned.length
     ? unassigned.length + (unassigned.length === 1 ? ' item' : ' items') + ' unassigned'
-    : state.taxAmt ? 'Items + tax' : 'Subtotal';
+    : priced
+      ? priced + (priced === 1 ? ' item' : ' items') + (state.taxAmt ? ' + tax' : '')
+      : 'Subtotal';
   note.classList.toggle('warn', unassigned.length > 0);
   $('itemsList').querySelectorAll<HTMLElement>('[data-row]').forEach(row => {
     row.classList.toggle('unassigned', unassigned.includes(Number(row.dataset.row)));

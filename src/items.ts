@@ -189,9 +189,9 @@ export function renderItems(): void {
   $('itemsList').innerHTML = itemsHead() + state.items.map((item, i) => `
     <div class="item-row" data-row="${i}">
       <div class="item-main">
-        <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name">
+        <input class="item-name" value="${esc(item.name)}" placeholder="Item name" data-item-name="${i}" aria-label="Item ${i + 1} name" enterkeyhint="next" autocomplete="off" autocapitalize="sentences" spellcheck="false">
         <input class="item-price" type="number" inputmode="decimal" step="0.01"
-               value="${item.price || ''}" placeholder="0.00" data-item-price="${i}" aria-label="Item ${i + 1} price">
+               value="${item.price || ''}" placeholder="0.00" data-item-price="${i}" aria-label="Item ${i + 1} price" enterkeyhint="next">
         <button class="item-del" data-item-del="${i}" aria-label="Remove item"${state.items.length <= 1 ? ' disabled hidden' : ''}><span class="trash-icon"></span></button>
       </div>
       ${byItem ? `<div class="item-who" data-who="${i}" role="group" aria-label="Who had item ${i + 1}">${whoChips(i)}</div>` : ''}
@@ -223,8 +223,10 @@ export function renderItems(): void {
         list.querySelector<HTMLInputElement>(`[data-item-price="${i}"]`)?.focus();
       } else if (i < state.items.length - 1) {
         list.querySelector<HTMLInputElement>(`[data-item-name="${i + 1}"]`)?.focus();
-      } else {
+      } else if (state.items[i].price) {
         addItem();
+      } else {
+        input.blur();
       }
     });
   });
@@ -249,6 +251,8 @@ export function removeItem(index: number): void {
   state.items.splice(index, 1);
   renderItems();
   updateRunning();
+  const target = index > 0 ? index - 1 : 0;
+  $('itemsList').querySelector<HTMLInputElement>(`[data-item-price="${target}"]`)?.focus();
 }
 
 export function updateRunning(): void {

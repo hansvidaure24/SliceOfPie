@@ -10,6 +10,9 @@ export function setSplitMode(mode: 'even' | 'item'): void {
   state.splitMode = mode;
   $('modeEven').classList.toggle('active', mode === 'even');
   $('modeItem').classList.toggle('active', mode === 'item');
+  $('modeEven').setAttribute('aria-pressed', String(mode === 'even'));
+  $('modeItem').setAttribute('aria-pressed', String(mode === 'item'));
+  $('peopleNextBtn').textContent = mode === 'even' ? 'Next: Total' : 'Next: Scan';
   // Even and by-item splits have different steps in the top bar
   refreshSteps();
 }
@@ -22,6 +25,8 @@ export function toggleTaxInc(): void {
   if (state.taxIncluded) {
     state.quickTaxAmt = 0;
     ($('quickTax') as HTMLInputElement).value = '';
+  } else {
+    setTimeout(() => ($('quickTax') as HTMLInputElement).focus(), 200);
   }
   updateQuickCta();
 }
