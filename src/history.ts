@@ -199,7 +199,7 @@ export function viewBill(id: number): void {
   $('detailSummaryCard').innerHTML = `
     <div class="section-label">Summary</div>
     <div class="sum-line"><span>Total</span><span>${fmt(bill.total)}</span></div>
-    <div class="sum-line"><span>Tip</span><span>${bill.tipPct}%</span></div>
+    <div class="sum-line"><span>Tip</span><span>${bill.tipPct}%${bill.tipPct ? ' · ' + fmt(bill.total - bill.total / (1 + bill.tipPct / 100)) : ''}</span></div>
     <div class="sum-line"><span>Split</span><span>${bill.splitMode === 'even' ? 'Even' : 'By item'}, ${bill.people.length} people</span></div>
     ${perPerson}
     <div class="sum-line"><span>Paid by</span><span>${esc(bill.payerName)}</span></div>

@@ -6,7 +6,11 @@ import { renderLiveSummary } from './layout';
 import { unassignedIndexes } from './bill';
 import { onEnterScreen } from './router';
 
-onEnterScreen('screenItems', renderAssign);
+onEnterScreen('screenItems', () => {
+  renderAssign();
+  const alt = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌥' : 'Alt';
+  $('itemsKbdHint').innerHTML = `<kbd>Enter</kbd> next field or new item · <kbd>${alt}</kbd>+<kbd>1</kbd>–<kbd>9</kbd> toggle a person on the item you're in`;
+});
 
 export function unassignedCount(): number {
   return unassignedIndexes().length;
