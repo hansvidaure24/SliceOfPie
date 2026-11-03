@@ -8,6 +8,7 @@ test('system back walks back one step at a time', async ({ page }) => {
   await expect(page).toHaveURL(/#items$/);
 
   await page.goBack();
+  await page.click('#confirmYes');
   await expect(screen(page)).toHaveId('screenCapture');
   await page.goBack();
   await expect(screen(page)).toHaveId('screenPeople');
@@ -51,6 +52,7 @@ test('a reload picks up the bill on the same screen', async ({ page }) => {
 
   // ...and back still works after the reload
   await page.goBack();
+  await page.click('#confirmYes');
   await expect(screen(page)).toHaveId('screenCapture');
 });
 

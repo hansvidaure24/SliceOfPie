@@ -105,7 +105,7 @@ function renderResult(breakdown: Breakdown[], total: number): void {
 function renderBreakdownLines(breakdown: Breakdown[]): string {
   return breakdown.map((entry, i) => {
     const paid = isPayer(i);
-    return `<button class="owe-row${paid ? ' is-payer' : ''}" style="--who:${entry.color}" data-copy-share="${i}" aria-label="Copy ${esc(entry.name)}'s share">
+    return `<button class="owe-row${paid ? ' is-payer' : ''}" style="--who:${entry.color}" data-copy-share="${i}">
       <span class="owe-name">${esc(entry.name)}</span>
       <span class="owe-amt">${paid ? '<span class="check-icon"></span>paid the bill' : fmt(entry.amount)}</span>
     </button>`;

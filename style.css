@@ -407,7 +407,7 @@ body .camera-screen.active,body .camera-screen.leaving{position:fixed;inset:0 0 
 }
 .tip-btn:active{transform:translateY(1px)}
 .tip-btn.active{background:var(--cherry);border-color:var(--cherry-dark);color:#fff;border-bottom:2px solid var(--cherry-dark)}
-.tip-dollar{display:block;font-size:var(--text-2xs);font-weight:400;opacity:.7;margin-top:1px}
+.tip-dollar{display:block;font-size:var(--text-2xs);font-weight:400;margin-top:1px}
 .custom-tip{
   width:72px;background:var(--surface2);border:2px solid var(--surface2);color:var(--cream);
   border-radius:8px;text-align:center;font-size:var(--text-sm);padding:9px;font-variant-numeric:tabular-nums;

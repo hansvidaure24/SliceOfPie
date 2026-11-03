@@ -40,6 +40,7 @@ test('scanning asks before the download, reads the receipt, then works offline',
   // Same scan with the network off: no prompt, still read
   await context.setOffline(true);
   await page.goBack();
+  await page.click('#confirmYes');
   await expect(screen(page)).toHaveId('screenCapture');
   await expect(page.locator('#captureScannerNote')).toHaveText('Scanner ready offline');
   await page.setInputFiles('#photoInput', { name: 'receipt.png', mimeType: 'image/png', buffer: png });

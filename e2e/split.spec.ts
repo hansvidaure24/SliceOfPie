@@ -34,7 +34,7 @@ test('by item: unassigned items are caught, shares are right, the bill saves', a
   await expect(page.locator('[data-row="2"]')).toHaveClass(/unassigned/);
 
   await page.click('[data-assign="2-2"]');
-  await expect(page.locator('#itemsCtaNote')).toHaveText('Items + tax');
+  await expect(page.locator('#itemsCtaNote')).toHaveText('4 items + tax');
   await page.click('#screenItems [data-action=itemsNext]');
   await expect(screen(page)).toHaveId('screenSummary');
 
