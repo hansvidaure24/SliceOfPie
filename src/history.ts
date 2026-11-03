@@ -205,7 +205,7 @@ export function viewBill(id: number): void {
 function renderDetailPeople(bill: Bill): void {
   $('detailPeople').innerHTML = bill.people.map((person, i) => `
     <div class="detail-person">
-      <button class="detail-who" data-copy-person="${i}" style="--who:${person.color}" aria-label="Copy ${esc(person.name)}'s share">
+      <button class="detail-who" data-copy-person="${i}" style="--who:${person.color}">
         <div class="person-icon" style="background:${person.color}"></div>
         <div>
           <div class="detail-name">${esc(person.name)}</div>
