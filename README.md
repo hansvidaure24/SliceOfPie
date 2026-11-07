@@ -1,8 +1,6 @@
 # SliceOfPie
 
-[![CI](https://github.com/hansvidaure24/SliceOfPie/actions/workflows/ci.yml/badge.svg)](https://github.com/hansvidaure24/SliceOfPie/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/hansvidaure24/SliceOfPie)](https://github.com/hansvidaure24/SliceOfPie/releases)
-[![License: MIT](https://img.shields.io/badge/license-MIT-blue)](LICENSE)
+> "Every bill-splitting app wanted sign-ups and sent your receipts to a server. I just wanted to scan, split, and share what everyone owes — with your payment info right there. One link, works in the browser."
 
 Split bills without the awkward math. Snap a receipt, assign items, add tip, and share who owes what — all offline, all on-device.
 
