@@ -124,7 +124,13 @@ export function changePeople(delta: number): void {
 function focusLastName(): void {
   const inputs = $('namesList').querySelectorAll<HTMLInputElement>('.person-name-input');
   const last = inputs[inputs.length - 1];
-  if (last) setTimeout(() => { last.focus(); last.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 50);
+  // Don't pull focus away if they've already moved on to another field
+  const before = document.activeElement;
+  if (last) setTimeout(() => {
+    if (document.activeElement !== before && document.activeElement !== document.body) return;
+    last.focus();
+    last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 50);
 }
 
 export function updateCounterState(): void {
