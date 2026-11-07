@@ -178,19 +178,21 @@ initReceiptDrop(file => {
 document.addEventListener('focusin', (e) => {
   const target = e.target as HTMLElement;
   if (target.matches('input[type="number"],input[type="text"],.item-name,.item-price,.pay-input,.person-name-input')) {
-    setTimeout(() => target.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
+    setTimeout(() => {
+      if (document.activeElement === target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
   }
 });
 
-// Tap a number field → select all so you can type over the old value
+// Tap a number field → select all so you can type over the old value.
+// select() also focuses, so skip it if focus already moved on (a quick tap or Tab)
 document.addEventListener('focus', (e) => {
   const input = e.target as HTMLInputElement;
-  if (input.matches('.item-price, .quick-entry-input, .tax-input, .custom-tip, .preset-input')) {
-    requestAnimationFrame(() => input.select());
-  }
-  if (input.matches('.person-name-input') && PLACEHOLDER.test(input.value)) {
-    requestAnimationFrame(() => input.select());
-  }
+  const selectIfStillFocused = () => requestAnimationFrame(() => {
+    if (document.activeElement === input) input.select();
+  });
+  if (input.matches('.item-price, .quick-entry-input, .tax-input, .custom-tip, .preset-input')) selectIfStillFocused();
+  if (input.matches('.person-name-input') && PLACEHOLDER.test(input.value)) selectIfStillFocused();
 }, true);
 
 // Enter key advances screens with numeric inputs, or moves between name fields
