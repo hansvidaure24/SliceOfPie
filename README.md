@@ -30,9 +30,9 @@ Every bill-splitting app I found either required everyone to sign up, needed an 
 ## By the numbers
 
 - **Lighthouse (mobile):** 99 performance, 100 accessibility, 100 best practices, 100 SEO. 0 ms of blocking time and no layout shift.
-- **About 23 KB of JavaScript** (gzipped) to start. The scanner (about 36 MB) only downloads after you ask for it, then works offline.
+- **About 26 KB of JavaScript** (gzipped) to start. The scanner (about 36 MB) only downloads after you ask for it, then works offline.
 - **No accessibility issues** found by axe on any screen, in light or dark.
-- **~165 unit tests and 41 end-to-end tests**, each end-to-end test run on a phone and a desktop screen, all on every push.
+- **199 unit tests and 42 end-to-end tests**, each end-to-end test run on a phone and a desktop screen, all on every push.
 - **No framework:** about 5,200 lines of TypeScript in 50 small modules.
 
 ## Features
@@ -78,7 +78,7 @@ The parser is tested against the OCR output of real receipts, so a change that b
 For a guided tour of the code, from start-up to scanning to updates, see [docs/how-it-works.md](docs/how-it-works.md).
 
 **Why vanilla TS instead of React/Vue/Svelte?**
-The app is ~5,200 lines across 50 modules. A framework would add a virtual DOM and a state management library to solve problems this app doesn't have. Manual DOM updates via `renderX()` functions mean every state change is explicit and traceable. The result is a small startup bundle (about 22 KB of JavaScript gzipped) and zero framework churn.
+The app is ~5,200 lines across 50 modules. A framework would add a virtual DOM and a state management library to solve problems this app doesn't have. Manual DOM updates via `renderX()` functions mean every state change is explicit and traceable. The result is a small startup bundle (about 26 KB of JavaScript gzipped) and zero framework churn.
 
 **Why a mutable state object instead of a store/signals?**
 A single `state.ts` object holds all app state. Each module imports it, mutates directly, and calls the appropriate render function. This works because:
