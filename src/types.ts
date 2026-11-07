@@ -22,6 +22,8 @@ export interface Bill {
   label: string;
   total: number;
   tipPct: number;
+  // The tip in dollars, as worked out when the bill was saved. Older bills don't have it
+  tip?: number;
   splitMode: 'even' | 'item';
   // From a scanned receipt, when found
   merchant?: string;

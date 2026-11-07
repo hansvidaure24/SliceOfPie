@@ -9,6 +9,7 @@ const lunch: Bill = {
   label: 'Taco Tuesday',
   total: 49.82,
   tipPct: 18,
+  tip: 7.02,
   splitMode: 'item',
   merchant: 'Taqueria',
   receiptDate: '2026-10-23',
@@ -43,12 +44,18 @@ describe('the bills export file', () => {
   });
 
   it('fills in optional fields and trims overlong text', () => {
-    const { merchant: _m, receiptDate: _r, tipPct: _t, ...bare } = lunch;
+    const { merchant: _m, receiptDate: _r, tipPct: _t, tip: _tip, ...bare } = lunch;
     const bill = readBackup(file([{ ...bare, label: 'x'.repeat(500), splitMode: 'weird', payerName: 42 }]))[0];
     expect(bill.label).toHaveLength(80);
     expect(bill.tipPct).toBe(0);
     expect(bill.splitMode).toBe('even');
     expect(bill.payerName).toBe('Me');
     expect(bill).not.toHaveProperty('merchant');
+    expect(bill).not.toHaveProperty('tip');
+  });
+
+  it('drops a tip that is not a real amount', () => {
+    expect(readBackup(file([{ ...lunch, tip: 'lots' }]))[0]).not.toHaveProperty('tip');
+    expect(readBackup(file([{ ...lunch, tip: -3 }]))[0]).not.toHaveProperty('tip');
   });
 });

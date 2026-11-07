@@ -69,6 +69,8 @@ test('by item: unassigned items are caught, shares are right, the bill saves', a
   await owed.click();
   await expect(screen(page)).toHaveId('screenDetail');
   await expect(page.locator('#detailTitle')).toContainText('Taco Tuesday');
+  // 18% of the $39 of items, the same tip the bill showed
+  await expect(page.locator('#detailSummaryCard')).toContainText('18% · $7.02');
   await page.click('[data-action="togglePaid"][data-arg="1"]');
   await expect(page.locator('[data-action="togglePaid"][data-arg="1"]')).toHaveAttribute('aria-pressed', 'true');
 });

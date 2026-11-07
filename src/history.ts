@@ -54,7 +54,7 @@ function displayName(merchant: string): string {
 
 async function saveBill(label: string): Promise<void> {
   const breakdown = calcOwes();
-  const { total: rawTotal } = getBillTotals();
+  const { total: rawTotal, tip } = getBillTotals();
   const total = state.roundUp ? breakdown.reduce((s, e) => s + e.amount, 0) : rawTotal;
 
   const bill: Bill = {
@@ -63,6 +63,7 @@ async function saveBill(label: string): Promise<void> {
     label,
     total,
     tipPct: effectiveTipPct(),
+    tip: Math.round(tip * 100) / 100,
     splitMode: state.splitMode,
     ...(state.receipt?.merchant ? { merchant: state.receipt.merchant } : {}),
     ...(state.receipt?.date ? { receiptDate: state.receipt.date } : {}),
@@ -187,7 +188,7 @@ export function viewBill(id: number): void {
   $('detailSummaryCard').innerHTML = `
     <div class="section-label">Summary</div>
     <div class="sum-line"><span>Total</span><span>${fmt(bill.total)}</span></div>
-    <div class="sum-line"><span>Tip</span><span>${bill.tipPct}%${bill.tipPct ? ' · ' + fmt(bill.total - bill.total / (1 + bill.tipPct / 100)) : ''}</span></div>
+    <div class="sum-line"><span>Tip</span><span>${bill.tipPct}%${bill.tip ? ' · ' + fmt(bill.tip) : ''}</span></div>
     <div class="sum-line"><span>Split</span><span>${bill.splitMode === 'even' ? 'Even' : 'By item'}, ${bill.people.length} people</span></div>
     ${perPerson}
     <div class="sum-line"><span>Paid by</span><span>${esc(bill.payerName)}</span></div>

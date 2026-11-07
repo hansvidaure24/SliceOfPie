@@ -35,6 +35,7 @@ export function readBackup(text: string): Bill[] {
       label: b.label.slice(0, 80),
       total: b.total as number,
       tipPct: Number.isFinite(b.tipPct) ? b.tipPct as number : 0,
+      ...(Number.isFinite(b.tip) && (b.tip as number) >= 0 ? { tip: b.tip as number } : {}),
       splitMode: b.splitMode === 'item' ? 'item' : 'even',
       ...(typeof b.merchant === 'string' ? { merchant: b.merchant.slice(0, 80) } : {}),
       ...(typeof b.receiptDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(b.receiptDate) ? { receiptDate: b.receiptDate } : {}),
